@@ -1,6 +1,15 @@
-import { Component, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component, inject, signal } from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
 import { ContactFormData, SubjectOption } from './contact.model';
+import { ToastService } from '../../core/services/toast.service';
+
+const INITIAL_FORM_DATA: ContactFormData = {
+  name: '',
+  email: '',
+  phone: '',
+  subject: '',
+  message: '',
+};
 
 @Component({
   selector: 'app-contact-page',
@@ -10,13 +19,10 @@ import { ContactFormData, SubjectOption } from './contact.model';
   styleUrl: './contact.page.scss'
 })
 export class ContactPageComponent {
-  formData = signal<ContactFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
-  });
+  private readonly toastService = inject(ToastService);
+
+  formData = signal<ContactFormData>({ ...INITIAL_FORM_DATA });
+  isSubmitting = signal<boolean>(false);
 
   readonly subjectOptions: SubjectOption[] = [
     { value: '', label: 'Select a subject' },
@@ -27,25 +33,39 @@ export class ContactPageComponent {
     { value: 'support', label: 'Technical Support' },
   ];
 
-  onSubmit(): void {
-    alert('Thank you for contacting us! We will get back to you soon.\n\nThis is a demo. In a real application, this would send your message to our team.');
-    this.resetForm();
+  onSubmit(form: NgForm): void {
+    if (form.invalid) {
+      this.toastService.error('Please fill in all required fields correctly.');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      this.toastService.success('Thank you for contacting us! We will get back to you soon.');
+      this.resetForm(form);
+      this.isSubmitting.set(false);
+    }, 1500);
   }
 
   updateField(field: keyof ContactFormData, value: string): void {
+    const sanitizedValue = this.sanitizeInput(value);
     this.formData.update(current => ({
       ...current,
-      [field]: value
+      [field]: sanitizedValue
     }));
   }
 
-  private resetForm(): void {
-    this.formData.set({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: '',
-    });
+  private sanitizeInput(input: string): string {
+    // Basic sanitization to prevent XSS
+    return input.replace(/[<>]/g, '');
+  }
+
+  private resetForm(form?: NgForm): void {
+    this.formData.set({ ...INITIAL_FORM_DATA });
+    if (form) {
+      form.resetForm({ ...INITIAL_FORM_DATA });
+    }
   }
 }
