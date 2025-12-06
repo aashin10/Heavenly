@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, ElementRef, AfterViewInit, OnDestroy, ViewChild, HostListener } from '@angular/core';
 
 interface TermsSection {
   title: string;
@@ -9,11 +9,26 @@ interface TermsSection {
   selector: 'app-terms-modal',
   standalone: true,
   template: `
-    <div class="modal-overlay" (click)="closeModal.emit()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
+    <div 
+      class="modal-overlay" 
+      (click)="closeModal.emit()"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div 
+        class="modal-content" 
+        (click)="$event.stopPropagation()"
+        #modalContent
+      >
         <div class="modal-header">
-          <h2 class="modal-title">Terms and Conditions</h2>
-          <button class="close-button" (click)="closeModal.emit()" aria-label="Close modal">
+          <h2 id="modal-title" class="modal-title">Terms and Conditions</h2>
+          <button 
+            class="close-button" 
+            (click)="closeModal.emit()" 
+            aria-label="Close modal"
+            #closeButton
+          >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
@@ -32,7 +47,7 @@ interface TermsSection {
 
         <div class="modal-footer">
           <button class="btn-cancel" (click)="closeModal.emit()">Cancel</button>
-          <button class="btn-accept" (click)="accept.emit()">I Accept</button>
+          <button class="btn-accept" (click)="accept.emit()" #acceptButton>I Accept</button>
         </div>
       </div>
     </div>
@@ -129,7 +144,7 @@ interface TermsSection {
       border-radius: 0.5rem;
       font-size: 1rem;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: background-color 0.2s, border-color 0.2s;
     }
 
     .btn-cancel {
@@ -153,9 +168,70 @@ interface TermsSection {
     }
   `]
 })
-export class TermsModalComponent {
+export class TermsModalComponent implements AfterViewInit, OnDestroy {
   @Output() accept = new EventEmitter<void>();
   @Output() closeModal = new EventEmitter<void>();
+
+  @ViewChild('modalContent') modalContent!: ElementRef<HTMLDivElement>;
+  @ViewChild('closeButton') closeButton!: ElementRef<HTMLButtonElement>;
+  @ViewChild('acceptButton') acceptButton!: ElementRef<HTMLButtonElement>;
+
+  private previouslyFocusedElement: HTMLElement | null = null;
+  private focusableElements: HTMLElement[] = [];
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    this.closeModal.emit();
+  }
+
+  ngAfterViewInit(): void {
+    // Store the previously focused element to restore focus later
+    this.previouslyFocusedElement = document.activeElement as HTMLElement;
+
+    // Get all focusable elements within the modal
+    this.updateFocusableElements();
+
+    // Focus the close button when modal opens
+    setTimeout(() => {
+      this.closeButton.nativeElement.focus();
+    });
+
+    // Set up focus trap
+    this.modalContent.nativeElement.addEventListener('keydown', this.trapFocus.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    // Return focus to the previously focused element
+    if (this.previouslyFocusedElement) {
+      this.previouslyFocusedElement.focus();
+    }
+  }
+
+  private updateFocusableElements(): void {
+    const focusableSelectors = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    this.focusableElements = Array.from(
+      this.modalContent.nativeElement.querySelectorAll<HTMLElement>(focusableSelectors)
+    );
+  }
+
+  private trapFocus(event: KeyboardEvent): void {
+    if (event.key !== 'Tab') return;
+
+    const firstFocusable = this.focusableElements[0];
+    const lastFocusable = this.focusableElements.at(-1);
+
+    if (!firstFocusable || !lastFocusable) return;
+
+    if (event.shiftKey && document.activeElement === firstFocusable) {
+      // Shift + Tab: if on first element, wrap to last
+      event.preventDefault();
+      lastFocusable.focus();
+    } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+      // Tab: if on last element, wrap to first
+      event.preventDefault();
+      firstFocusable.focus();
+    }
+  }
 
   readonly termsSections: TermsSection[] = [
     {
