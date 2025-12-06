@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/login/login.routes').then(m => m.LOGIN_ROUTES)
   },
   {
+    path: 'management',
+    loadChildren: () => import('./features/management/management.routes').then(m => m.MANAGEMENT_ROUTES)
+  },
+  {
     path: '**',
     redirectTo: ''
   }
