@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/contact/contact.routes').then(m => m.CONTACT_ROUTES)
   },
   {
+    path: 'login',
+    loadChildren: () => import('./features/auth/login/login.routes').then(m => m.LOGIN_ROUTES)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

@@ -1,0 +1,376 @@
+<div class="login-page">
+  <div class="login-container">
+    <div class="login-grid">
+      <!-- Left Side - Branding -->
+      <div class="branding-section">
+        <img src="assets/logo.png" alt="Heavenly Corporation" class="brand-logo" />
+        <h1 class="brand-title">Welcome to Heavenly Corporation</h1>
+        <p class="brand-subtitle">
+          Your trusted partner in manpower solutions. Connect with opportunities or find the perfect talent.
+        </p>
+        <div class="features-list">
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <div class="feature-content">
+              <h3 class="feature-title">For Employers</h3>
+              <p class="feature-text">Post jobs and find qualified candidates</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="feature-content">
+              <h3 class="feature-title">For Job Seekers</h3>
+              <p class="feature-text">Discover opportunities across industries</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side - Form -->
+      <div class="form-section">
+        <!-- Logo for mobile -->
+        <div class="mobile-logo">
+          <img src="assets/logo.png" alt="Heavenly Corporation" />
+        </div>
+
+        <!-- Toggle Tabs -->
+        <div class="tabs-container" role="tablist" aria-label="Login or Sign Up">
+          <button 
+            class="tab-button" 
+            [class.active]="isLogin()"
+            [attr.aria-selected]="isLogin()"
+            role="tab"
+            id="login-tab"
+            [attr.aria-controls]="isLogin() ? 'login-panel' : null"
+            (click)="toggleView(true)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            <span>Login</span>
+          </button>
+          <button 
+            class="tab-button" 
+            [class.active]="!isLogin()"
+            [attr.aria-selected]="!isLogin()"
+            role="tab"
+            id="signup-tab"
+            [attr.aria-controls]="!isLogin() ? 'signup-panel' : null"
+            (click)="toggleView(false)"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <line x1="20" y1="8" x2="20" y2="14"/>
+              <line x1="23" y1="11" x2="17" y2="11"/>
+            </svg>
+            <span>Sign Up</span>
+          </button>
+        </div>
+
+        <!-- Error Message -->
+        @if (error()) {
+          <div class="error-message" role="alert" aria-live="assertive">
+            {{ error() }}
+          </div>
+        }
+
+        <!-- Login Form -->
+        @if (isLogin()) {
+          <form (ngSubmit)="handleLoginSubmit()" class="auth-form" id="login-panel" role="tabpanel" aria-labelledby="login-tab">
+            <div class="form-group">
+              <label for="login-email" class="form-label">Email Address</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <input
+                  type="email"
+                  id="login-email"
+                  [ngModel]="loginData().email"
+                  (ngModelChange)="updateLoginField('email', $event)"
+                  name="email"
+                  required
+                  class="form-input"
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="login-password" class="form-label">Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  type="password"
+                  id="login-password"
+                  [ngModel]="loginData().password"
+                  (ngModelChange)="updateLoginField('password', $event)"
+                  name="password"
+                  required
+                  class="form-input"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              class="submit-button" 
+              [disabled]="isSubmitting()"
+              [attr.aria-busy]="isSubmitting()"
+            >
+              @if (isSubmitting()) {
+                <span class="loading-spinner" aria-hidden="true"></span>
+                <span>Logging in...</span>
+              } @else {
+                <span>Login to Dashboard</span>
+              }
+            </button>
+          </form>
+        } @else {
+          <!-- Signup Form -->
+          <form (ngSubmit)="handleSignupSubmit()" class="auth-form signup-form" id="signup-panel" role="tabpanel" aria-labelledby="signup-tab">
+            <!-- User Type Selection -->
+            <fieldset class="user-type-fieldset">
+              <legend class="form-label">I want to...</legend>
+              <div class="user-type-grid">
+                <button
+                  type="button"
+                  class="user-type-button"
+                  [class.active]="signupData().userType === 'applicant'"
+                  [attr.aria-pressed]="signupData().userType === 'applicant'"
+                  (click)="setUserType('applicant')"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <span>Find Jobs</span>
+                </button>
+                <button
+                  type="button"
+                  class="user-type-button"
+                  [class.active]="signupData().userType === 'employer'"
+                  [attr.aria-pressed]="signupData().userType === 'employer'"
+                  (click)="setUserType('employer')"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                  </svg>
+                  <span>Hire Talent</span>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="form-group">
+              <label for="signup-name" class="form-label">Full Name</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <input
+                  type="text"
+                  id="signup-name"
+                  [ngModel]="signupData().name"
+                  (ngModelChange)="updateSignupField('name', $event)"
+                  name="name"
+                  required
+                  class="form-input"
+                  placeholder="John Doe"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-email" class="form-label">Email Address</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <input
+                  type="email"
+                  id="signup-email"
+                  [ngModel]="signupData().email"
+                  (ngModelChange)="updateSignupField('email', $event)"
+                  name="email"
+                  required
+                  class="form-input"
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
+
+            @if (signupData().userType === 'employer') {
+              <div class="form-group">
+                <label for="signup-company" class="form-label">Company Name</label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+                    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+                    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+                    <path d="M10 6h4"/>
+                    <path d="M10 10h4"/>
+                    <path d="M10 14h4"/>
+                    <path d="M10 18h4"/>
+                  </svg>
+                  <input
+                    type="text"
+                    id="signup-company"
+                    [ngModel]="signupData().company"
+                    (ngModelChange)="updateSignupField('company', $event)"
+                    name="company"
+                    required
+                    class="form-input"
+                    placeholder="Your Company"
+                  />
+                </div>
+              </div>
+            }
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="signup-phone" class="form-label">Phone <span class="optional-label">(Optional)</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <input
+                    type="tel"
+                    id="signup-phone"
+                    [ngModel]="signupData().phone"
+                    (ngModelChange)="updateSignupField('phone', $event)"
+                    name="phone"
+                    class="form-input"
+                    placeholder="(555) 123-4567"
+                    aria-describedby="phone-hint"
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="signup-location" class="form-label">Location <span class="optional-label">(Optional)</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <input
+                    type="text"
+                    id="signup-location"
+                    [ngModel]="signupData().location"
+                    (ngModelChange)="updateSignupField('location', $event)"
+                    name="location"
+                    class="form-input"
+                    placeholder="City, State"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-password" class="form-label">Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  type="password"
+                  id="signup-password"
+                  [ngModel]="signupData().password"
+                  (ngModelChange)="updateSignupField('password', $event)"
+                  name="password"
+                  required
+                  class="form-input"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="signup-confirm-password" class="form-label">Confirm Password</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <input
+                  type="password"
+                  id="signup-confirm-password"
+                  [ngModel]="signupData().confirmPassword"
+                  (ngModelChange)="updateSignupField('confirmPassword', $event)"
+                  name="confirmPassword"
+                  required
+                  class="form-input"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            <div class="terms-checkbox">
+              <input
+                type="checkbox"
+                id="terms-signup"
+                [checked]="termsAccepted()"
+                (change)="handleTermsCheckboxChange($event)"
+                required
+                class="checkbox-input"
+              />
+              <label for="terms-signup" class="checkbox-label">
+                I agree to the
+                <button type="button" class="terms-link" (click)="openTerms()">
+                  Terms and Conditions
+                </button>
+              </label>
+            </div>
+
+            <button 
+              type="submit" 
+              class="submit-button" 
+              [disabled]="isSubmitting()"
+              [attr.aria-busy]="isSubmitting()"
+            >
+              @if (isSubmitting()) {
+                <span class="loading-spinner" aria-hidden="true"></span>
+                <span>Creating Account...</span>
+              } @else {
+                <span>Create Account</span>
+              }
+            </button>
+          </form>
+        }
+
+        <div class="back-link">
+          <a routerLink="/">← Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (showTerms()) {
+    <app-terms-modal
+      (accept)="acceptTerms()"
+      (closeModal)="closeTerms()"
+    />
+  }
+</div>

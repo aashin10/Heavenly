@@ -87,26 +87,10 @@ export class AuthService {
       return true;
     }
 
-    // Demo admin user
-    if (email === 'admin@heavenlycorp.com' && password === 'admin123') {
-      const adminUser: User = {
-        id: 'admin',
-        email: 'admin@heavenlycorp.com',
-        name: 'System Administrator',
-        userType: 'admin',
-        acceptedTerms: true,
-        createdAt: new Date().toISOString(),
-      };
-      this.userSignal.set(adminUser);
-      if (isPlatformBrowser(this.platformId)) {
-        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(adminUser));
-      }
-      this.toastService.success(`Welcome back, ${adminUser.name}!`);
-      return true;
-    }
-    
     return false;
-  }  logout(): void {
+  }
+
+  logout(): void {
     this.userSignal.set(null);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(CURRENT_USER_KEY);

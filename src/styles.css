@@ -8,9 +8,13 @@
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
   --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
   --gray-600: #4b5563;
   --gray-700: #374151;
+  --red-50: #fef2f2;
   --red-500: #ef4444;
+  --red-700: #b91c1c;
+  --blue-50: #eff6ff;
 }
 
 * {
