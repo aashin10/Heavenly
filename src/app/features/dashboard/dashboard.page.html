@@ -1,0 +1,54 @@
+<div class="dashboard-page">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-container">
+      <h1 class="header-title">Dashboard</h1>
+      <p class="header-subtitle">{{ headerSubtitle() }}</p>
+    </div>
+  </div>
+
+  <!-- Admin Tab Navigation -->
+  @if (isAdmin()) {
+    <div class="tab-navigation">
+      <div class="tab-container">
+        <button
+          class="tab-button"
+          [class.active]="activeTab() === 'jobseeker'"
+          (click)="setActiveTab('jobseeker')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <span>Find Jobs</span>
+        </button>
+        <button
+          class="tab-button"
+          [class.active]="activeTab() === 'employer'"
+          (click)="setActiveTab('employer')"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          <span>Post Jobs</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Dashboard Content -->
+  <div class="dashboard-content">
+    @if (isAdmin()) {
+      @if (activeTab() === 'employer') {
+        <app-employer-dashboard />
+      } @else {
+        <app-job-seeker-dashboard />
+      }
+    } @else if (showEmployerDashboard()) {
+      <app-employer-dashboard />
+    } @else {
+      <app-job-seeker-dashboard />
+    }
+  </div>
+</div>

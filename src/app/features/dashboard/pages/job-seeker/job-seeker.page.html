@@ -1,0 +1,92 @@
+<div class="job-seeker-dashboard">
+  <div class="header-section">
+    <h2 class="page-title">Find Your Next Opportunity</h2>
+    <p class="page-subtitle">Browse and apply for jobs across various domains</p>
+  </div>
+
+  <!-- Search and Filters -->
+  <div class="filters-section">
+    <div class="filters-header">
+      <svg class="filter-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+      </svg>
+      <h3 class="filters-title">Search & Filter</h3>
+    </div>
+
+    <div class="filters-grid">
+      <div class="search-group">
+        <label for="search" class="form-label">Search</label>
+        <div class="search-input-wrapper">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            id="search"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="updateSearch($event)"
+            class="search-input"
+            placeholder="Search by title, company, or location..."
+          />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <label for="domain-filter" class="form-label">Domain</label>
+        <select
+          id="domain-filter"
+          [ngModel]="selectedDomain()"
+          (ngModelChange)="updateDomain($event)"
+          class="filter-select"
+        >
+          @for (domain of domains; track domain) {
+            <option [value]="domain">{{ domain }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="type-filter" class="form-label">Job Type</label>
+        <select
+          id="type-filter"
+          [ngModel]="selectedType()"
+          (ngModelChange)="updateType($event)"
+          class="filter-select"
+        >
+          @for (type of jobTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="clear-filter-group">
+        <button class="btn-clear" (click)="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section">
+    <h3 class="results-title">
+      Available Jobs ({{ filteredJobs().length }})
+    </h3>
+
+    <div class="jobs-list">
+      @if (filteredJobs().length === 0) {
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <p>No jobs found matching your criteria.</p>
+          <p class="empty-hint">Try adjusting your filters or search terms.</p>
+        </div>
+      } @else {
+        @for (job of filteredJobs(); track job.id) {
+          <app-job-card [job]="job" [showActions]="true" />
+        }
+      }
+    </div>
+  </div>
+</div>

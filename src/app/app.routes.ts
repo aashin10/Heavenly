@@ -18,8 +18,8 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/login/login.routes').then(m => m.LOGIN_ROUTES)
   },
   {
-    path: 'management',
-    loadChildren: () => import('./features/management/management.routes').then(m => m.MANAGEMENT_ROUTES)
+    path: 'dashboard',
+    loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
   },
   {
     path: '**',
