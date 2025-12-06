@@ -5,17 +5,18 @@ import { ToastService } from '../../services/toast.service';
   selector: 'app-toaster',
   standalone: true,
   template: `
-    <div class="toaster-container">
+    <div class="toaster-container" aria-live="polite" aria-atomic="true">
       @for (toast of toastService.toasts(); track toast.id) {
         <div 
           class="toast"
+          [attr.role]="toast.type === 'error' ? 'alert' : 'status'"
           [class.toast-success]="toast.type === 'success'"
           [class.toast-error]="toast.type === 'error'"
           [class.toast-info]="toast.type === 'info'"
           [class.toast-warning]="toast.type === 'warning'"
         >
           <span class="toast-message">{{ toast.message }}</span>
-          <button class="toast-close" (click)="toastService.removeToast(toast.id)">×</button>
+          <button class="toast-close" (click)="toastService.removeToast(toast.id)" aria-label="Close notification">×</button>
         </div>
       }
     </div>
