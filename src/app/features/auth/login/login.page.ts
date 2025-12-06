@@ -13,6 +13,8 @@ import {
 import { TermsModalComponent } from './terms-modal.component';
 
 const MIN_PASSWORD_LENGTH = 6;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[\d\s\-+()]{10,}$/;
 
 @Component({
   selector: 'app-login-page',
