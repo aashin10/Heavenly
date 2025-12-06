@@ -1,0 +1,241 @@
+// Variables
+$primary-color: #003664;
+$primary-light: #004a8f;
+$white: #ffffff;
+$gray-50: #f9fafb;
+$gray-100: #f3f4f6;
+$gray-200: #e5e7eb;
+$gray-600: #4b5563;
+$gray-700: #374151;
+
+.container {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  @media (min-width: 640px) {
+    padding: 0 1.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0 2rem;
+  }
+}
+
+// Hero Section
+.hero-section {
+  background: linear-gradient(to bottom right, $primary-color, $primary-light);
+  color: $white;
+  padding: 5rem 0;
+}
+
+.hero-container {
+  max-width: 56rem;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+
+  @media (min-width: 768px) {
+    font-size: 3rem;
+  }
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: $gray-200;
+}
+
+// Section Common Styles
+.section-title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  color: $primary-color;
+  font-weight: 400;
+
+  @media (min-width: 768px) {
+    font-size: 2.5rem;
+  }
+}
+
+.section-title-left {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: $primary-color;
+  font-weight: 400;
+
+  @media (min-width: 768px) {
+    font-size: 2.5rem;
+  }
+}
+
+// Overview Section
+.overview-section {
+  padding: 4rem 0;
+}
+
+.overview-grid {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.overview-content {
+  order: 2;
+
+  @media (min-width: 768px) {
+    order: 1;
+  }
+}
+
+.overview-text {
+  color: $gray-700;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.stats-container {
+  background-color: $gray-100;
+  border-radius: 0.5rem;
+  padding: 2rem;
+  order: 1;
+
+  @media (min-width: 768px) {
+    order: 2;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2rem;
+  color: $primary-color;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+
+  @media (min-width: 768px) {
+    font-size: 2.5rem;
+  }
+}
+
+.stat-label {
+  color: $gray-600;
+}
+
+// Values Section
+.values-section {
+  padding: 4rem 0;
+  background-color: $gray-50;
+}
+
+.values-grid {
+  display: grid;
+  gap: 2rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.value-card {
+  background-color: $white;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.value-icon {
+  color: $primary-color;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.value-title {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: $primary-color;
+  font-weight: 500;
+}
+
+.value-description {
+  color: $gray-600;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// Services Section
+.services-section {
+  padding: 4rem 0;
+}
+
+.services-grid {
+  display: grid;
+  gap: 2rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.service-card {
+  border: 2px solid $primary-color;
+  border-radius: 0.5rem;
+  padding: 2rem;
+}
+
+.service-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: $primary-color;
+  font-weight: 500;
+}
+
+.service-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.service-list-item {
+  display: flex;
+  align-items: flex-start;
+  color: $gray-700;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.bullet {
+  color: $primary-color;
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
