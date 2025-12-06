@@ -72,12 +72,17 @@
           role="tablist" 
           aria-label="Job status filter"
         >
-          @for (option of filterOptions; track option.value) {
+          @for (option of filterOptions; track option.value; let i = $index) {
             <button
+              #tabButton
               role="tab"
+              [id]="'tab-' + option.value"
               [attr.aria-selected]="managementService.filter() === option.value"
+              [attr.aria-controls]="'job-listings-panel'"
+              [attr.tabindex]="managementService.filter() === option.value ? 0 : -1"
               [class.active]="managementService.filter() === option.value"
               (click)="setFilter(option.value)"
+              (keydown)="handleTabKeydown($event, i)"
               class="filter-tab"
             >
               {{ option.label }}
@@ -87,7 +92,13 @@
       </section>
 
       <!-- Jobs List -->
-      <section class="jobs-section" aria-label="Job postings list">
+      <section 
+        id="job-listings-panel"
+        role="tabpanel"
+        [attr.aria-labelledby]="'tab-' + managementService.filter()"
+        class="jobs-section" 
+        aria-label="Job postings list"
+      >
         <h2 class="section-title">
           Job Postings ({{ managementService.filteredJobs().length }})
         </h2>

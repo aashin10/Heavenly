@@ -16,7 +16,7 @@ const DEFAULT_JOBS: Job[] = [
     salary: '$120,000 - $150,000',
     description: 'We are seeking an experienced Senior Software Engineer to join our dynamic team.',
     requirements: "Bachelor's degree in Computer Science, 5+ years of experience in full-stack development",
-    postedDate: '2025-12-01',
+    postedDate: '2025-11-15',
     status: 'approved',
     postedBy: 'demo',
   },
@@ -30,7 +30,7 @@ const DEFAULT_JOBS: Job[] = [
     salary: '$70,000 - $90,000',
     description: 'Manage daily operations of our 5-star hotel facility.',
     requirements: 'Hospitality degree, 7+ years management experience in luxury hotels',
-    postedDate: '2025-12-02',
+    postedDate: '2025-11-18',
     status: 'approved',
     postedBy: 'demo',
   },
@@ -44,7 +44,7 @@ const DEFAULT_JOBS: Job[] = [
     salary: '$55,000 - $70,000',
     description: 'Handle recruitment, employee relations, and HR administrative duties.',
     requirements: "Bachelor's degree in HR or related field, 3+ years HR experience",
-    postedDate: '2025-12-03',
+    postedDate: '2025-11-22',
     status: 'pending',
     postedBy: 'demo',
   }
@@ -92,7 +92,14 @@ export class ManagementService {
 
     const savedJobs = localStorage.getItem(JOBS_KEY);
     if (savedJobs) {
-      this.jobsSignal.set(JSON.parse(savedJobs));
+      try {
+        const parsedJobs = JSON.parse(savedJobs) as Job[];
+        this.jobsSignal.set(parsedJobs);
+      } catch (error) {
+        console.error('Failed to parse jobs from localStorage, using defaults:', error);
+        this.jobsSignal.set(DEFAULT_JOBS);
+        this.saveJobs();
+      }
     } else {
       this.jobsSignal.set(DEFAULT_JOBS);
       this.saveJobs();
@@ -110,10 +117,16 @@ export class ManagementService {
     this.jobsSignal.set(updatedJobs);
     this.saveJobs();
 
-    if (status === 'approved') {
-      this.toastService.success('Job has been approved and is now visible to job seekers!');
-    } else {
-      this.toastService.error('Job has been rejected.');
+    switch (status) {
+      case 'approved':
+        this.toastService.success('Job has been approved and is now visible to job seekers!');
+        break;
+      case 'rejected':
+        this.toastService.error('Job has been rejected.');
+        break;
+      case 'pending':
+        this.toastService.info('Job status has been set to pending for review.');
+        break;
     }
   }
 
