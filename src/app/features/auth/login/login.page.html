@@ -44,13 +44,17 @@
         </div>
 
         <!-- Toggle Tabs -->
-        <div class="tabs-container">
+        <div class="tabs-container" role="tablist" aria-label="Login or Sign Up">
           <button 
             class="tab-button" 
             [class.active]="isLogin()"
+            [attr.aria-selected]="isLogin()"
+            role="tab"
+            id="login-tab"
+            [attr.aria-controls]="isLogin() ? 'login-panel' : null"
             (click)="toggleView(true)"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
               <polyline points="10 17 15 12 10 7"/>
               <line x1="15" y1="12" x2="3" y2="12"/>
@@ -60,9 +64,13 @@
           <button 
             class="tab-button" 
             [class.active]="!isLogin()"
+            [attr.aria-selected]="!isLogin()"
+            role="tab"
+            id="signup-tab"
+            [attr.aria-controls]="!isLogin() ? 'signup-panel' : null"
             (click)="toggleView(false)"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="8.5" cy="7" r="4"/>
               <line x1="20" y1="8" x2="20" y2="14"/>
@@ -74,14 +82,14 @@
 
         <!-- Error Message -->
         @if (error()) {
-          <div class="error-message">
+          <div class="error-message" role="alert" aria-live="assertive">
             {{ error() }}
           </div>
         }
 
         <!-- Login Form -->
         @if (isLogin()) {
-          <form (ngSubmit)="handleLoginSubmit()" class="auth-form">
+          <form (ngSubmit)="handleLoginSubmit()" class="auth-form" id="login-panel" role="tabpanel" aria-labelledby="login-tab">
             <div class="form-group">
               <label for="login-email" class="form-label">Email Address</label>
               <div class="input-wrapper">
@@ -122,13 +130,23 @@
               </div>
             </div>
 
-            <button type="submit" class="submit-button" [disabled]="isSubmitting()">
-              Login to Dashboard
+            <button 
+              type="submit" 
+              class="submit-button" 
+              [disabled]="isSubmitting()"
+              [attr.aria-busy]="isSubmitting()"
+            >
+              @if (isSubmitting()) {
+                <span class="loading-spinner" aria-hidden="true"></span>
+                <span>Logging in...</span>
+              } @else {
+                <span>Login to Dashboard</span>
+              }
             </button>
           </form>
         } @else {
           <!-- Signup Form -->
-          <form (ngSubmit)="handleSignupSubmit()" class="auth-form signup-form">
+          <form (ngSubmit)="handleSignupSubmit()" class="auth-form signup-form" id="signup-panel" role="tabpanel" aria-labelledby="signup-tab">
             <!-- User Type Selection -->
             <fieldset class="user-type-fieldset">
               <legend class="form-label">I want to...</legend>
@@ -137,9 +155,10 @@
                   type="button"
                   class="user-type-button"
                   [class.active]="signupData().userType === 'applicant'"
+                  [attr.aria-pressed]="signupData().userType === 'applicant'"
                   (click)="setUserType('applicant')"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
@@ -149,9 +168,10 @@
                   type="button"
                   class="user-type-button"
                   [class.active]="signupData().userType === 'employer'"
+                  [attr.aria-pressed]="signupData().userType === 'employer'"
                   (click)="setUserType('employer')"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                   </svg>
@@ -229,9 +249,9 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label for="signup-phone" class="form-label">Phone</label>
+                <label for="signup-phone" class="form-label">Phone <span class="optional-label">(Optional)</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                   </svg>
                   <input
@@ -242,12 +262,13 @@
                     name="phone"
                     class="form-input"
                     placeholder="(555) 123-4567"
+                    aria-describedby="phone-hint"
                   />
                 </div>
               </div>
 
               <div class="form-group">
-                <label for="signup-location" class="form-label">Location</label>
+                <label for="signup-location" class="form-label">Location <span class="optional-label">(Optional)</span></label>
                 <div class="input-wrapper">
                   <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -311,7 +332,7 @@
                 type="checkbox"
                 id="terms-signup"
                 [checked]="termsAccepted()"
-                (change)="termsAccepted.set($any($event.target).checked)"
+                (change)="handleTermsCheckboxChange($event)"
                 required
                 class="checkbox-input"
               />
@@ -323,8 +344,18 @@
               </label>
             </div>
 
-            <button type="submit" class="submit-button" [disabled]="isSubmitting()">
-              Create Account
+            <button 
+              type="submit" 
+              class="submit-button" 
+              [disabled]="isSubmitting()"
+              [attr.aria-busy]="isSubmitting()"
+            >
+              @if (isSubmitting()) {
+                <span class="loading-spinner" aria-hidden="true"></span>
+                <span>Creating Account...</span>
+              } @else {
+                <span>Create Account</span>
+              }
             </button>
           </form>
         }
