@@ -1,4 +1,4 @@
-import { Component, inject, signal, HostListener, ElementRef, ViewChild, effect } from '@angular/core';
+import { Component, inject, signal, HostListener, ElementRef, ViewChild } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../services/toast.service';
@@ -33,15 +33,6 @@ export class NavbarComponent {
     { path: '/about', label: 'About' },
     { path: '/contact', label: 'Contact' },
   ];
-
-  constructor() {
-    effect(() => {
-      const currentUser = this.user();
-      if (currentUser) {
-        this.toastService.success(`Welcome, ${currentUser.name}!`);
-      }
-    });
-  }
 
   get allLinks(): NavLink[] {
     const protectedLinks = this.user() ? [{ path: '/dashboard', label: 'Dashboard' }] : [];

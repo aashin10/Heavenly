@@ -13,6 +13,7 @@ export interface Toast {
 export class ToastService {
   private readonly toastsSignal = signal<Toast[]>([]);
   private idCounter = 0;
+  private readonly timeoutIds = new Map<number, any>();
 
   readonly toasts = this.toastsSignal.asReadonly();
 
@@ -26,9 +27,11 @@ export class ToastService {
 
     this.toastsSignal.update(toasts => [...toasts, toast]);
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       this.removeToast(toast.id);
     }, duration);
+    
+    this.timeoutIds.set(toast.id, timeoutId);
   }
 
   success(message: string, duration?: number): void {
@@ -48,6 +51,11 @@ export class ToastService {
   }
 
   removeToast(id: number): void {
+    const timeoutId = this.timeoutIds.get(id);
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      this.timeoutIds.delete(id);
+    }
     this.toastsSignal.update(toasts => toasts.filter(t => t.id !== id));
   }
 }

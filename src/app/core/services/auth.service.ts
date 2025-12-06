@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { User } from '../models/user.model';
+import { ToastService } from './toast.service';
 
 const USERS_KEY = 'heavenly_users';
 const CURRENT_USER_KEY = 'heavenly_current_user';
@@ -10,6 +11,7 @@ const CURRENT_USER_KEY = 'heavenly_current_user';
 })
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly toastService = inject(ToastService);
   private readonly userSignal = signal<User | null>(null);
   
   readonly user = this.userSignal.asReadonly();
@@ -75,10 +77,13 @@ export class AuthService {
     const foundUser = users.find(u => u.email === email);
 
     if (foundUser) {
+      // NOTE: Password validation is intentionally skipped for demo purposes.
+      // In a real application, you must hash and verify passwords securely.
       this.userSignal.set(foundUser);
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(foundUser));
       }
+      this.toastService.success(`Welcome back, ${foundUser.name}!`);
       return true;
     }
 
@@ -96,13 +101,12 @@ export class AuthService {
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(adminUser));
       }
+      this.toastService.success(`Welcome back, ${adminUser.name}!`);
       return true;
     }
-
+    
     return false;
-  }
-
-  logout(): void {
+  }  logout(): void {
     this.userSignal.set(null);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(CURRENT_USER_KEY);
@@ -134,6 +138,7 @@ export class AuthService {
   getInitials(name: string): string {
     return name
       .split(' ')
+      .filter(n => n.length > 0)
       .map(n => n[0])
       .join('')
       .toUpperCase()
