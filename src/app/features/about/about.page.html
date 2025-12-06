@@ -1,0 +1,116 @@
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container hero-container">
+    <h1 class="hero-title">About Heavenly Corporation</h1>
+    <p class="hero-subtitle">
+      Your partner in connecting exceptional talent with outstanding opportunities
+    </p>
+  </div>
+</section>
+
+<!-- Company Overview -->
+<section class="overview-section">
+  <div class="container">
+    <div class="overview-grid">
+      <div class="overview-content">
+        <h2 class="section-title-left">Who We Are</h2>
+        <p class="overview-text">
+          Heavenly Corporation is a leading manpower solutions provider dedicated to connecting skilled professionals with top employers across various industries. With years of expertise in the recruitment industry, we understand the unique challenges faced by both job seekers and employers.
+        </p>
+        <p class="overview-text">
+          Our comprehensive approach to manpower supply ensures that we deliver qualified candidates who not only meet the technical requirements but also align with the organizational culture and values of our client companies.
+        </p>
+        <p class="overview-text">
+          We specialize in multiple domains including IT, Hospitality, HR, Masonry, Plumbing, and Servicing Staff, providing tailored solutions that meet the specific needs of each industry sector.
+        </p>
+      </div>
+      <div class="stats-container">
+        <div class="stats-grid">
+          @for (stat of stats; track stat.label) {
+            <div class="stat-item">
+              <div class="stat-number">{{ stat.number }}</div>
+              <div class="stat-label">{{ stat.label }}</div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Values Section -->
+<section class="values-section">
+  <div class="container">
+    <h2 class="section-title">Our Foundation</h2>
+    <div class="values-grid">
+      @for (value of values; track value.title) {
+        <div class="value-card">
+          <div class="value-icon">
+            @switch (value.icon) {
+              @case ('target') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="6"/>
+                  <circle cx="12" cy="12" r="2"/>
+                </svg>
+              }
+              @case ('eye') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              }
+              @case ('award') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="8" r="7"/>
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+                </svg>
+              }
+              @case ('users') {
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              }
+            }
+          </div>
+          <h3 class="value-title">{{ value.title }}</h3>
+          <p class="value-description">{{ value.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Services Section -->
+<section class="services-section">
+  <div class="container">
+    <h2 class="section-title">What We Offer</h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <h3 class="service-title">For Employers</h3>
+        <ul class="service-list">
+          @for (benefit of employerBenefits; track benefit) {
+            <li class="service-list-item">
+              <span class="bullet">•</span>
+              <span>{{ benefit }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+      <div class="service-card">
+        <h3 class="service-title">For Job Seekers</h3>
+        <ul class="service-list">
+          @for (benefit of jobSeekerBenefits; track benefit) {
+            <li class="service-list-item">
+              <span class="bullet">•</span>
+              <span>{{ benefit }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
