@@ -26,24 +26,7 @@
   margin: 0;
 }
 
-.btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  background-color: var(--primary-color);
-  color: var(--white);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--primary-light);
-  }
-}
+// Uses global .btn-primary class from styles.css
 
 .form-section {
   margin-bottom: 2rem;
@@ -89,15 +72,15 @@
   color: var(--gray-700);
 
   &.pending svg {
-    color: #d97706;
+    color: var(--yellow-600);
   }
 
   &.approved svg {
-    color: #059669;
+    color: var(--green-600);
   }
 
   &.rejected svg {
-    color: #dc2626;
+    color: var(--red-600);
   }
 }
 

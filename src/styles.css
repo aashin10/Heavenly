@@ -8,9 +8,22 @@
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
   --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
   --gray-600: #4b5563;
   --gray-700: #374151;
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
   --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --yellow-100: #fef3c7;
+  --yellow-600: #d97706;
+  --yellow-700: #b45309;
+  --green-100: #d1fae5;
+  --green-600: #059669;
+  --green-700: #047857;
+  --blue-50: #eff6ff;
 }
 
 * {
@@ -51,4 +64,65 @@ button {
   .container {
     padding: 0 2rem;
   }
+}
+
+/* Shared Button Styles */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-light);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid var(--gray-300);
+  background: transparent;
+  color: var(--gray-700);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.btn-outline:hover {
+  background-color: var(--gray-50);
+}
+
+.btn-outline--primary {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline--primary:hover {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+/* Required field indicator */
+.required {
+  color: var(--red-500);
 }

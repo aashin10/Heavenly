@@ -9,11 +9,11 @@
     </button>
   </div>
 
-  <form (ngSubmit)="handleSubmit()" class="job-form">
+  <form (ngSubmit)="handleSubmit()" class="job-form" novalidate>
     <div class="form-grid">
       <div class="form-group">
         <label for="job-title" class="form-label">
-          Job Title <span class="required">*</span>
+          Job Title <span class="required" aria-hidden="true">*</span>
         </label>
         <input
           type="text"
@@ -21,15 +21,21 @@
           [ngModel]="formData().title"
           (ngModelChange)="updateField('title', $event)"
           name="title"
-          required
+          [attr.aria-invalid]="getFieldError('title') ? 'true' : null"
+          [attr.aria-describedby]="getFieldError('title') ? 'title-error' : null"
           class="form-input"
+          [class.input-error]="getFieldError('title')"
           placeholder="e.g., Senior Software Engineer"
+          aria-required="true"
         />
+        @if (getFieldError('title')) {
+          <span id="title-error" class="error-message" role="alert">{{ getFieldError('title') }}</span>
+        }
       </div>
 
       <div class="form-group">
         <label for="company-name" class="form-label">
-          Company Name <span class="required">*</span>
+          Company Name <span class="required" aria-hidden="true">*</span>
         </label>
         <input
           type="text"
@@ -37,23 +43,29 @@
           [ngModel]="formData().company"
           (ngModelChange)="updateField('company', $event)"
           name="company"
-          required
+          [attr.aria-invalid]="getFieldError('company') ? 'true' : null"
+          [attr.aria-describedby]="getFieldError('company') ? 'company-error' : null"
           class="form-input"
+          [class.input-error]="getFieldError('company')"
           placeholder="e.g., Tech Solutions Inc."
+          aria-required="true"
         />
+        @if (getFieldError('company')) {
+          <span id="company-error" class="error-message" role="alert">{{ getFieldError('company') }}</span>
+        }
       </div>
 
       <div class="form-group">
         <label for="domain" class="form-label">
-          Domain <span class="required">*</span>
+          Domain <span class="required" aria-hidden="true">*</span>
         </label>
         <select
           id="domain"
           [ngModel]="formData().domain"
           (ngModelChange)="updateField('domain', $event)"
           name="domain"
-          required
           class="form-input"
+          aria-required="true"
         >
           @for (domain of domains; track domain) {
             <option [value]="domain">{{ domain }}</option>
@@ -63,15 +75,15 @@
 
       <div class="form-group">
         <label for="job-type" class="form-label">
-          Job Type <span class="required">*</span>
+          Job Type <span class="required" aria-hidden="true">*</span>
         </label>
         <select
           id="job-type"
           [ngModel]="formData().type"
           (ngModelChange)="updateField('type', $event)"
           name="type"
-          required
           class="form-input"
+          aria-required="true"
         >
           @for (type of jobTypes; track type) {
             <option [value]="type">{{ type }}</option>
@@ -81,7 +93,7 @@
 
       <div class="form-group">
         <label for="location" class="form-label">
-          Location <span class="required">*</span>
+          Location <span class="required" aria-hidden="true">*</span>
         </label>
         <input
           type="text"
@@ -89,15 +101,21 @@
           [ngModel]="formData().location"
           (ngModelChange)="updateField('location', $event)"
           name="location"
-          required
+          [attr.aria-invalid]="getFieldError('location') ? 'true' : null"
+          [attr.aria-describedby]="getFieldError('location') ? 'location-error' : null"
           class="form-input"
+          [class.input-error]="getFieldError('location')"
           placeholder="e.g., New York, NY"
+          aria-required="true"
         />
+        @if (getFieldError('location')) {
+          <span id="location-error" class="error-message" role="alert">{{ getFieldError('location') }}</span>
+        }
       </div>
 
       <div class="form-group">
         <label for="salary" class="form-label">
-          Salary Range <span class="required">*</span>
+          Salary Range <span class="required" aria-hidden="true">*</span>
         </label>
         <input
           type="text"
@@ -105,47 +123,65 @@
           [ngModel]="formData().salary"
           (ngModelChange)="updateField('salary', $event)"
           name="salary"
-          required
+          [attr.aria-invalid]="getFieldError('salary') ? 'true' : null"
+          [attr.aria-describedby]="getFieldError('salary') ? 'salary-error' : null"
           class="form-input"
+          [class.input-error]="getFieldError('salary')"
           placeholder="e.g., $80,000 - $100,000"
+          aria-required="true"
         />
+        @if (getFieldError('salary')) {
+          <span id="salary-error" class="error-message" role="alert">{{ getFieldError('salary') }}</span>
+        }
       </div>
     </div>
 
     <div class="form-group full-width">
       <label for="description" class="form-label">
-        Job Description <span class="required">*</span>
+        Job Description <span class="required" aria-hidden="true">*</span>
       </label>
       <textarea
         id="description"
         [ngModel]="formData().description"
         (ngModelChange)="updateField('description', $event)"
         name="description"
-        required
         rows="4"
+        [attr.aria-invalid]="getFieldError('description') ? 'true' : null"
+        [attr.aria-describedby]="getFieldError('description') ? 'description-error' : null"
         class="form-input"
+        [class.input-error]="getFieldError('description')"
         placeholder="Describe the role, responsibilities, and what makes this opportunity great..."
+        aria-required="true"
       ></textarea>
+      @if (getFieldError('description')) {
+        <span id="description-error" class="error-message" role="alert">{{ getFieldError('description') }}</span>
+      }
     </div>
 
     <div class="form-group full-width">
       <label for="requirements" class="form-label">
-        Requirements <span class="required">*</span>
+        Requirements <span class="required" aria-hidden="true">*</span>
       </label>
       <textarea
         id="requirements"
         [ngModel]="formData().requirements"
         (ngModelChange)="updateField('requirements', $event)"
         name="requirements"
-        required
         rows="4"
+        [attr.aria-invalid]="getFieldError('requirements') ? 'true' : null"
+        [attr.aria-describedby]="getFieldError('requirements') ? 'requirements-error' : null"
         class="form-input"
+        [class.input-error]="getFieldError('requirements')"
         placeholder="List the qualifications, skills, and experience needed..."
+        aria-required="true"
       ></textarea>
+      @if (getFieldError('requirements')) {
+        <span id="requirements-error" class="error-message" role="alert">{{ getFieldError('requirements') }}</span>
+      }
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn-primary">Post Job</button>
+      <button type="submit" class="btn-primary" [disabled]="!isFormValid()">Post Job</button>
       <button type="button" class="btn-outline" (click)="handleCancel()">Cancel</button>
     </div>
   </form>

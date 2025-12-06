@@ -44,18 +44,18 @@
   font-size: 0.75rem;
 
   &.pending {
-    background-color: #fef3c7;
-    color: #b45309;
+    background-color: var(--yellow-100);
+    color: var(--yellow-700);
   }
 
   &.approved {
-    background-color: #d1fae5;
-    color: #047857;
+    background-color: var(--green-100);
+    color: var(--green-700);
   }
 
   &.rejected {
-    background-color: #fee2e2;
-    color: #b91c1c;
+    background-color: var(--red-100);
+    color: var(--red-700);
   }
 }
 
@@ -125,37 +125,20 @@
   margin-top: 1rem;
 }
 
-.btn-outline {
+// Uses global .btn-primary and .btn-outline classes from styles.css
+// Local overrides for flex behavior and smaller padding in card context
+.btn-outline,
+.btn-primary {
   flex: 1;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--primary-color);
+}
+
+.btn-outline {
+  border-color: var(--primary-color);
   color: var(--primary-color);
-  background: transparent;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: all 0.2s;
 
   &:hover {
     background-color: var(--primary-color);
     color: var(--white);
-  }
-}
-
-.btn-primary {
-  flex: 1;
-  padding: 0.5rem 1rem;
-  border: none;
-  background-color: var(--primary-color);
-  color: var(--white);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--primary-light);
   }
 }

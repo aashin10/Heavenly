@@ -154,9 +154,9 @@
 .error-message {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  background-color: #fef2f2;
+  background-color: var(--red-50);
   border-left: 4px solid var(--red-500);
-  color: #b91c1c;
+  color: var(--red-700);
   border-radius: 0.25rem;
 }
 
@@ -193,7 +193,7 @@
   left: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: var(--gray-400);
 }
 
 .form-input {
@@ -213,7 +213,7 @@
   }
 
   &::placeholder {
-    color: #9ca3af;
+    color: var(--gray-400);
   }
 }
 
@@ -258,7 +258,7 @@
 
   &.active {
     border-color: var(--primary-color);
-    background-color: #eff6ff;
+    background-color: var(--blue-50);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   }
 }

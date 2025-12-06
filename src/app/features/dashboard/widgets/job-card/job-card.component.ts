@@ -1,5 +1,7 @@
-import { Component, Input, signal } from '@angular/core';
+import { Component, Input, inject, signal } from '@angular/core';
 import { Job } from '../../dashboard.model';
+import { ToastService } from '../../../../core/services/toast.service';
+import { formatDateSafe } from '../../../../shared/utils/helpers';
 
 @Component({
   selector: 'app-job-card',
@@ -9,6 +11,8 @@ import { Job } from '../../dashboard.model';
   styleUrl: './job-card.component.scss'
 })
 export class JobCardComponent {
+  private readonly toastService = inject(ToastService);
+
   @Input({ required: true }) job!: Job;
   @Input() showActions = false;
 
@@ -19,10 +23,12 @@ export class JobCardComponent {
   }
 
   handleApply(): void {
-    alert(`Application submitted for ${this.job.title} at ${this.job.company}!\n\nThis is a demo. In a real application, this would process your application.`);
+    this.toastService.success(
+      `Application submitted for ${this.job.title} at ${this.job.company}! This is a demo.`
+    );
   }
 
   formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString();
+    return formatDateSafe(dateString);
   }
 }
