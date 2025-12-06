@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Job, JobFormData, DEFAULT_JOBS } from './dashboard.model';
+import { generateUniqueId, safeJsonParse, safeJsonStringify } from '../../shared/utils/helpers';
 
 const JOBS_KEY = 'heavenly_jobs';
 
@@ -24,8 +25,10 @@ export class DashboardService {
     }
 
     const savedJobs = localStorage.getItem(JOBS_KEY);
-    if (savedJobs) {
-      this.jobsSignal.set(JSON.parse(savedJobs));
+    const parsedJobs = safeJsonParse<Job[]>(savedJobs, []);
+    
+    if (parsedJobs.length > 0) {
+      this.jobsSignal.set(parsedJobs);
     } else {
       this.jobsSignal.set(DEFAULT_JOBS);
       this.saveJobsToStorage(DEFAULT_JOBS);
@@ -34,13 +37,17 @@ export class DashboardService {
 
   private saveJobsToStorage(jobs: Job[]): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    localStorage.setItem(JOBS_KEY, JSON.stringify(jobs));
+    
+    const jsonString = safeJsonStringify(jobs);
+    if (jsonString) {
+      localStorage.setItem(JOBS_KEY, jsonString);
+    }
   }
 
   addJob(formData: JobFormData, userId: string): void {
     const newJob: Job = {
       ...formData,
-      id: Date.now().toString(),
+      id: generateUniqueId(),
       postedDate: new Date().toISOString().split('T')[0],
       status: 'pending',
       postedBy: userId,

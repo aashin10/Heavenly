@@ -12,11 +12,7 @@ import {
 } from './login.model';
 import { TermsModalComponent } from './terms-modal.component';
 
-/** Email validation regex pattern */
-const EMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-/** Phone number validation regex pattern (optional, but must be valid if provided) */
-const PHONE_PATTERN = /^[\d\s\-()+]*$/;
+const MIN_PASSWORD_LENGTH = 6;
 
 @Component({
   selector: 'app-login-page',
@@ -147,8 +143,8 @@ export class LoginPageComponent {
       return;
     }
 
-    if (data.password.length < 6) {
-      this.error.set('Password must be at least 6 characters');
+    if (data.password.length < MIN_PASSWORD_LENGTH) {
+      this.error.set(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`);
       return;
     }
 

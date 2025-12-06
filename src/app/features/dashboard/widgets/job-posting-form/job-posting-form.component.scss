@@ -63,7 +63,7 @@
 }
 
 .required {
-  color: #ef4444;
+  color: var(--red-500);
 }
 
 .form-input {
@@ -85,6 +85,20 @@
   &::placeholder {
     color: var(--gray-400);
   }
+
+  &.input-error {
+    border-color: var(--red-500);
+  }
+
+  &.input-error:focus {
+    box-shadow: 0 0 0 2px var(--red-500);
+  }
+}
+
+.error-message {
+  color: var(--red-600);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 textarea.form-input {
@@ -98,36 +112,14 @@ textarea.form-input {
   padding-top: 1rem;
 }
 
-.btn-primary {
-  flex: 1;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  background-color: var(--primary-color);
-  color: var(--white);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: var(--primary-light);
-  }
-}
-
+// Use global .btn-primary and .btn-outline classes from styles.css
+// Local overrides for flex behavior in form context
+.btn-primary,
 .btn-outline {
   flex: 1;
-  padding: 0.75rem 1.5rem;
-  border: 1px solid var(--gray-300);
-  background: transparent;
-  color: var(--gray-700);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 1rem;
-  transition: background-color 0.2s;
+}
 
-  &:hover {
-    background-color: var(--gray-50);
-  }
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
