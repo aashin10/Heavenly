@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/login/login.routes').then(m => m.LOGIN_ROUTES)
   },
   {
+    path: 'dashboard',
+    loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
+  },
+  {
     path: '**',
     redirectTo: ''
   }

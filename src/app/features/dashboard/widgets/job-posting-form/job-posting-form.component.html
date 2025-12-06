@@ -1,0 +1,152 @@
+<div class="form-container">
+  <div class="form-header">
+    <h3 class="form-title">Post New Job</h3>
+    <button type="button" class="close-btn" (click)="handleCancel()" aria-label="Close form">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <form (ngSubmit)="handleSubmit()" class="job-form">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="job-title" class="form-label">
+          Job Title <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="job-title"
+          [ngModel]="formData().title"
+          (ngModelChange)="updateField('title', $event)"
+          name="title"
+          required
+          class="form-input"
+          placeholder="e.g., Senior Software Engineer"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="company-name" class="form-label">
+          Company Name <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="company-name"
+          [ngModel]="formData().company"
+          (ngModelChange)="updateField('company', $event)"
+          name="company"
+          required
+          class="form-input"
+          placeholder="e.g., Tech Solutions Inc."
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="domain" class="form-label">
+          Domain <span class="required">*</span>
+        </label>
+        <select
+          id="domain"
+          [ngModel]="formData().domain"
+          (ngModelChange)="updateField('domain', $event)"
+          name="domain"
+          required
+          class="form-input"
+        >
+          @for (domain of domains; track domain) {
+            <option [value]="domain">{{ domain }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="job-type" class="form-label">
+          Job Type <span class="required">*</span>
+        </label>
+        <select
+          id="job-type"
+          [ngModel]="formData().type"
+          (ngModelChange)="updateField('type', $event)"
+          name="type"
+          required
+          class="form-input"
+        >
+          @for (type of jobTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="location" class="form-label">
+          Location <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="location"
+          [ngModel]="formData().location"
+          (ngModelChange)="updateField('location', $event)"
+          name="location"
+          required
+          class="form-input"
+          placeholder="e.g., New York, NY"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="salary" class="form-label">
+          Salary Range <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="salary"
+          [ngModel]="formData().salary"
+          (ngModelChange)="updateField('salary', $event)"
+          name="salary"
+          required
+          class="form-input"
+          placeholder="e.g., $80,000 - $100,000"
+        />
+      </div>
+    </div>
+
+    <div class="form-group full-width">
+      <label for="description" class="form-label">
+        Job Description <span class="required">*</span>
+      </label>
+      <textarea
+        id="description"
+        [ngModel]="formData().description"
+        (ngModelChange)="updateField('description', $event)"
+        name="description"
+        required
+        rows="4"
+        class="form-input"
+        placeholder="Describe the role, responsibilities, and what makes this opportunity great..."
+      ></textarea>
+    </div>
+
+    <div class="form-group full-width">
+      <label for="requirements" class="form-label">
+        Requirements <span class="required">*</span>
+      </label>
+      <textarea
+        id="requirements"
+        [ngModel]="formData().requirements"
+        (ngModelChange)="updateField('requirements', $event)"
+        name="requirements"
+        required
+        rows="4"
+        class="form-input"
+        placeholder="List the qualifications, skills, and experience needed..."
+      ></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn-primary">Post Job</button>
+      <button type="button" class="btn-outline" (click)="handleCancel()">Cancel</button>
+    </div>
+  </form>
+</div>
