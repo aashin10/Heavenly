@@ -205,6 +205,7 @@
 
   &::placeholder {
     color: var(--gray-600);
+    opacity: 0.5;
   }
   
   &:disabled {
@@ -219,6 +220,7 @@
   
   &.placeholder-selected {
     color: var(--gray-600);
+    opacity: 0.5;
   }
 }
 

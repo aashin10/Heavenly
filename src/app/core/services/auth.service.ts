@@ -5,6 +5,8 @@ import { ToastService } from './toast.service';
 
 const USERS_KEY = 'heavenly_users';
 const CURRENT_USER_KEY = 'heavenly_current_user';
+const LOGIN_TIMESTAMP_KEY = 'heavenly_login_timestamp';
+const SESSION_TIMEOUT_MS = 3600000; // 1 hour
 
 @Injectable({
   providedIn: 'root'
@@ -26,8 +28,22 @@ export class AuthService {
     if (!isPlatformBrowser(this.platformId)) return;
 
     const savedUser = localStorage.getItem(CURRENT_USER_KEY);
-    if (savedUser) {
+    const loginTimestamp = localStorage.getItem(LOGIN_TIMESTAMP_KEY);
+
+    if (savedUser && loginTimestamp) {
+      const now = Date.now();
+      const loginTime = Number.parseInt(loginTimestamp, 10);
+      
+      if (now - loginTime > SESSION_TIMEOUT_MS) {
+        this.logout();
+        this.toastService.info('Session expired. Please login again.');
+        return;
+      }
+
       this.userSignal.set(JSON.parse(savedUser));
+    } else if (savedUser) {
+      // If we have a user but no timestamp (legacy session), expire it to be safe
+      this.logout();
     }
   }
 
@@ -82,6 +98,7 @@ export class AuthService {
       this.userSignal.set(foundUser);
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(foundUser));
+        localStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString());
       }
       this.toastService.success(`Welcome back, ${foundUser.name}!`);
       return true;
@@ -94,6 +111,7 @@ export class AuthService {
     this.userSignal.set(null);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(CURRENT_USER_KEY);
+      localStorage.removeItem(LOGIN_TIMESTAMP_KEY);
     }
   }
 
