@@ -5,6 +5,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ProfileFormData, INITIAL_PROFILE_DATA } from './profile.model';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_PATTERN = /^[\d\s\-+()]{10,}$/;
+
 @Component({
   selector: 'app-profile-page',
   standalone: true,
@@ -55,9 +58,10 @@ export class ProfilePageComponent {
   }
 
   updateField<K extends keyof ProfileFormData>(field: K, value: ProfileFormData[K]): void {
+    const sanitizedValue = value.replaceAll(/[<>]/g, '');
     this.formData.update(current => ({
       ...current,
-      [field]: value
+      [field]: sanitizedValue
     }));
   }
 
@@ -71,23 +75,38 @@ export class ProfilePageComponent {
       return;
     }
 
+    if (data.phone && !PHONE_PATTERN.test(data.phone)) {
+      this.toastService.error('Please enter a valid phone number');
+      return;
+    }
+
+    if (this.isEmployer() && !data.company.trim()) {
+      this.toastService.error('Company name is required for employers');
+      return;
+    }
+
     const skillsArray = data.skills
       .split(',')
       .map(s => s.trim())
       .filter(s => s.length > 0);
 
-    this.authService.updateProfile({
-      name: data.name.trim(),
-      phone: data.phone.trim() || undefined,
-      location: data.location.trim() || undefined,
-      company: data.company.trim() || undefined,
-      bio: data.bio.trim() || undefined,
-      skills: skillsArray.length > 0 ? skillsArray : undefined,
-      experience: data.experience.trim() || undefined
-    });
+    try {
+      this.authService.updateProfile({
+        name: data.name.trim(),
+        phone: data.phone.trim() || undefined,
+        location: data.location.trim() || undefined,
+        company: data.company.trim() || undefined,
+        bio: data.bio.trim() || undefined,
+        skills: skillsArray.length > 0 ? skillsArray : undefined,
+        experience: data.experience.trim() || undefined
+      });
 
-    this.toastService.success('Profile updated successfully!');
-    this.isEditing.set(false);
+      this.toastService.success('Profile updated successfully!');
+      this.isEditing.set(false);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      this.toastService.error('Failed to update profile. Please try again.');
+    }
   }
 
   private resetFormData(): void {
