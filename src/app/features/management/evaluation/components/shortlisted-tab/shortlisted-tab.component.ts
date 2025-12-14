@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LiveTender, EvaluationBid, NegotiationNote } from '../../evaluation.model';
+import { LiveTender, EvaluationBid } from '../../evaluation.model';
 import { EvaluationService } from '../../evaluation.service';
 
 @Component({
@@ -166,7 +166,7 @@ export class ShortlistedTabComponent {
   @Output() bidUpdated = new EventEmitter<void>();
   @Output() selectWinner = new EventEmitter<EvaluationBid>();
   
-  private evaluationService = inject(EvaluationService);
+  private readonly evaluationService = inject(EvaluationService);
   
   showNoteForm = signal<string | null>(null);
   newNoteContent = '';

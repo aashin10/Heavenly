@@ -165,11 +165,14 @@ export class ServiceRequestFormPageComponent implements OnInit {
     this.draftId.set(draftId);
   }
 
-  onFormComplete(): void {
+  onFormComplete(draftId?: string): void {
     // Navigate to preview
-    this.router.navigate(['/service-request/preview'], {
-      queryParams: { draftId: this.draftId() }
-    });
+    const id = draftId || this.draftId();
+    if (id) {
+      this.router.navigate(['/service-request/preview'], {
+        queryParams: { draftId: id }
+      });
+    }
   }
 
   onFormCancel(): void {

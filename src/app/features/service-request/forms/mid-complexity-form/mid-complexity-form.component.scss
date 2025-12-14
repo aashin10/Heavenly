@@ -140,6 +140,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+  align-items: start;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
@@ -176,12 +177,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 1rem;
   border: 2px solid var(--gray-200, #e5e7eb);
   border-radius: 12px;
   cursor: pointer;
   text-align: center;
   transition: all 0.2s ease;
+  min-height: 100px;
+  height: 100%;
 
   input[type="radio"] {
     display: none;
@@ -190,6 +194,7 @@
   .card-icon {
     font-size: 1.5rem;
     margin-bottom: 0.5rem;
+    line-height: 1;
   }
 
   .card-title {
@@ -197,11 +202,13 @@
     font-size: 0.875rem;
     color: var(--gray-900);
     margin-bottom: 0.25rem;
+    line-height: 1.2;
   }
 
   .card-description {
     font-size: 0.75rem;
     color: var(--gray-500);
+    line-height: 1.3;
   }
 
   &:hover {
@@ -226,12 +233,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 1rem;
   border: 2px solid var(--gray-200, #e5e7eb);
   border-radius: 10px;
   cursor: pointer;
   text-align: center;
   transition: all 0.2s ease;
+  min-height: 80px;
+  height: 100%;
 
   input[type="radio"] {
     display: none;
@@ -242,11 +252,13 @@
     font-size: 0.875rem;
     color: var(--gray-900);
     margin-bottom: 0.25rem;
+    line-height: 1.2;
   }
 
   .quality-desc {
     font-size: 0.7rem;
     color: var(--gray-500);
+    line-height: 1.3;
   }
 
   &:hover {

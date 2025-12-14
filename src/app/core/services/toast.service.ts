@@ -50,6 +50,10 @@ export class ToastService {
     this.addToast(message, 'warning', duration);
   }
 
+  show(config: { message: string; type: Toast['type']; duration?: number }): void {
+    this.addToast(config.message, config.type, config.duration);
+  }
+
   removeToast(id: number): void {
     const timeoutId = this.timeoutIds.get(id);
     if (timeoutId) {

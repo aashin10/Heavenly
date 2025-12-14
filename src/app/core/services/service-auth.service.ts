@@ -69,6 +69,9 @@ export class ServiceAuthService {
       const session: ServiceUserSession = JSON.parse(savedSession);
       this.currentUserSignal.set(session);
 
+      // Refresh session timestamp on successful load (extends session on page refresh)
+      localStorage.setItem(SERVICE_LOGIN_TIMESTAMP_KEY, Date.now().toString());
+
       // Load full profile based on user type
       if (session.userType === 'service_requester') {
         this.loadServiceRequesterProfile(session.id);
@@ -297,6 +300,17 @@ export class ServiceAuthService {
     this.currentUserSignal.set(session);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.setItem(CURRENT_SERVICE_USER_KEY, JSON.stringify(session));
+      localStorage.setItem(SERVICE_LOGIN_TIMESTAMP_KEY, Date.now().toString());
+    }
+  }
+
+  /**
+   * Refresh the session timestamp to extend the session.
+   * This should be called on user activity to prevent session expiry during active use.
+   */
+  refreshSession(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.currentUserSignal()) {
       localStorage.setItem(SERVICE_LOGIN_TIMESTAMP_KEY, Date.now().toString());
     }
   }

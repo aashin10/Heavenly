@@ -40,7 +40,7 @@
             [draftId]="draftId()"
             [initialStep]="initialStep()"
             (saved)="onFormSaved($event)"
-            (completed)="onFormComplete()"
+            (completed)="onFormComplete($event)"
             (cancelled)="onFormCancel()">
           </app-technical-service-form>
         }
@@ -51,7 +51,7 @@
             [draftId]="draftId()"
             [initialStep]="initialStep()"
             (saved)="onFormSaved($event)"
-            (completed)="onFormComplete()"
+            (completed)="onFormComplete($event)"
             (cancelled)="onFormCancel()">
           </app-mid-complexity-form>
         }
@@ -62,7 +62,7 @@
             [draftId]="draftId()"
             [initialStep]="initialStep()"
             (saved)="onFormSaved($event)"
-            (completed)="onFormComplete()"
+            (completed)="onFormComplete($event)"
             (cancelled)="onFormCancel()">
           </app-quick-service-form>
         }
