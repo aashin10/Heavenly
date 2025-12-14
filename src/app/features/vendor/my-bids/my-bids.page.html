@@ -1,0 +1,137 @@
+<div class="my-bids-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>My Bids</h1>
+      <p class="subtitle">Track all your submitted bids and their status</p>
+    </div>
+    
+    <button class="btn btn-primary" (click)="browseTenders()">
+      + Browse New Tenders
+    </button>
+  </div>
+  
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <button class="stat-card" [class.active]="selectedFilter() === 'all'" (click)="setFilter('all')" type="button">
+      <span class="stat-value">{{ stats().total }}</span>
+      <span class="stat-label">Total Bids</span>
+    </button>
+    <button class="stat-card" [class.active]="selectedFilter() === 'under_review'" (click)="setFilter('under_review')" type="button">
+      <span class="stat-value">{{ stats().underReview }}</span>
+      <span class="stat-label">Under Review</span>
+    </button>
+    <button class="stat-card" [class.active]="selectedFilter() === 'shortlisted'" (click)="setFilter('shortlisted')" type="button">
+      <span class="stat-value">{{ stats().shortlisted }}</span>
+      <span class="stat-label">Shortlisted</span>
+    </button>
+    <button class="stat-card success" [class.active]="selectedFilter() === 'awarded'" (click)="setFilter('awarded')" type="button">
+      <span class="stat-value">{{ stats().awarded }}</span>
+      <span class="stat-label">Awarded</span>
+    </button>
+  </div>
+  
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        placeholder="Search by tender title or bid ID..."
+        [value]="searchQuery()"
+        (input)="updateSearch($event)">
+    </div>
+    
+    <div class="filter-tabs">
+      @for (option of filterOptions; track option.value) {
+        <button 
+          class="filter-tab"
+          [class.active]="selectedFilter() === option.value"
+          (click)="setFilter(option.value)">
+          {{ option.label }}
+          @if (option.value === 'all') {
+            <span class="count">({{ stats().total }})</span>
+          }
+        </button>
+      }
+    </div>
+  </div>
+  
+  <!-- Bids List -->
+  <div class="bids-list">
+    @if (filteredBids().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No bids found</h3>
+        @if (selectedFilter() !== 'all' || searchQuery()) {
+          <p>Try adjusting your filters or search query</p>
+          <button class="btn btn-outline" (click)="setFilter('all'); searchQuery.set('')">
+            Clear Filters
+          </button>
+        } @else {
+          <p>You haven't submitted any bids yet</p>
+          <button class="btn btn-primary" (click)="browseTenders()">
+            Browse Tenders
+          </button>
+        }
+      </div>
+    } @else {
+      @for (bid of filteredBids(); track bid.bidId) {
+        <article 
+          class="bid-card" 
+          (click)="viewBidDetail(bid.bidId)"
+          (keydown.enter)="viewBidDetail(bid.bidId)">
+          <button class="card-action-overlay" (click)="viewBidDetail(bid.bidId)" [attr.aria-label]="'View details for bid ' + bid.bidId"></button>
+          <div class="bid-header">
+            <div class="bid-info">
+              <span class="bid-id">{{ bid.bidId }}</span>
+              <h3 class="tender-title">{{ bid.tenderTitle }}</h3>
+            </div>
+            <span class="status-badge" [ngClass]="getStatusBadgeClass(bid.status)">
+              {{ getStatusLabel(bid.status) }}
+            </span>
+          </div>
+          
+          <div class="bid-details">
+            <div class="detail-item">
+              <span class="detail-label">Bid Amount</span>
+              <span class="detail-value amount">{{ formatCurrency(bid.bidAmount) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Submitted</span>
+              <span class="detail-value">{{ bid.submittedAt | timeAgo }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Tender Closes</span>
+              <span class="detail-value">{{ bid.tenderClosingDate | date:'dd MMM yyyy' }}</span>
+            </div>
+          </div>
+          
+          @if (bid.status === 'shortlisted' || bid.status === 'awarded') {
+            <div class="bid-footer success">
+              @if (bid.status === 'awarded') {
+                <span class="award-badge">🏆 Congratulations! Your bid has been awarded</span>
+              } @else {
+                <span class="shortlist-notice">Your technical proposal has been shortlisted for commercial evaluation</span>
+              }
+            </div>
+          }
+          
+          @if (bid.status === 'rejected') {
+            <div class="bid-footer rejected">
+              <span class="rejection-notice">Your bid was not selected. You can view feedback if available.</span>
+            </div>
+          }
+          
+          <div class="bid-actions">
+            <button class="btn-action" (click)="$event.stopPropagation(); viewTender(bid.tenderId)">
+              View Tender
+            </button>
+            <span class="view-details">View Details →</span>
+          </div>
+        </article>
+      }
+    }
+  </div>
+</div>

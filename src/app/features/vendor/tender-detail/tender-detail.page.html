@@ -1,0 +1,369 @@
+@if (tender(); as tender) {
+<div class="tender-detail-container">
+  
+  <!-- Header -->
+  <div class="detail-header">
+    <button class="btn-back" (click)="goBack()">← Back to Browse</button>
+    <div class="header-info">
+      <div class="tender-id">Tender #{{ tender.tenderId }}</div>
+      <span class="status-badge" [class.closing-soon]="isClosingSoon()" [class.closed]="isBidWindowClosed()">
+        {{ getStatusLabel() }}
+      </span>
+    </div>
+  </div>
+  
+  <div class="tender-title-section">
+    <h1>{{ tender.title }}</h1>
+    <div class="meta-info">
+      <span>Posted {{ tender.publishedAt | timeAgo }}</span>
+      <span class="separator">•</span>
+      <span class="deadline" [class.urgent]="isClosingSoon()">
+        ⏰ Closes {{ tender.bidWindowEnd | timeRemaining }}
+      </span>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="detail-content">
+    
+    <!-- Sidebar -->
+    <aside class="detail-sidebar">
+      
+      <!-- Summary Card -->
+      <div class="summary-card">
+        <h3>Tender Summary</h3>
+        <div class="summary-list">
+          <div class="summary-item">
+            <span class="label">Category</span>
+            <span class="category-badge" [attr.data-category]="tender.category">
+              {{ tender.categoryLabel }}
+            </span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Location</span>
+            <span class="value">📍 {{ tender.location }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Budget</span>
+            <span class="value">💰 {{ getBudgetDisplay() }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="label">Timeline</span>
+            <span class="value">📅 {{ tender.expectedTimeline }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Key Dates -->
+      <div class="dates-card">
+        <h3>Key Dates</h3>
+        <div class="timeline-list">
+          <div class="timeline-item completed">
+            <span class="dot"></span>
+            <div class="timeline-content">
+              <span class="date-label">Published</span>
+              <span class="date-value">{{ tender.publishedAt | date:'mediumDate' }}</span>
+            </div>
+          </div>
+          <div class="timeline-item completed">
+            <span class="dot"></span>
+            <div class="timeline-content">
+              <span class="date-label">Bid Opens</span>
+              <span class="date-value">{{ tender.bidWindowStart | date:'mediumDate' }}</span>
+            </div>
+          </div>
+          <div class="timeline-item" [class.active]="!isBidWindowClosed()">
+            <span class="dot"></span>
+            <div class="timeline-content">
+              <span class="date-label">Bid Closes</span>
+              <span class="date-value">{{ tender.bidWindowEnd | date:'medium' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Eligibility -->
+      <div class="eligibility-card">
+        <h3>Eligibility Criteria</h3>
+        <ul class="criteria-list">
+          @for (criterion of tender.eligibilityCriteria; track criterion) {
+            <li>{{ criterion }}</li>
+          }
+        </ul>
+        
+        @if (eligibility().eligible) {
+          <div class="eligibility-status success">
+            <div class="status-icon">✓</div>
+            <div>
+              <p><strong>You are eligible</strong></p>
+              <p class="subtext">to bid on this tender</p>
+            </div>
+          </div>
+        } @else {
+          <div class="eligibility-status warning">
+            <div class="status-icon">⚠️</div>
+            <div>
+              <p><strong>You may not be eligible</strong></p>
+              <button class="btn-link" (click)="showEligibilityModal.set(true)">
+                View reasons
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+      
+      <!-- Actions -->
+      <div class="action-buttons">
+        @if (!bidStatus().submitted) {
+          <button 
+            class="btn btn-primary btn-lg btn-block" 
+            (click)="startBidSubmission()"
+            [disabled]="isBidWindowClosed()">
+            Submit Bid Now
+          </button>
+        } @else {
+          <button 
+            class="btn btn-outline btn-block"
+            (click)="viewMyBid()">
+            View Your Bid
+          </button>
+          <div class="bid-submitted-notice">
+            ✓ Bid submitted on {{ bidStatus().bidId }}
+          </div>
+        }
+        
+        <button class="btn btn-secondary btn-block" (click)="saveForLater()">
+          {{ isSaved() ? '★ Saved' : '☆ Save for Later' }}
+        </button>
+        
+        <button class="btn-link-subtle" (click)="markNotInterested()">
+          Not Interested
+        </button>
+      </div>
+      
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="detail-main">
+      
+      <!-- Scope of Work -->
+      <section class="detail-section">
+        <h2 class="section-title">📋 Scope of Work</h2>
+        <div class="section-content">
+          <p class="scope-text">{{ tender.scopeSummary }}</p>
+          
+          @if (tender.detailedScope) {
+            <div class="scope-details">
+              <h4>Detailed Requirements:</h4>
+              <p>{{ tender.detailedScope }}</p>
+            </div>
+          }
+        </div>
+      </section>
+      
+      <!-- Technical Requirements -->
+      <section class="detail-section">
+        <h2 class="section-title">🔧 Technical Requirements</h2>
+        <div class="section-content">
+          <ul class="requirements-list">
+            @for (req of tender.technicalRequirements; track req) {
+              <li>{{ req }}</li>
+            }
+          </ul>
+        </div>
+      </section>
+      
+      <!-- Commercial Terms -->
+      <section class="detail-section">
+        <h2 class="section-title">💰 Commercial Terms</h2>
+        <div class="section-content">
+          <div class="terms-grid">
+            <div class="term-item">
+              <span class="term-label">Payment Structure</span>
+              <span class="term-value">{{ tender.paymentStructure }}</span>
+            </div>
+            <div class="term-item">
+              <span class="term-label">Warranty Expectation</span>
+              <span class="term-value">{{ tender.warrantyExpectation }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Documents & Attachments -->
+      <section class="detail-section">
+        <h2 class="section-title">📎 Documents & Attachments</h2>
+        <div class="section-content">
+          @if (tender.attachments && tender.attachments.length > 0) {
+            <div class="attachments-list">
+              @for (file of tender.attachments; track file.id) {
+                <div class="attachment-item">
+                  <div class="file-info">
+                    <span class="file-icon">📄</span>
+                    <span class="file-name">{{ file.name }}</span>
+                    <span class="file-size">({{ file.size | fileSize }})</span>
+                  </div>
+                  <button class="btn btn-sm btn-outline" (click)="downloadAttachment(file.id)">
+                    Download
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-attachments">No attachments available</p>
+          }
+        </div>
+      </section>
+      
+      <!-- Pre-Bid Clarifications -->
+      <section class="detail-section">
+        <div class="section-header-with-action">
+          <h2 class="section-title">❓ Pre-Bid Clarifications</h2>
+          <button class="btn btn-outline btn-sm" (click)="openClarificationModal()">
+            Ask a Question
+          </button>
+        </div>
+        
+        <div class="section-content">
+          @if (clarifications().length > 0) {
+            <div class="clarifications-list">
+              @for (clarification of clarifications(); track clarification.id) {
+                <div class="clarification-item">
+                  <div class="question">
+                    <div class="q-header">
+                      <span class="q-label">Q:</span>
+                      <span class="q-meta">Asked {{ clarification.askedAt | timeAgo }}</span>
+                    </div>
+                    <p class="q-text">{{ clarification.question }}</p>
+                  </div>
+                  
+                  @if (clarification.answer) {
+                    <div class="answer">
+                      <div class="a-header">
+                        <span class="a-label">A:</span>
+                        <span class="a-meta">
+                          Answered by {{ clarification.answeredBy }}
+                          @if (clarification.answeredAt) {
+                            • {{ clarification.answeredAt | timeAgo }}
+                          }
+                        </span>
+                      </div>
+                      <p class="a-text">{{ clarification.answer }}</p>
+                    </div>
+                  } @else {
+                    <div class="answer pending">
+                      <span class="pending-label">⏳ Awaiting response from management</span>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-clarifications">No questions asked yet. Be the first to ask!</p>
+          }
+        </div>
+      </section>
+      
+    </main>
+  </div>
+</div>
+
+<!-- Ask Clarification Modal -->
+@if (showClarificationModal()) {
+  <dialog 
+    open
+    class="modal-overlay" 
+    (click)="closeClarificationModal()"
+    (keydown.escape)="closeClarificationModal()"
+    aria-modal="true"
+    aria-labelledby="clarification-modal-title">
+    <div class="modal-dialog" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="clarification-modal-title">Ask a Question</h2>
+        <button class="btn-close" (click)="closeClarificationModal()" aria-label="Close modal">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <p>Submit your question about this tender. The answer will be visible to all vendors.</p>
+        
+        <div class="form-field">
+          <label class="field-label" for="clarification-question">Your Question</label>
+          <textarea 
+            id="clarification-question"
+            [(ngModel)]="clarificationQuestion"
+            rows="6" 
+            class="form-textarea"
+            placeholder="Enter your question clearly..."></textarea>
+          <p class="field-hint">
+            💡 Tip: Be specific and clear in your question for a better response
+          </p>
+        </div>
+        
+        <div class="info-box">
+          <span class="icon">ℹ️</span>
+          <div>
+            <p><strong>Please note:</strong></p>
+            <ul>
+              <li>Your question will be visible to all vendors (your identity will remain anonymous)</li>
+              <li>Management will respond within 24-48 hours</li>
+              <li>The answer will be posted publicly for fairness</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeClarificationModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitClarification()">
+          Submit Question
+        </button>
+      </div>
+    </div>
+  </dialog>
+}
+
+<!-- Eligibility Modal -->
+@if (showEligibilityModal()) {
+  <dialog 
+    open
+    class="modal-overlay" 
+    (click)="closeEligibilityModal()"
+    (keydown.escape)="closeEligibilityModal()"
+    aria-modal="true"
+    aria-labelledby="eligibility-modal-title">
+    <div class="modal-dialog" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 id="eligibility-modal-title">Eligibility Check</h2>
+        <button class="btn-close" (click)="closeEligibilityModal()" aria-label="Close modal">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="eligibility-warning">
+          <span class="warning-icon">⚠️</span>
+          <p>You may not meet all eligibility requirements for this tender.</p>
+        </div>
+        
+        <div class="reasons-section">
+          <h4>Missing Requirements:</h4>
+          <ul>
+            @for (req of eligibility().missingRequirements; track req) {
+              <li>{{ req }}</li>
+            }
+          </ul>
+        </div>
+        
+        <div class="info-box">
+          <p>You can still submit a bid, but your bid may be rejected during evaluation if you don't meet the eligibility criteria.</p>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeEligibilityModal()">Cancel</button>
+        <button class="btn btn-primary" routerLink="/vendor/profile">
+          Complete Profile
+        </button>
+      </div>
+    </div>
+  </dialog>
+}
+}

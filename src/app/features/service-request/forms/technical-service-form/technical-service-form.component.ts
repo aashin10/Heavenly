@@ -1,0 +1,358 @@
+import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { DraftService } from '../../../../core/services/draft.service';
+import { interval, Subscription } from 'rxjs';
+import { FormStepperComponent } from '../../../../shared/components/form-stepper/form-stepper.component';
+import { FormProgressComponent } from '../../../../shared/components/form-progress/form-progress.component';
+import { AutoSaveIndicatorComponent } from '../../../../shared/components/auto-save-indicator/auto-save-indicator.component';
+import { FileUploadComponent } from '../../../../shared/components/file-upload/file-upload.component';
+import { 
+  EQUIPMENT_TYPES, 
+  VOLTAGE_REQUIREMENTS, 
+  URGENCY_LEVELS, 
+  BUDGET_RANGES, 
+  PAYMENT_TERMS, 
+  COMPLIANCE_STANDARDS,
+  TECHNICAL_STEP_LABELS
+} from '../../../../core/constants/form-options';
+
+interface CustomField {
+  name: string;
+  value: string;
+}
+
+@Component({
+  selector: 'app-technical-service-form',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormStepperComponent,
+    FormProgressComponent,
+    AutoSaveIndicatorComponent,
+    FileUploadComponent
+  ],
+  templateUrl: './technical-service-form.component.html',
+  styleUrl: './technical-service-form.component.scss'
+})
+export class TechnicalServiceFormComponent implements OnInit, OnDestroy {
+  @Input({ required: true }) serviceId!: string;
+  @Input({ required: true }) serviceName!: string;
+  @Input() draftId: string | null = null;
+  @Input() initialStep = 1;
+
+  @Output() saved = new EventEmitter<string>();
+  @Output() completed = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
+
+  private readonly fb = inject(FormBuilder);
+  private readonly draftService = inject(DraftService);
+  private autoSaveSubscription?: Subscription;
+
+  // State
+  currentStep = signal(1);
+  totalSteps = signal(5);
+  stepLabels = signal(TECHNICAL_STEP_LABELS);
+  lastSaved = signal<Date | null>(null);
+  saveStatus = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  // Computed
+  progress = computed(() => (this.currentStep() / this.totalSteps()) * 100);
+  canGoBack = computed(() => this.currentStep() > 1);
+  canGoNext = computed(() => this.currentStep() < this.totalSteps());
+  isLastStep = computed(() => this.currentStep() === this.totalSteps());
+
+  // Form Groups for each step
+  form!: FormGroup;
+
+  // Options for dropdowns
+  equipmentTypes = EQUIPMENT_TYPES;
+  voltageRequirements = VOLTAGE_REQUIREMENTS;
+  urgencyLevels = URGENCY_LEVELS;
+  budgetRanges = BUDGET_RANGES;
+  paymentTerms = PAYMENT_TERMS;
+  complianceStandards = COMPLIANCE_STANDARDS;
+
+  ngOnInit(): void {
+    this.initializeForm();
+    this.loadDraftIfExists();
+    this.startAutoSave();
+    this.currentStep.set(this.initialStep);
+  }
+
+  ngOnDestroy(): void {
+    this.autoSaveSubscription?.unsubscribe();
+  }
+
+  private initializeForm(): void {
+    this.form = this.fb.group({
+      // Step 1: Service Identification
+      step1: this.fb.group({
+        requestTitle: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(100)]],
+        equipmentType: ['', Validators.required],
+        equipmentTypeOther: [''],
+        equipmentCapacity: ['', Validators.required],
+        make: [''],
+        model: [''],
+        serialNumber: [''],
+        yearOfManufacture: ['', [Validators.min(1950), Validators.max(new Date().getFullYear())]],
+        problemDescription: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(2000)]],
+        serviceType: ['', Validators.required]
+      }),
+
+      // Step 2: Site & Contact
+      step2: this.fb.group({
+        siteType: ['', Validators.required],
+        siteAddress: ['', Validators.required],
+        city: ['', Validators.required],
+        state: ['', Validators.required],
+        pincode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+        primaryContactName: ['', Validators.required],
+        primaryContactPhone: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
+        primaryContactEmail: ['', [Validators.required, Validators.email]],
+        secondaryContactName: [''],
+        secondaryContactPhone: ['', Validators.pattern(/^[6-9]\d{9}$/)],
+        siteAccessRestrictions: [''],
+        preferredVisitDays: this.fb.array([]),
+        preferredTimeSlot: ['']
+      }),
+
+      // Step 3: Technical Scope
+      step3: this.fb.group({
+        scopeOfWork: ['', [Validators.required, Validators.minLength(100), Validators.maxLength(5000)]],
+        technicalRequirements: this.fb.array([]),
+        voltageRequirement: [''],
+        loadCapacity: [''],
+        environmentConditions: [''],
+        safetyRequirements: [''],
+        existingDocuments: [null],
+        referenceImages: [null],
+        technicalDrawings: [null],
+        customFields: this.fb.array([])
+      }),
+
+      // Step 4: Commercial
+      step4: this.fb.group({
+        estimatedBudget: ['', Validators.required],
+        budgetFlexibility: ['', Validators.required],
+        quotationRequired: [true],
+        preferredQuotations: [3, [Validators.min(1), Validators.max(10)]],
+        preferredPaymentTerms: [''],
+        gstRegistered: [false],
+        gstNumber: [''],
+        expectedStartDate: ['', Validators.required],
+        expectedCompletionDate: [''],
+        urgencyLevel: ['', Validators.required],
+        annualMaintenanceRequired: [false],
+        warrantyRequired: [false],
+        warrantyPeriod: ['']
+      }),
+
+      // Step 5: Constraints & Compliance
+      step5: this.fb.group({
+        operationalConstraints: [''],
+        workingHoursRestriction: [false],
+        allowedWorkingHours: [''],
+        noiseRestrictions: [false],
+        hazardousMaterials: [false],
+        hazardousMaterialsDescription: [''],
+        requiredCertifications: this.fb.array([]),
+        complianceStandards: this.fb.array([]),
+        insuranceRequired: [false],
+        minimumInsuranceCoverage: [''],
+        vendorExperienceYears: [null, Validators.min(0)],
+        vendorPreviousWorkReference: [false],
+        additionalRequirements: [''],
+        termsAccepted: [false, Validators.requiredTrue]
+      })
+    });
+  }
+
+  private loadDraftIfExists(): void {
+    if (this.draftId) {
+      const draft = this.draftService.getDraft(this.draftId);
+      if (draft?.formData) {
+        this.form.patchValue(draft.formData);
+        this.lastSaved.set(new Date(draft.lastSaved));
+      }
+    }
+  }
+
+  private startAutoSave(): void {
+    // Auto-save every 30 seconds
+    this.autoSaveSubscription = interval(30000).subscribe(() => {
+      if (this.form.dirty) {
+        this.saveDraft();
+      }
+    });
+  }
+
+  saveDraft(): void {
+    this.saveStatus.set('saving');
+
+    try {
+      const draftData = {
+        id: this.draftId || undefined,
+        serviceId: this.serviceId,
+        serviceName: this.serviceName,
+        category: 'technical' as const,
+        formData: this.form.value,
+        currentStep: this.currentStep(),
+        totalSteps: this.totalSteps()
+      };
+
+      const savedId = this.draftService.saveDraft(draftData);
+      
+      if (!this.draftId) {
+        this.draftId = savedId;
+        this.saved.emit(savedId);
+      }
+
+      this.lastSaved.set(new Date());
+      this.saveStatus.set('saved');
+      this.form.markAsPristine();
+
+      // Reset status after 3 seconds
+      setTimeout(() => {
+        if (this.saveStatus() === 'saved') {
+          this.saveStatus.set('idle');
+        }
+      }, 3000);
+    } catch {
+      this.saveStatus.set('error');
+    }
+  }
+
+  // Step Navigation
+  goToStep(step: number): void {
+    if (step >= 1 && step <= this.totalSteps()) {
+      // Validate current step before moving forward
+      if (step > this.currentStep()) {
+        if (!this.isCurrentStepValid()) {
+          this.markCurrentStepAsTouched();
+          return;
+        }
+      }
+      this.currentStep.set(step);
+      this.saveDraft();
+    }
+  }
+
+  nextStep(): void {
+    if (this.canGoNext() && this.isCurrentStepValid()) {
+      this.currentStep.update(s => s + 1);
+      this.saveDraft();
+    } else {
+      this.markCurrentStepAsTouched();
+    }
+  }
+
+  previousStep(): void {
+    if (this.canGoBack()) {
+      this.currentStep.update(s => s - 1);
+    }
+  }
+
+  private isCurrentStepValid(): boolean {
+    const stepGroup = this.form.get(`step${this.currentStep()}`) as FormGroup;
+    return stepGroup ? stepGroup.valid : false;
+  }
+
+  private markCurrentStepAsTouched(): void {
+    const stepGroup = this.form.get(`step${this.currentStep()}`) as FormGroup;
+    if (stepGroup) {
+      Object.keys(stepGroup.controls).forEach(key => {
+        stepGroup.get(key)?.markAsTouched();
+      });
+    }
+  }
+
+  // Form Helpers
+  getStepGroup(step: number): FormGroup {
+    return this.form.get(`step${step}`) as FormGroup;
+  }
+
+  getControl(step: number, controlName: string) {
+    return this.getStepGroup(step)?.get(controlName);
+  }
+
+  hasError(step: number, controlName: string, error: string): boolean {
+    const control = this.getControl(step, controlName);
+    return control ? control.hasError(error) && control.touched : false;
+  }
+
+  // FormArray helpers
+  getTechnicalRequirements(): FormArray {
+    return this.form.get('step3.technicalRequirements') as FormArray;
+  }
+
+  addTechnicalRequirement(): void {
+    const requirements = this.getTechnicalRequirements();
+    requirements.push(this.fb.control('', Validators.required));
+  }
+
+  removeTechnicalRequirement(index: number): void {
+    const requirements = this.getTechnicalRequirements();
+    requirements.removeAt(index);
+  }
+
+  getCustomFields(): FormArray {
+    return this.form.get('step3.customFields') as FormArray;
+  }
+
+  addCustomField(): void {
+    const fields = this.getCustomFields();
+    fields.push(this.fb.group({
+      name: ['', Validators.required],
+      value: ['', Validators.required]
+    }));
+  }
+
+  removeCustomField(index: number): void {
+    const fields = this.getCustomFields();
+    fields.removeAt(index);
+  }
+
+  getComplianceStandards(): FormArray {
+    return this.form.get('step5.complianceStandards') as FormArray;
+  }
+
+  toggleComplianceStandard(standard: string): void {
+    const standards = this.getComplianceStandards();
+    const index = standards.controls.findIndex(c => c.value === standard);
+    
+    if (index >= 0) {
+      standards.removeAt(index);
+    } else {
+      standards.push(this.fb.control(standard));
+    }
+  }
+
+  isComplianceSelected(standard: string): boolean {
+    const standards = this.getComplianceStandards();
+    return standards.controls.some(c => c.value === standard);
+  }
+
+  // Submission
+  onSubmit(): void {
+    if (this.form.valid) {
+      this.saveDraft();
+      this.completed.emit();
+    } else {
+      // Mark all fields in current step as touched
+      this.markCurrentStepAsTouched();
+    }
+  }
+
+  onCancel(): void {
+    this.cancelled.emit();
+  }
+
+  // Formatting helpers
+  formatLastSaved(): string {
+    const saved = this.lastSaved();
+    if (!saved) return '';
+    return this.draftService.formatLastSaved(saved);
+  }
+}

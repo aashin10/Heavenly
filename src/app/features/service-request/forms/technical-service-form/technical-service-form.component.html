@@ -1,0 +1,789 @@
+<div class="technical-form">
+  <!-- Progress and Save Indicator -->
+  <div class="form-header">
+    <app-form-progress
+      [progress]="progress()"
+      [lastSaved]="lastSaved()">
+    </app-form-progress>
+    <app-auto-save-indicator [saving]="saveStatus() === 'saving'" [lastSaved]="lastSaved()"></app-auto-save-indicator>
+  </div>
+
+  <!-- Form Stepper -->
+  <app-form-stepper
+    [steps]="stepLabels()"
+    [currentStep]="currentStep()"
+    (stepChange)="goToStep($event)">
+  </app-form-stepper>
+
+  <!-- Form Content -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <!-- Step 1: Service Identification -->
+    @if (currentStep() === 1) {
+      <div class="form-step" formGroupName="step1">
+        <h2 class="step-title">Service Identification</h2>
+        <p class="step-description">Tell us about the equipment and the issue you're facing.</p>
+
+        <div class="form-group">
+          <label for="requestTitle" class="required">Request Title</label>
+          <input 
+            type="text" 
+            id="requestTitle" 
+            formControlName="requestTitle"
+            placeholder="Brief title for your service request"
+            [class.error]="hasError(1, 'requestTitle', 'required') || hasError(1, 'requestTitle', 'minlength')">
+          @if (hasError(1, 'requestTitle', 'required')) {
+            <span class="error-text">Request title is required</span>
+          }
+          @if (hasError(1, 'requestTitle', 'minlength')) {
+            <span class="error-text">Title must be at least 10 characters</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="equipmentType" class="required">Equipment Type</label>
+            <select id="equipmentType" formControlName="equipmentType" [class.error]="hasError(1, 'equipmentType', 'required')">
+              <option value="">Select equipment type</option>
+              @for (type of equipmentTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+            @if (hasError(1, 'equipmentType', 'required')) {
+              <span class="error-text">Equipment type is required</span>
+            }
+          </div>
+
+          @if (getControl(1, 'equipmentType')?.value === 'Other') {
+            <div class="form-group">
+              <label for="equipmentTypeOther">Specify Equipment Type</label>
+              <input type="text" id="equipmentTypeOther" formControlName="equipmentTypeOther" placeholder="Enter equipment type">
+            </div>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="equipmentCapacity" class="required">Capacity / Rating</label>
+            <input 
+              type="text" 
+              id="equipmentCapacity" 
+              formControlName="equipmentCapacity"
+              placeholder="e.g., 500 kVA, 100 HP, 5 TR"
+              [class.error]="hasError(1, 'equipmentCapacity', 'required')">
+            @if (hasError(1, 'equipmentCapacity', 'required')) {
+              <span class="error-text">Capacity is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="make">Make / Brand</label>
+            <input type="text" id="make" formControlName="make" placeholder="Equipment manufacturer">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="model">Model Number</label>
+            <input type="text" id="model" formControlName="model" placeholder="Model number if known">
+          </div>
+
+          <div class="form-group">
+            <label for="serialNumber">Serial Number</label>
+            <input type="text" id="serialNumber" formControlName="serialNumber" placeholder="Serial number if available">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="yearOfManufacture">Year of Manufacture</label>
+          <input 
+            type="number" 
+            id="yearOfManufacture" 
+            formControlName="yearOfManufacture"
+            placeholder="e.g., 2018"
+            min="1950"
+            [max]="2024">
+        </div>
+
+        <div class="form-group">
+          <label for="serviceType" class="required">Service Type Required</label>
+          <div class="radio-group">
+            <label class="radio-option">
+              <input type="radio" formControlName="serviceType" value="repair">
+              <span class="radio-label">Repair / Breakdown</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="serviceType" value="maintenance">
+              <span class="radio-label">Preventive Maintenance</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="serviceType" value="installation">
+              <span class="radio-label">New Installation</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="serviceType" value="upgrade">
+              <span class="radio-label">Upgrade / Modification</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="serviceType" value="inspection">
+              <span class="radio-label">Inspection / Audit</span>
+            </label>
+          </div>
+          @if (hasError(1, 'serviceType', 'required')) {
+            <span class="error-text">Please select a service type</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="problemDescription" class="required">Problem Description</label>
+          <textarea 
+            id="problemDescription" 
+            formControlName="problemDescription"
+            rows="6"
+            placeholder="Describe the issue in detail. Include symptoms, when it started, any error codes, and what troubleshooting you've already tried."
+            [class.error]="hasError(1, 'problemDescription', 'required') || hasError(1, 'problemDescription', 'minlength')">
+          </textarea>
+          <div class="textarea-footer">
+            <span class="char-count">{{ getControl(1, 'problemDescription')?.value?.length || 0 }} / 2000</span>
+          </div>
+          @if (hasError(1, 'problemDescription', 'required')) {
+            <span class="error-text">Problem description is required</span>
+          }
+          @if (hasError(1, 'problemDescription', 'minlength')) {
+            <span class="error-text">Please provide at least 50 characters</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Site & Contact -->
+    @if (currentStep() === 2) {
+      <div class="form-step" formGroupName="step2">
+        <h2 class="step-title">Site & Contact Information</h2>
+        <p class="step-description">Provide the location details and contact information for the service.</p>
+
+        <div class="form-group">
+          <label for="siteType" class="required">Site Type</label>
+          <div class="radio-group horizontal">
+            <label class="radio-option">
+              <input type="radio" formControlName="siteType" value="factory">
+              <span class="radio-label">Factory / Plant</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="siteType" value="warehouse">
+              <span class="radio-label">Warehouse</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="siteType" value="office">
+              <span class="radio-label">Commercial Office</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="siteType" value="construction">
+              <span class="radio-label">Construction Site</span>
+            </label>
+            <label class="radio-option">
+              <input type="radio" formControlName="siteType" value="other">
+              <span class="radio-label">Other</span>
+            </label>
+          </div>
+          @if (hasError(2, 'siteType', 'required')) {
+            <span class="error-text">Site type is required</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="siteAddress" class="required">Site Address</label>
+          <textarea 
+            id="siteAddress" 
+            formControlName="siteAddress"
+            rows="3"
+            placeholder="Complete address including building name, floor, etc."
+            [class.error]="hasError(2, 'siteAddress', 'required')">
+          </textarea>
+          @if (hasError(2, 'siteAddress', 'required')) {
+            <span class="error-text">Site address is required</span>
+          }
+        </div>
+
+        <div class="form-row three-cols">
+          <div class="form-group">
+            <label for="city" class="required">City</label>
+            <input type="text" id="city" formControlName="city" placeholder="City" [class.error]="hasError(2, 'city', 'required')">
+            @if (hasError(2, 'city', 'required')) {
+              <span class="error-text">City is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="state" class="required">State</label>
+            <input type="text" id="state" formControlName="state" placeholder="State" [class.error]="hasError(2, 'state', 'required')">
+            @if (hasError(2, 'state', 'required')) {
+              <span class="error-text">State is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="pincode" class="required">PIN Code</label>
+            <input 
+              type="text" 
+              id="pincode" 
+              formControlName="pincode" 
+              placeholder="6-digit PIN"
+              maxlength="6"
+              [class.error]="hasError(2, 'pincode', 'required') || hasError(2, 'pincode', 'pattern')">
+            @if (hasError(2, 'pincode', 'required')) {
+              <span class="error-text">PIN code is required</span>
+            }
+            @if (hasError(2, 'pincode', 'pattern')) {
+              <span class="error-text">Invalid PIN code</span>
+            }
+          </div>
+        </div>
+
+        <h3 class="section-subtitle">Primary Contact</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="primaryContactName" class="required">Contact Name</label>
+            <input 
+              type="text" 
+              id="primaryContactName" 
+              formControlName="primaryContactName"
+              placeholder="Full name"
+              [class.error]="hasError(2, 'primaryContactName', 'required')">
+            @if (hasError(2, 'primaryContactName', 'required')) {
+              <span class="error-text">Contact name is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="primaryContactPhone" class="required">Phone Number</label>
+            <input 
+              type="tel" 
+              id="primaryContactPhone" 
+              formControlName="primaryContactPhone"
+              placeholder="10-digit mobile number"
+              maxlength="10"
+              [class.error]="hasError(2, 'primaryContactPhone', 'required') || hasError(2, 'primaryContactPhone', 'pattern')">
+            @if (hasError(2, 'primaryContactPhone', 'required')) {
+              <span class="error-text">Phone number is required</span>
+            }
+            @if (hasError(2, 'primaryContactPhone', 'pattern')) {
+              <span class="error-text">Invalid phone number</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="primaryContactEmail" class="required">Email Address</label>
+          <input 
+            type="email" 
+            id="primaryContactEmail" 
+            formControlName="primaryContactEmail"
+            placeholder="email@company.com"
+            [class.error]="hasError(2, 'primaryContactEmail', 'required') || hasError(2, 'primaryContactEmail', 'email')">
+          @if (hasError(2, 'primaryContactEmail', 'required')) {
+            <span class="error-text">Email is required</span>
+          }
+          @if (hasError(2, 'primaryContactEmail', 'email')) {
+            <span class="error-text">Invalid email address</span>
+          }
+        </div>
+
+        <h3 class="section-subtitle">Secondary Contact (Optional)</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="secondaryContactName">Contact Name</label>
+            <input type="text" id="secondaryContactName" formControlName="secondaryContactName" placeholder="Full name">
+          </div>
+
+          <div class="form-group">
+            <label for="secondaryContactPhone">Phone Number</label>
+            <input 
+              type="tel" 
+              id="secondaryContactPhone" 
+              formControlName="secondaryContactPhone"
+              placeholder="10-digit mobile number"
+              maxlength="10"
+              [class.error]="hasError(2, 'secondaryContactPhone', 'pattern')">
+            @if (hasError(2, 'secondaryContactPhone', 'pattern')) {
+              <span class="error-text">Invalid phone number</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="siteAccessRestrictions">Site Access Restrictions</label>
+          <textarea 
+            id="siteAccessRestrictions" 
+            formControlName="siteAccessRestrictions"
+            rows="3"
+            placeholder="Any security protocols, entry requirements, or access restrictions">
+          </textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="preferredTimeSlot">Preferred Time for Site Visit</label>
+          <select id="preferredTimeSlot" formControlName="preferredTimeSlot">
+            <option value="">Select preferred time</option>
+            <option value="morning">Morning (8 AM - 12 PM)</option>
+            <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+            <option value="evening">Evening (4 PM - 7 PM)</option>
+            <option value="flexible">Flexible</option>
+          </select>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Technical Scope -->
+    @if (currentStep() === 3) {
+      <div class="form-step" formGroupName="step3">
+        <h2 class="step-title">Technical Scope & Requirements</h2>
+        <p class="step-description">Provide detailed technical specifications for accurate quotations.</p>
+
+        <div class="form-group">
+          <label for="scopeOfWork" class="required">Scope of Work</label>
+          <textarea 
+            id="scopeOfWork" 
+            formControlName="scopeOfWork"
+            rows="8"
+            placeholder="Describe the complete scope of work required. Include all tasks, deliverables, and expected outcomes."
+            [class.error]="hasError(3, 'scopeOfWork', 'required') || hasError(3, 'scopeOfWork', 'minlength')">
+          </textarea>
+          <div class="textarea-footer">
+            <span class="char-count">{{ getControl(3, 'scopeOfWork')?.value?.length || 0 }} / 5000</span>
+          </div>
+          @if (hasError(3, 'scopeOfWork', 'required')) {
+            <span class="error-text">Scope of work is required</span>
+          }
+          @if (hasError(3, 'scopeOfWork', 'minlength')) {
+            <span class="error-text">Please provide at least 100 characters</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">Technical Requirements</div>
+          <div class="dynamic-list">
+            @for (req of getTechnicalRequirements().controls; track $index) {
+              <div class="list-item">
+                <input type="text" [formControl]="$any(req)" placeholder="Enter technical requirement">
+                <button type="button" class="btn-icon remove" (click)="removeTechnicalRequirement($index)" aria-label="Remove requirement">
+                  ✕
+                </button>
+              </div>
+            }
+            <button type="button" class="btn-add" (click)="addTechnicalRequirement()">
+              + Add Technical Requirement
+            </button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="voltageRequirement">Voltage Requirement</label>
+            <select id="voltageRequirement" formControlName="voltageRequirement">
+              <option value="">Select voltage</option>
+              @for (voltage of voltageRequirements; track voltage) {
+                <option [value]="voltage">{{ voltage }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="loadCapacity">Load Capacity</label>
+            <input type="text" id="loadCapacity" formControlName="loadCapacity" placeholder="e.g., 200 kW, 500 Amps">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="environmentConditions">Environment Conditions</label>
+          <textarea 
+            id="environmentConditions" 
+            formControlName="environmentConditions"
+            rows="3"
+            placeholder="Describe environmental factors: temperature, humidity, dust, corrosive elements, etc.">
+          </textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="safetyRequirements">Safety Requirements</label>
+          <textarea 
+            id="safetyRequirements" 
+            formControlName="safetyRequirements"
+            rows="3"
+            placeholder="Any specific safety requirements or PPE needs">
+          </textarea>
+        </div>
+
+        <h3 class="section-subtitle">Supporting Documents</h3>
+        <p class="section-description">Upload relevant documents to help vendors understand your requirements better.</p>
+
+        <div class="form-group">
+          <div class="form-label">Existing Documentation</div>
+          <app-file-upload
+            formControlName="existingDocuments"
+            [multiple]="true"
+            [accept]="'.pdf,.doc,.docx,.xls,.xlsx'"
+            [maxSize]="10"
+            placeholder="Upload maintenance records, previous reports, etc.">
+          </app-file-upload>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">Reference Images</div>
+          <app-file-upload
+            formControlName="referenceImages"
+            [multiple]="true"
+            [accept]="'.jpg,.jpeg,.png,.gif,.webp'"
+            [maxSize]="5"
+            placeholder="Upload photos of equipment, problem areas, etc.">
+          </app-file-upload>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">Technical Drawings / Diagrams</div>
+          <app-file-upload
+            formControlName="technicalDrawings"
+            [multiple]="true"
+            [accept]="'.pdf,.dwg,.dxf,.jpg,.png'"
+            [maxSize]="20"
+            placeholder="Upload CAD files, schematics, layout plans, etc.">
+          </app-file-upload>
+        </div>
+
+        <h3 class="section-subtitle">Custom Fields</h3>
+        <p class="section-description">Add any additional specifications not covered above.</p>
+
+        <div class="form-group">
+          <div class="dynamic-list">
+            @for (field of getCustomFields().controls; track $index) {
+              <div class="list-item custom-field">
+                <input type="text" [formControl]="$any(field).controls.name" placeholder="Field name">
+                <input type="text" [formControl]="$any(field).controls.value" placeholder="Value">
+                <button type="button" class="btn-icon remove" (click)="removeCustomField($index)" aria-label="Remove field">
+                  ✕
+                </button>
+              </div>
+            }
+            <button type="button" class="btn-add" (click)="addCustomField()">
+              + Add Custom Field
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Step 4: Commercial -->
+    @if (currentStep() === 4) {
+      <div class="form-step" formGroupName="step4">
+        <h2 class="step-title">Commercial Expectations</h2>
+        <p class="step-description">Set your budget expectations and timeline preferences.</p>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="estimatedBudget" class="required">Estimated Budget Range</label>
+            <select id="estimatedBudget" formControlName="estimatedBudget" [class.error]="hasError(4, 'estimatedBudget', 'required')">
+              <option value="">Select budget range</option>
+              @for (range of budgetRanges; track range) {
+                <option [value]="range">{{ range }}</option>
+              }
+            </select>
+            @if (hasError(4, 'estimatedBudget', 'required')) {
+              <span class="error-text">Budget range is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="budgetFlexibility" class="required">Budget Flexibility</label>
+            <select id="budgetFlexibility" formControlName="budgetFlexibility" [class.error]="hasError(4, 'budgetFlexibility', 'required')">
+              <option value="">Select flexibility</option>
+              <option value="strict">Strict - Cannot exceed</option>
+              <option value="moderate">Moderate - Up to 10% over</option>
+              <option value="flexible">Flexible - Up to 25% over</option>
+              <option value="open">Open - Based on best solution</option>
+            </select>
+            @if (hasError(4, 'budgetFlexibility', 'required')) {
+              <span class="error-text">Please select budget flexibility</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="quotationRequired">
+            <span>I need formal quotations from vendors</span>
+          </label>
+        </div>
+
+        @if (getControl(4, 'quotationRequired')?.value) {
+          <div class="form-group">
+            <label for="preferredQuotations">Number of Quotations Preferred</label>
+            <input 
+              type="number" 
+              id="preferredQuotations" 
+              formControlName="preferredQuotations"
+              min="1"
+              max="10"
+              placeholder="3">
+          </div>
+        }
+
+        <div class="form-group">
+          <label for="preferredPaymentTerms">Preferred Payment Terms</label>
+          <select id="preferredPaymentTerms" formControlName="preferredPaymentTerms">
+            <option value="">Select payment terms</option>
+            @for (term of paymentTerms; track term) {
+              <option [value]="term">{{ term }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="gstRegistered">
+            <span>I am GST registered</span>
+          </label>
+        </div>
+
+        @if (getControl(4, 'gstRegistered')?.value) {
+          <div class="form-group">
+            <label for="gstNumber">GST Number</label>
+            <input 
+              type="text" 
+              id="gstNumber" 
+              formControlName="gstNumber"
+              placeholder="22AAAAA0000A1Z5"
+              maxlength="15">
+          </div>
+        }
+
+        <h3 class="section-subtitle">Timeline</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="expectedStartDate" class="required">Expected Start Date</label>
+            <input 
+              type="date" 
+              id="expectedStartDate" 
+              formControlName="expectedStartDate"
+              [class.error]="hasError(4, 'expectedStartDate', 'required')">
+            @if (hasError(4, 'expectedStartDate', 'required')) {
+              <span class="error-text">Start date is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="expectedCompletionDate">Expected Completion Date</label>
+            <input type="date" id="expectedCompletionDate" formControlName="expectedCompletionDate">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="urgencyLevel" class="required">Urgency Level</label>
+          <select id="urgencyLevel" formControlName="urgencyLevel" [class.error]="hasError(4, 'urgencyLevel', 'required')">
+            <option value="">Select urgency</option>
+            @for (level of urgencyLevels; track level) {
+              <option [value]="level">{{ level }}</option>
+            }
+          </select>
+          @if (hasError(4, 'urgencyLevel', 'required')) {
+            <span class="error-text">Urgency level is required</span>
+          }
+        </div>
+
+        <h3 class="section-subtitle">Additional Services</h3>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="annualMaintenanceRequired">
+            <span>I'm interested in an Annual Maintenance Contract (AMC)</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="warrantyRequired">
+            <span>Warranty on work is required</span>
+          </label>
+        </div>
+
+        @if (getControl(4, 'warrantyRequired')?.value) {
+          <div class="form-group">
+            <label for="warrantyPeriod">Minimum Warranty Period</label>
+            <select id="warrantyPeriod" formControlName="warrantyPeriod">
+              <option value="">Select warranty period</option>
+              <option value="3months">3 Months</option>
+              <option value="6months">6 Months</option>
+              <option value="1year">1 Year</option>
+              <option value="2years">2 Years</option>
+            </select>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Step 5: Constraints & Compliance -->
+    @if (currentStep() === 5) {
+      <div class="form-step" formGroupName="step5">
+        <h2 class="step-title">Constraints & Compliance</h2>
+        <p class="step-description">Specify any operational constraints and compliance requirements.</p>
+
+        <div class="form-group">
+          <label for="operationalConstraints">Operational Constraints</label>
+          <textarea 
+            id="operationalConstraints" 
+            formControlName="operationalConstraints"
+            rows="4"
+            placeholder="Any limitations on when/how work can be performed (e.g., production schedules, shutdown windows)">
+          </textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="workingHoursRestriction">
+            <span>Work can only be done during specific hours</span>
+          </label>
+        </div>
+
+        @if (getControl(5, 'workingHoursRestriction')?.value) {
+          <div class="form-group">
+            <label for="allowedWorkingHours">Allowed Working Hours</label>
+            <input 
+              type="text" 
+              id="allowedWorkingHours" 
+              formControlName="allowedWorkingHours"
+              placeholder="e.g., 6 PM - 6 AM on weekdays, or weekends only">
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="noiseRestrictions">
+            <span>There are noise level restrictions at the site</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="hazardousMaterials">
+            <span>Work may involve hazardous materials</span>
+          </label>
+        </div>
+
+        @if (getControl(5, 'hazardousMaterials')?.value) {
+          <div class="form-group">
+            <label for="hazardousMaterialsDescription">Hazardous Materials Description</label>
+            <textarea 
+              id="hazardousMaterialsDescription" 
+              formControlName="hazardousMaterialsDescription"
+              rows="3"
+              placeholder="Describe the hazardous materials and any special handling requirements">
+            </textarea>
+          </div>
+        }
+
+        <h3 class="section-subtitle">Compliance & Certifications</h3>
+
+        <div class="form-group">
+          <div class="form-label">Required Compliance Standards</div>
+          <div class="checkbox-grid">
+            @for (standard of complianceStandards; track standard) {
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [checked]="isComplianceSelected(standard)"
+                  (change)="toggleComplianceStandard(standard)">
+                <span>{{ standard }}</span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="insuranceRequired">
+            <span>Vendor must have liability insurance</span>
+          </label>
+        </div>
+
+        @if (getControl(5, 'insuranceRequired')?.value) {
+          <div class="form-group">
+            <label for="minimumInsuranceCoverage">Minimum Insurance Coverage</label>
+            <input 
+              type="text" 
+              id="minimumInsuranceCoverage" 
+              formControlName="minimumInsuranceCoverage"
+              placeholder="e.g., ₹10 Lakhs">
+          </div>
+        }
+
+        <h3 class="section-subtitle">Vendor Requirements</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="vendorExperienceYears">Minimum Years of Experience</label>
+            <input 
+              type="number" 
+              id="vendorExperienceYears" 
+              formControlName="vendorExperienceYears"
+              min="0"
+              placeholder="e.g., 5">
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label tall">
+              <input type="checkbox" formControlName="vendorPreviousWorkReference">
+              <span>Require references from previous similar work</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="additionalRequirements">Additional Requirements</label>
+          <textarea 
+            id="additionalRequirements" 
+            formControlName="additionalRequirements"
+            rows="4"
+            placeholder="Any other specific requirements or preferences not covered above">
+          </textarea>
+        </div>
+
+        <div class="form-group terms">
+          <label class="checkbox-label" [class.error]="hasError(5, 'termsAccepted', 'required')">
+            <input type="checkbox" formControlName="termsAccepted">
+            <span>I confirm that all information provided is accurate and I accept the <a href="/terms" target="_blank">terms and conditions</a></span>
+          </label>
+          @if (hasError(5, 'termsAccepted', 'required')) {
+            <span class="error-text">You must accept the terms to proceed</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <div class="left-actions">
+        <button type="button" class="btn btn-ghost" (click)="onCancel()">
+          Cancel
+        </button>
+      </div>
+      <div class="right-actions">
+        @if (canGoBack()) {
+          <button type="button" class="btn btn-secondary" (click)="previousStep()">
+            ← Back
+          </button>
+        }
+        @if (canGoNext()) {
+          <button type="button" class="btn btn-primary" (click)="nextStep()">
+            Next →
+          </button>
+        }
+        @if (isLastStep()) {
+          <button type="submit" class="btn btn-primary btn-submit">
+            Review & Submit
+          </button>
+        }
+      </div>
+    </div>
+  </form>
+</div>

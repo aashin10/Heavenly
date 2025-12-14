@@ -1,0 +1,498 @@
+<div class="review-container">
+  @if (request(); as request) {
+    <!-- Header -->
+    <header class="review-header">
+      <button type="button" class="btn-back" (click)="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back to Dashboard
+      </button>
+      <div class="header-info">
+        <h1>Request {{ request.requestNumber }}</h1>
+        <app-status-badge [status]="request.status"></app-status-badge>
+        <span class="timestamp">Submitted {{ getTimeAgo(request.submittedAt) }}</span>
+      </div>
+    </header>
+
+    <!-- Two Column Layout -->
+    <div class="review-body">
+      <!-- Left Sidebar -->
+      <aside class="review-sidebar">
+        <!-- Requester Info Card -->
+        <div class="info-card">
+          <h3 class="card-title">Requester Information</h3>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="icon">👤</span>
+              <span>{{ request.requesterName }}</span>
+            </div>
+            <div class="info-item">
+              <span class="icon">📧</span>
+              <span>{{ request.requesterEmail }}</span>
+            </div>
+            <div class="info-item">
+              <span class="icon">📱</span>
+              <span>{{ request.requesterPhone }}</span>
+            </div>
+            <div class="info-item">
+              <span class="icon">🏢</span>
+              <span class="requester-badge" [class]="'badge-' + request.requesterType">
+                {{ request.requesterType | titlecase }}
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="icon">📍</span>
+              <span>{{ request.location }}</span>
+            </div>
+          </div>
+          <button type="button" class="btn-link" (click)="viewOriginalForm()">
+            View Original Form →
+          </button>
+        </div>
+
+        <!-- Request Details -->
+        <app-collapsible-section title="Service Information" [expanded]="true">
+          <div class="detail-section">
+            <div class="detail-row">
+              <span class="detail-label">Service Type</span>
+              <span class="detail-value">{{ request.serviceName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Request Title</span>
+              <span class="detail-value">{{ request.title }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Category</span>
+              <span class="detail-value">{{ request.category | titlecase }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Urgency</span>
+              <span class="detail-value urgency" [class]="'urgency--' + request.urgency">
+                {{ request.urgency | titlecase }}
+              </span>
+            </div>
+          </div>
+        </app-collapsible-section>
+
+        <app-collapsible-section title="Description">
+          <div class="detail-section">
+            <p class="description-text">{{ request.description }}</p>
+          </div>
+        </app-collapsible-section>
+
+        <app-collapsible-section title="Commercial Terms">
+          <div class="detail-section">
+            @if (request.budgetMin || request.budgetMax) {
+              <div class="detail-row">
+                <span class="detail-label">Budget Range</span>
+                <span class="detail-value">
+                  {{ request.budgetCurrency }} {{ request.budgetMin?.toLocaleString() }} - {{ request.budgetMax?.toLocaleString() }}
+                </span>
+              </div>
+            }
+            @if (request.preferredPaymentTerms) {
+              <div class="detail-row">
+                <span class="detail-label">Payment Terms</span>
+                <span class="detail-value">{{ request.preferredPaymentTerms }}</span>
+              </div>
+            }
+            @if (request.preferredStartDate) {
+              <div class="detail-row">
+                <span class="detail-label">Preferred Start</span>
+                <span class="detail-value">{{ request.preferredStartDate | date:'mediumDate' }}</span>
+              </div>
+            }
+            @if (request.preferredEndDate) {
+              <div class="detail-row">
+                <span class="detail-label">Preferred End</span>
+                <span class="detail-value">{{ request.preferredEndDate | date:'mediumDate' }}</span>
+              </div>
+            }
+            <div class="detail-row">
+              <span class="detail-label">Flexible Dates</span>
+              <span class="detail-value">{{ request.flexibleDates ? 'Yes' : 'No' }}</span>
+            </div>
+          </div>
+        </app-collapsible-section>
+
+        <app-collapsible-section title="Files & Documents">
+          <div class="files-list">
+            @if (request.attachments.length === 0) {
+              <p class="no-files">No files uploaded</p>
+            } @else {
+              @for (file of request.attachments; track file.id) {
+                <div class="file-item">
+                  <div class="file-icon">📎</div>
+                  <div class="file-info">
+                    <span class="file-name">{{ file.fileName }}</span>
+                    <span class="file-size">{{ formatFileSize(file.fileSize) }}</span>
+                  </div>
+                  <a [href]="file.url" class="file-download" download>Download</a>
+                </div>
+              }
+            }
+          </div>
+        </app-collapsible-section>
+
+        <!-- Flags & Warnings -->
+        @if (request.hasWarnings) {
+          <div class="warnings-card">
+            <h3 class="card-title warning-title">⚠️ Flags & Warnings</h3>
+            <div class="warning-list">
+              @for (warning of request.warnings; track warning.type) {
+                <div class="warning-item" [class]="'warning--' + warning.severity">
+                  <span class="warning-icon">
+                    @switch (warning.type) {
+                      @case ('low_clarity') { ⚠️ }
+                      @case ('tight_budget') { 💰 }
+                      @case ('tight_timeline') { ⏰ }
+                      @case ('missing_documents') { 📄 }
+                      @default { ⚠️ }
+                    }
+                  </span>
+                  <div>
+                    <strong>{{ warning.type | titlecase }}</strong>
+                    <p>{{ warning.message }}</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Timeline -->
+        <div class="timeline-card">
+          <h3 class="card-title">Timeline</h3>
+          <div class="timeline">
+            <div class="timeline-item">
+              <span class="timeline-dot"></span>
+              <span>Submitted: {{ getTimeAgo(request.submittedAt) }}</span>
+            </div>
+            <div class="timeline-item">
+              <span class="timeline-dot"></span>
+              <span>AI Processed: {{ getTimeAgo(request.submittedAt) }}</span>
+            </div>
+            @if (request.reviewedAt) {
+              <div class="timeline-item">
+                <span class="timeline-dot active"></span>
+                <span>Under Review: {{ getTimeAgo(request.reviewedAt) }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="review-content">
+        @if (aiDraft(); as draft) {
+          <!-- AI Clarity Score -->
+          <div class="ai-score-card">
+            <div class="score-header">
+              <h3>✨ AI Clarity Assessment</h3>
+              <span class="score-value">{{ draft.clarityScore }}%</span>
+            </div>
+            <div class="score-meter">
+              <div class="score-bar" [style.width.%]="draft.clarityScore" [class]="getClarityClass(draft.clarityScore)"></div>
+            </div>
+            <p class="score-label" [class]="getClarityClass(draft.clarityScore)">{{ getClarityLabel(draft.clarityScore) }}</p>
+
+            @if (draft.identifiedGaps.length > 0) {
+              <div class="gaps-section">
+                <h4>Identified Gaps</h4>
+                <ul class="gap-list">
+                  @for (gap of draft.identifiedGaps; track gap) {
+                    <li>{{ gap }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+
+          <!-- AI Draft Section -->
+          <div class="ai-draft-section">
+            <div class="section-header">
+              <h2>✨ AI Pre-Processing Results</h2>
+              <span class="badge badge-info">Auto-generated draft</span>
+            </div>
+
+            <form [formGroup]="reviewForm" class="review-form">
+              <!-- Tender Title -->
+              <div class="form-field">
+                <div class="field-label required">Tender Title</div>
+                <input type="text" formControlName="tenderTitle" class="form-input"
+                  placeholder="AI-generated tender title"
+                  [class.error]="reviewForm.get('tenderTitle')?.invalid && reviewForm.get('tenderTitle')?.touched">
+                <p class="field-hint">This will be visible to all vendors</p>
+                @if (reviewForm.get('tenderTitle')?.hasError('required') && reviewForm.get('tenderTitle')?.touched) {
+                  <span class="error-text">Tender title is required</span>
+                }
+              </div>
+
+              <!-- Scope Summary -->
+              <div class="form-field">
+                <div class="field-label required">Scope Summary</div>
+                <textarea formControlName="scopeSummary" rows="6" class="form-textarea"
+                  placeholder="AI-generated scope summary"
+                  [class.error]="reviewForm.get('scopeSummary')?.invalid && reviewForm.get('scopeSummary')?.touched"></textarea>
+                <p class="field-hint">Summarize the work scope in clear terms</p>
+              </div>
+
+              <!-- Commercial Structure -->
+              <div class="form-field">
+                <div class="field-label">Commercial Structure</div>
+                <textarea formControlName="commercialStructure" rows="4" class="form-textarea"
+                  placeholder="Payment terms, milestones, etc."></textarea>
+              </div>
+
+              <!-- Tags (Read-only) -->
+              <div class="tags-section">
+                <h3 class="section-subtitle">AI-Generated Tags</h3>
+                <div class="tag-list">
+                  <span class="tag tag-complexity">Complexity: {{ draft.tags.complexityLevel | titlecase }}</span>
+                  <span class="tag tag-risk">Risk: {{ draft.tags.riskLevel | titlecase }}</span>
+                  <span class="tag tag-vendor">Vendor Type: {{ draft.tags.expectedVendorType }}</span>
+                </div>
+              </div>
+
+              <hr class="section-divider">
+
+              <!-- Management Actions Section -->
+              <div class="management-actions-section">
+                <h3 class="section-title">Management Actions</h3>
+
+                <!-- Bid Window -->
+                <div class="form-row">
+                  <div class="form-field">
+                    <div class="field-label required">Bid Window Start</div>
+                    <input type="date" formControlName="bidWindowStart" class="form-input">
+                  </div>
+                  <div class="form-field">
+                    <div class="field-label required">Bid Window End</div>
+                    <input type="date" formControlName="bidWindowEnd" class="form-input">
+                  </div>
+                </div>
+
+                <!-- Eligibility Criteria -->
+                <div class="form-field">
+                  <div class="field-label">Eligibility Criteria</div>
+                  <div class="checkbox-group" formGroupName="eligibilityCriteria">
+                    <label class="checkbox-item">
+                      <input type="checkbox" formControlName="minExperience">
+                      <span>Minimum 2 years experience</span>
+                    </label>
+                    <label class="checkbox-item">
+                      <input type="checkbox" formControlName="certifications">
+                      <span>Required certifications</span>
+                    </label>
+                    <label class="checkbox-item">
+                      <input type="checkbox" formControlName="financialCapacity">
+                      <span>Financial capacity proof</span>
+                    </label>
+                    <label class="checkbox-item">
+                      <input type="checkbox" formControlName="previousWork">
+                      <span>Previous similar work references</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Budget Visibility -->
+                <div class="form-field">
+                  <div class="field-label required">Budget Visibility to Vendors</div>
+                  <div class="radio-group-vertical">
+                    <label class="radio-option-card">
+                      <input type="radio" formControlName="budgetVisibility" value="show_exact">
+                      <div class="option-content">
+                        <strong>Show Exact Budget</strong>
+                        <span>Vendors see the exact budget amount</span>
+                      </div>
+                    </label>
+                    <label class="radio-option-card">
+                      <input type="radio" formControlName="budgetVisibility" value="show_range">
+                      <div class="option-content">
+                        <strong>Show Budget Range</strong>
+                        <span>Vendors see a budget range (recommended)</span>
+                      </div>
+                    </label>
+                    <label class="radio-option-card">
+                      <input type="radio" formControlName="budgetVisibility" value="hide">
+                      <div class="option-content">
+                        <strong>Hide Budget</strong>
+                        <span>Vendors don't see budget information</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Tender Type -->
+                <div class="form-field">
+                  <div class="field-label required">Tender Type</div>
+                  <div class="radio-group">
+                    <label class="radio-option">
+                      <input type="radio" formControlName="tenderType" value="open">
+                      <span>Open Tender</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Internal Notes -->
+                <div class="form-field">
+                  <div class="field-label">Internal Notes</div>
+                  <textarea formControlName="internalNotes" rows="3" class="form-textarea"
+                    placeholder="Notes for internal use only (not visible to requester or vendors)"></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+        }
+      </main>
+    </div>
+
+    <!-- Sticky Action Bar -->
+    <div class="review-actions">
+      <button type="button" class="btn btn-secondary" (click)="openClarificationModal()">
+        Request Clarification
+      </button>
+
+      <button type="button" class="btn btn-danger-outline" (click)="openRejectModal()">
+        Reject
+      </button>
+
+      <button type="button" class="btn btn-secondary" (click)="saveDraft()">
+        Save Draft
+      </button>
+
+      <button type="button" class="btn btn-primary btn-lg" (click)="approveRequest()"
+        [disabled]="reviewForm.invalid">
+        Approve & Continue →
+      </button>
+    </div>
+
+    <!-- Clarification Modal -->
+    @if (showClarificationModal()) {
+      <button type="button" class="modal-overlay" (click)="closeClarificationModal()" (keydown.escape)="closeClarificationModal()" (keydown.enter)="closeClarificationModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Request Clarification</h2>
+            <button type="button" class="btn-close" (click)="closeClarificationModal()">×</button>
+          </div>
+
+          <div class="modal-body">
+            <p>Send this request back to the requester with your questions or concerns.</p>
+
+            <form [formGroup]="clarificationForm">
+              <div class="form-field">
+                <div class="field-label required">Subject</div>
+                <input type="text" formControlName="subject" class="form-input"
+                  placeholder="e.g., Need technical drawings">
+              </div>
+
+              <div class="form-field">
+                <div class="field-label required">Message to Requester</div>
+                <textarea formControlName="message" rows="6" class="form-textarea"
+                  placeholder="Explain what additional information is needed..."></textarea>
+              </div>
+
+              <div class="checkbox-group">
+                <label class="checkbox-item">
+                  <input type="checkbox" formControlName="markUrgent">
+                  <span>Mark as urgent (requester will be notified immediately)</span>
+                </label>
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeClarificationModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="sendClarification()"
+              [disabled]="clarificationForm.invalid">
+              Send Clarification Request
+            </button>
+          </div>
+        </div>
+      </button>
+    }
+
+    <!-- Reject Modal -->
+    @if (showRejectModal()) {
+      <button type="button" class="modal-overlay" (click)="closeRejectModal()" (keydown.escape)="closeRejectModal()" (keydown.enter)="closeRejectModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Reject Service Request</h2>
+            <button type="button" class="btn-close" (click)="closeRejectModal()">×</button>
+          </div>
+
+          <div class="modal-body">
+            <p class="warning-text">Are you sure you want to reject this request?</p>
+
+            <form [formGroup]="rejectForm">
+              <div class="form-field">
+                <div class="field-label required">Reason for Rejection</div>
+                <select formControlName="reason" class="form-select">
+                  <option value="">Select reason</option>
+                  <option value="insufficient_info">Insufficient Information</option>
+                  <option value="out_of_scope">Out of Scope</option>
+                  <option value="unrealistic_budget">Unrealistic Budget</option>
+                  <option value="duplicate">Duplicate Request</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              @if (rejectForm.get('reason')?.value === 'other') {
+                <div class="form-field">
+                  <div class="field-label required">Please specify</div>
+                  <textarea formControlName="customReason" rows="4" class="form-textarea"></textarea>
+                </div>
+              }
+
+              <div class="form-field">
+                <div class="field-label">Message to Requester (Optional)</div>
+                <textarea formControlName="message" rows="4" class="form-textarea"
+                  placeholder="Explain why this request cannot be processed..."></textarea>
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeRejectModal()">Cancel</button>
+            <button type="button" class="btn btn-danger" (click)="confirmReject()"
+              [disabled]="rejectForm.invalid">
+              Reject Request
+            </button>
+          </div>
+        </div>
+      </button>
+    }
+
+    <!-- Approval Success Modal -->
+    @if (showApprovalSuccessModal()) {
+      <div class="modal-overlay">
+        <div class="modal-container success-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+          <div class="modal-body text-center">
+            <div class="success-icon">✅</div>
+            <h2>Request Approved!</h2>
+            <p>Request {{ request.requestNumber }} has been approved successfully.</p>
+
+            <div class="info-box">
+              <p>The tender is now ready to be published.</p>
+              <p>You can publish it now or schedule it for later.</p>
+            </div>
+          </div>
+
+          <div class="modal-footer justify-center">
+            <button type="button" class="btn btn-outline" (click)="publishLater()">
+              Publish Later
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" (click)="publishNow()">
+              Publish Now →
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="loading-state">
+      <p>Loading request details...</p>
+    </div>
+  }
+</div>

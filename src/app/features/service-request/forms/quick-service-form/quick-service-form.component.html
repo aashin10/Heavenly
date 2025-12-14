@@ -1,0 +1,392 @@
+<div class="quick-service-form">
+  <!-- Progress and Save Indicator -->
+  <div class="form-header">
+    <app-form-progress
+      [progress]="progress()"
+      [lastSaved]="lastSaved()">
+    </app-form-progress>
+    <app-auto-save-indicator [saving]="saveStatus() === 'saving'" [lastSaved]="lastSaved()"></app-auto-save-indicator>
+  </div>
+
+  <!-- Form Stepper -->
+  <app-form-stepper
+    [steps]="stepLabels()"
+    [currentStep]="currentStep()"
+    (stepChange)="goToStep($event)">
+  </app-form-stepper>
+
+  <!-- Form Content -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <!-- Step 1: Service Type -->
+    @if (currentStep() === 1) {
+      <div class="form-step" formGroupName="step1">
+        <h2 class="step-title">What do you need?</h2>
+        <p class="step-description">Select the type of service and describe the issue.</p>
+
+        <div class="form-group">
+          <label for="serviceType" class="required">Service Type</label>
+          <div class="service-type-cards">
+            @for (type of serviceTypes; track type) {
+              <label class="type-card" [class.selected]="getControl(1, 'serviceType')?.value === type">
+                <input type="radio" formControlName="serviceType" [value]="type">
+                <span class="type-icon">
+                  @switch (type) {
+                    @case ('Regular Service') { 🔧 }
+                    @case ('Deep Cleaning') { ✨ }
+                    @case ('Repair') { 🛠️ }
+                    @case ('Installation') { 📦 }
+                    @case ('Gas Refill') { ⛽ }
+                    @case ('Inspection') { 🔍 }
+                    @default { 📋 }
+                  }
+                </span>
+                <span class="type-name">{{ type }}</span>
+              </label>
+            }
+          </div>
+          @if (hasError(1, 'serviceType', 'required')) {
+            <span class="error-text">Please select a service type</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="issueDescription" class="required">Describe the issue</label>
+          <textarea 
+            id="issueDescription" 
+            formControlName="issueDescription"
+            rows="4"
+            placeholder="What's the problem? Any unusual sounds, leaks, or error codes?"
+            [class.error]="hasError(1, 'issueDescription', 'required') || hasError(1, 'issueDescription', 'minlength')">
+          </textarea>
+          <div class="textarea-footer">
+            <span class="char-count">{{ getControl(1, 'issueDescription')?.value?.length || 0 }} / 500</span>
+          </div>
+          @if (hasError(1, 'issueDescription', 'required')) {
+            <span class="error-text">Please describe the issue</span>
+          }
+          @if (hasError(1, 'issueDescription', 'minlength')) {
+            <span class="error-text">Please provide at least 10 characters</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">Photo of the issue (Optional)</div>
+          <app-file-upload
+            formControlName="issuePhoto"
+            [multiple]="false"
+            [accept]="'.jpg,.jpeg,.png,.webp'"
+            [maxSize]="5"
+            placeholder="Take a photo or upload an image">
+          </app-file-upload>
+          <p class="field-hint">A photo helps our technician prepare better</p>
+        </div>
+      </div>
+    }
+
+    <!-- Step 2: Equipment List -->
+    @if (currentStep() === 2) {
+      <div class="form-step" formGroupName="step2">
+        <h2 class="step-title">Equipment Details</h2>
+        <p class="step-description">Tell us about the equipment that needs servicing.</p>
+
+        <div class="equipment-list">
+          @for (equipment of getEquipmentList().controls; track $index; let first = $first) {
+            <div class="equipment-card" [formGroupName]="$index">
+              <div class="equipment-header">
+                <span class="equipment-number">Equipment {{ $index + 1 }}</span>
+                @if (!first) {
+                  <button type="button" class="btn-remove" (click)="removeEquipment($index)">
+                    Remove
+                  </button>
+                }
+              </div>
+
+              <div class="form-group">
+                <label [for]="'type-' + $index" class="required">Type</label>
+                <select [id]="'type-' + $index" formControlName="type" [class.error]="hasEquipmentError($index, 'type', 'required')">
+                  <option value="">Select type</option>
+                  @for (eqType of getEquipmentTypes(); track eqType) {
+                    <option [value]="eqType">{{ eqType }}</option>
+                  }
+                </select>
+                @if (hasEquipmentError($index, 'type', 'required')) {
+                  <span class="error-text">Equipment type is required</span>
+                }
+              </div>
+
+              <div class="form-row three-cols">
+                <div class="form-group">
+                  <label [for]="'brand-' + $index">Brand</label>
+                  <input type="text" [id]="'brand-' + $index" formControlName="brand" placeholder="e.g., LG, Samsung">
+                </div>
+
+                <div class="form-group">
+                  <label [for]="'model-' + $index">Model (if known)</label>
+                  <input type="text" [id]="'model-' + $index" formControlName="model" placeholder="Model number">
+                </div>
+
+                <div class="form-group">
+                  <label [for]="'quantity-' + $index" class="required">Qty</label>
+                  <input 
+                    type="number" 
+                    [id]="'quantity-' + $index" 
+                    formControlName="quantity"
+                    min="1"
+                    [class.error]="hasEquipmentError($index, 'quantity', 'required')">
+                </div>
+              </div>
+            </div>
+          }
+
+          <button type="button" class="btn-add-equipment" (click)="addEquipment()">
+            + Add Another Equipment
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label for="additionalNotes">Additional Notes</label>
+          <textarea 
+            id="additionalNotes" 
+            formControlName="additionalNotes"
+            rows="2"
+            placeholder="Any other details about the equipment?">
+          </textarea>
+        </div>
+      </div>
+    }
+
+    <!-- Step 3: Service Context -->
+    @if (currentStep() === 3) {
+      <div class="form-step" formGroupName="step3">
+        <h2 class="step-title">Where & When</h2>
+        <p class="step-description">Tell us where to come and when works best for you.</p>
+
+        <div class="form-group">
+          <label for="address" class="required">Address</label>
+          <textarea 
+            id="address" 
+            formControlName="address"
+            rows="3"
+            placeholder="Full address including flat number, building name, street"
+            [class.error]="hasError(3, 'address', 'required')">
+          </textarea>
+          @if (hasError(3, 'address', 'required')) {
+            <span class="error-text">Address is required</span>
+          }
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="landmark">Landmark</label>
+            <input type="text" id="landmark" formControlName="landmark" placeholder="Nearby landmark">
+          </div>
+
+          <div class="form-group">
+            <label for="pincode" class="required">PIN Code</label>
+            <input 
+              type="text" 
+              id="pincode" 
+              formControlName="pincode" 
+              placeholder="6-digit PIN"
+              maxlength="6"
+              [class.error]="hasError(3, 'pincode', 'required') || hasError(3, 'pincode', 'pattern')">
+            @if (hasError(3, 'pincode', 'required')) {
+              <span class="error-text">PIN code is required</span>
+            }
+            @if (hasError(3, 'pincode', 'pattern')) {
+              <span class="error-text">Invalid PIN code</span>
+            }
+          </div>
+        </div>
+
+        <h3 class="section-subtitle">Contact</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="contactName" class="required">Your Name</label>
+            <input 
+              type="text" 
+              id="contactName" 
+              formControlName="contactName"
+              placeholder="Full name"
+              [class.error]="hasError(3, 'contactName', 'required')">
+            @if (hasError(3, 'contactName', 'required')) {
+              <span class="error-text">Name is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="contactPhone" class="required">Phone Number</label>
+            <input 
+              type="tel" 
+              id="contactPhone" 
+              formControlName="contactPhone"
+              placeholder="10-digit mobile"
+              maxlength="10"
+              [class.error]="hasError(3, 'contactPhone', 'required') || hasError(3, 'contactPhone', 'pattern')">
+            @if (hasError(3, 'contactPhone', 'required')) {
+              <span class="error-text">Phone is required</span>
+            }
+            @if (hasError(3, 'contactPhone', 'pattern')) {
+              <span class="error-text">Invalid phone number</span>
+            }
+          </div>
+        </div>
+
+        <h3 class="section-subtitle">Preferred Time</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="preferredDate" class="required">Date</label>
+            <input 
+              type="date" 
+              id="preferredDate" 
+              formControlName="preferredDate"
+              [class.error]="hasError(3, 'preferredDate', 'required')">
+            @if (hasError(3, 'preferredDate', 'required')) {
+              <span class="error-text">Date is required</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="preferredTime" class="required">Time Slot</label>
+            <select id="preferredTime" formControlName="preferredTime" [class.error]="hasError(3, 'preferredTime', 'required')">
+              <option value="">Select time</option>
+              <option value="8-10am">8 AM - 10 AM</option>
+              <option value="10-12pm">10 AM - 12 PM</option>
+              <option value="12-2pm">12 PM - 2 PM</option>
+              <option value="2-4pm">2 PM - 4 PM</option>
+              <option value="4-6pm">4 PM - 6 PM</option>
+              <option value="6-8pm">6 PM - 8 PM</option>
+            </select>
+            @if (hasError(3, 'preferredTime', 'required')) {
+              <span class="error-text">Time slot is required</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="accessInstructions">Access Instructions</label>
+          <input 
+            type="text" 
+            id="accessInstructions" 
+            formControlName="accessInstructions"
+            placeholder="Gate code, doorbell location, etc.">
+        </div>
+      </div>
+    }
+
+    <!-- Step 4: Budget & Timing -->
+    @if (currentStep() === 4) {
+      <div class="form-step" formGroupName="step4">
+        <h2 class="step-title">Budget & Preferences</h2>
+        <p class="step-description">Almost done! Set your budget and final preferences.</p>
+
+        <div class="form-group">
+          <label for="budgetRange" class="required">Your Budget</label>
+          <div class="budget-cards">
+            @for (range of budgetRanges; track range) {
+              <label class="budget-card" [class.selected]="getControl(4, 'budgetRange')?.value === range">
+                <input type="radio" formControlName="budgetRange" [value]="range">
+                <span class="budget-amount">{{ range }}</span>
+              </label>
+            }
+          </div>
+          @if (hasError(4, 'budgetRange', 'required')) {
+            <span class="error-text">Please select a budget range</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="urgency" class="required">How urgent is this?</label>
+          <div class="urgency-pills">
+            @for (level of urgencyLevels; track level) {
+              <label class="urgency-pill" [class.selected]="getControl(4, 'urgency')?.value === level">
+                <input type="radio" formControlName="urgency" [value]="level">
+                {{ level }}
+              </label>
+            }
+          </div>
+          @if (hasError(4, 'urgency', 'required')) {
+            <span class="error-text">Please select urgency level</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="paymentMode" class="required">Payment Mode</label>
+          <div class="payment-options">
+            <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'cash'">
+              <input type="radio" formControlName="paymentMode" value="cash">
+              <span class="payment-icon">💵</span>
+              <span class="payment-name">Cash</span>
+            </label>
+            <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'upi'">
+              <input type="radio" formControlName="paymentMode" value="upi">
+              <span class="payment-icon">📱</span>
+              <span class="payment-name">UPI</span>
+            </label>
+            <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'card'">
+              <input type="radio" formControlName="paymentMode" value="card">
+              <span class="payment-icon">💳</span>
+              <span class="payment-name">Card</span>
+            </label>
+            <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'online'">
+              <input type="radio" formControlName="paymentMode" value="online">
+              <span class="payment-icon">🏦</span>
+              <span class="payment-name">Online</span>
+            </label>
+          </div>
+          @if (hasError(4, 'paymentMode', 'required')) {
+            <span class="error-text">Please select payment mode</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="specialRequests">Special Requests (Optional)</label>
+          <textarea 
+            id="specialRequests" 
+            formControlName="specialRequests"
+            rows="2"
+            placeholder="Any special requirements or instructions?">
+          </textarea>
+        </div>
+
+        <div class="form-group terms">
+          <label class="checkbox-label" [class.error]="hasError(4, 'termsAccepted', 'required')">
+            <input type="checkbox" formControlName="termsAccepted">
+            <span>I accept the <a href="/terms" target="_blank">terms and conditions</a></span>
+          </label>
+          @if (hasError(4, 'termsAccepted', 'required')) {
+            <span class="error-text">You must accept the terms to proceed</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <div class="left-actions">
+        <button type="button" class="btn btn-ghost" (click)="onCancel()">
+          Cancel
+        </button>
+      </div>
+      <div class="right-actions">
+        @if (canGoBack()) {
+          <button type="button" class="btn btn-secondary" (click)="previousStep()">
+            ← Back
+          </button>
+        }
+        @if (canGoNext()) {
+          <button type="button" class="btn btn-primary" (click)="nextStep()">
+            Next →
+          </button>
+        }
+        @if (isLastStep()) {
+          <button type="submit" class="btn btn-primary btn-submit">
+            Book Service ✓
+          </button>
+        }
+      </div>
+    </div>
+  </form>
+</div>

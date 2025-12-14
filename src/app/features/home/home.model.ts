@@ -8,3 +8,9 @@ export interface Feature {
   title: string;
   description: string;
 }
+
+export interface ServiceIcon {
+  id: string;
+  name: string;
+  icon: string;
+}

@@ -114,6 +114,95 @@
   margin-right: auto;
 }
 
+// Services Section
+.services-section {
+  padding: 4rem 0;
+  background-color: var(--white);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.services-header {
+  margin-bottom: 2rem;
+}
+
+.services-icons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (min-width: 1024px) {
+    gap: 1.5rem;
+  }
+}
+
+.service-icon-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 1rem;
+  background-color: var(--gray-50);
+  border-radius: 0.75rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+
+  &:hover {
+    background-color: var(--white);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 54, 100, 0.1);
+  }
+}
+
+.service-icon-emoji {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+
+  @media (min-width: 768px) {
+    font-size: 3rem;
+  }
+}
+
+.service-icon-name {
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  text-align: center;
+  font-weight: 500;
+
+  @media (min-width: 768px) {
+    font-size: 1rem;
+  }
+}
+
+.services-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.btn-large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+.btn-subtle {
+  color: var(--gray-600);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: color 0.2s;
+
+  &:hover {
+    color: var(--primary-color);
+  }
+}
+
 // Domains Section
 .domains-section {
   padding: 4rem 0;

@@ -1,0 +1,358 @@
+<div class="services-page">
+  <!-- Header Section -->
+  <section class="services-header">
+    <div class="container">
+      <h1 class="page-title">Our Services</h1>
+      <p class="page-subtitle">
+        Find the right service for your needs. Submit requests, receive competitive tenders, and hire verified vendors.
+      </p>
+      
+      <!-- Search Bar -->
+      <div class="search-container">
+        <div class="search-wrapper">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search for services..."
+            aria-label="Search services"
+            [value]="searchQuery()"
+            (input)="updateSearch($event)"
+          />
+        </div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-chips">
+        @for (filter of filters; track filter.id) {
+          <button
+            class="filter-chip"
+            [class.active]="activeFilter() === filter.id"
+            (click)="setFilter(filter.id)"
+          >
+            {{ filter.label }}
+          </button>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <section class="services-content">
+    <div class="container">
+      <!-- Popular Services (only show when not filtering/searching) -->
+      @if (showGroupedView() && popularServices.length > 0) {
+        <div class="popular-section">
+          <h2 class="section-heading">
+            <span class="heading-icon">🔥</span>
+            Popular Services
+          </h2>
+          <div class="popular-scroll">
+            @for (service of popularServices; track service.id) {
+              <button class="popular-card" (click)="handleServiceClick(service)">
+                <div class="popular-icon">{{ service.icon }}</div>
+                <div class="popular-name">{{ service.name }}</div>
+                <span class="popular-badge">{{ getCategoryIndicator(service.category) }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Grouped View -->
+      @if (showGroupedView()) {
+        <!-- Quick Services -->
+        <div class="service-group">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="group-emoji">🚀</span>
+              <h2>Quick Services</h2>
+            </div>
+            <div class="group-badges">
+              <span class="badge badge-success">Fast & Easy</span>
+              <span class="badge badge-info">5-10 min form</span>
+            </div>
+          </div>
+          <div class="services-grid">
+            @for (service of groupedServices.quick; track service.id) {
+              <button class="service-card" (click)="handleServiceClick(service)">
+                <div class="card-icon">{{ service.icon }}</div>
+                <div class="card-content">
+                  <h3 class="card-title">{{ service.name }}</h3>
+                  <p class="card-description">{{ service.description }}</p>
+                </div>
+                <div class="card-footer">
+                  <span class="category-indicator">⚡ Quick Request</span>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Home & Office Services -->
+        <div class="service-group">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="group-emoji">🏠</span>
+              <h2>Home & Office Services</h2>
+            </div>
+            <div class="group-badges">
+              <span class="badge badge-warning">Mid-Complexity</span>
+              <span class="badge badge-info">10-15 min form</span>
+            </div>
+          </div>
+          <div class="services-grid">
+            @for (service of groupedServices.midComplexity; track service.id) {
+              <button class="service-card" (click)="handleServiceClick(service)">
+                <div class="card-icon">{{ service.icon }}</div>
+                <div class="card-content">
+                  <h3 class="card-title">{{ service.name }}</h3>
+                  <p class="card-description">{{ service.description }}</p>
+                </div>
+                <div class="card-footer">
+                  <span class="category-indicator">📋 Guided Form</span>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Industrial & Technical Services -->
+        <div class="service-group">
+          <div class="group-header">
+            <div class="group-title">
+              <span class="group-emoji">⚙️</span>
+              <h2>Industrial & Technical Services</h2>
+            </div>
+            <div class="group-badges">
+              <span class="badge badge-primary">Engineering Services</span>
+              <span class="badge badge-info">Detailed specs required</span>
+            </div>
+          </div>
+          <div class="services-grid">
+            @for (service of groupedServices.technical; track service.id) {
+              <button class="service-card" (click)="handleServiceClick(service)">
+                <div class="card-icon">{{ service.icon }}</div>
+                <div class="card-content">
+                  <h3 class="card-title">
+                    {{ service.name }}
+                    @if (service.aiAssisted) {
+                      <span class="ai-badge" title="AI-Assisted">✨</span>
+                    }
+                  </h3>
+                  <p class="card-description">{{ service.description }}</p>
+                </div>
+                <div class="card-footer">
+                  <span class="category-indicator">📐 Technical Details Needed</span>
+                </div>
+              </button>
+            }
+          </div>
+        </div>
+      } @else {
+        <!-- Filtered/Search View -->
+        <div class="filtered-results">
+          <p class="results-count">{{ filteredServices().length }} services found</p>
+          <div class="services-grid">
+            @for (service of filteredServices(); track service.id) {
+              <button class="service-card" (click)="handleServiceClick(service)">
+                <div class="card-icon">{{ service.icon }}</div>
+                <div class="card-content">
+                  <h3 class="card-title">
+                    {{ service.name }}
+                    @if (service.aiAssisted) {
+                      <span class="ai-badge" title="AI-Assisted">✨</span>
+                    }
+                  </h3>
+                  <p class="card-description">{{ service.description }}</p>
+                </div>
+                <div class="card-footer">
+                  <span class="category-indicator">{{ getCategoryIndicator(service.category) }}</span>
+                </div>
+              </button>
+            } @empty {
+              <div class="no-results">
+                <p>No services found matching your search.</p>
+                <button class="btn-outline" (click)="searchQuery.set(''); activeFilter.set('all')">
+                  Clear Filters
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Floating Help Button -->
+  <button class="help-fab" (click)="toggleHelpModal()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+    <span>Not sure which service?</span>
+  </button>
+
+  <!-- Auth Modal -->
+  @if (authModal().isOpen) {
+    <button 
+      type="button"
+      class="modal-backdrop" 
+      (click)="closeAuthModal()" 
+      (keydown.escape)="closeAuthModal()"
+      (keydown.enter)="closeAuthModal()"
+      aria-label="Close modal">
+      <dialog 
+        open
+        class="modal" 
+        (click)="$event.stopPropagation()" 
+        (keydown)="$event.stopPropagation()"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title">
+        <button class="modal-close" (click)="closeAuthModal()" aria-label="Close login modal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <div class="modal-content">
+          <div class="modal-icon">🔐</div>
+          <h2 class="modal-title" id="auth-modal-title">Sign in to continue</h2>
+          <p class="modal-subtitle">
+            Create an account or sign in to submit service requests and receive competitive tenders.
+          </p>
+          <div class="modal-actions">
+            <button class="btn-primary btn-full" (click)="goToLogin()">
+              Login
+            </button>
+            <button class="btn-outline btn-full" (click)="goToSignup()">
+              Sign Up
+            </button>
+          </div>
+          <div class="modal-divider">
+            <span>or</span>
+          </div>
+          <button class="vendor-link" (click)="goToVendorSignup()">
+            Are you a vendor? Register here →
+          </button>
+        </div>
+      </dialog>
+    </button>
+  }
+
+  <!-- What to Expect Modal -->
+  @if (whatToExpectModal().isOpen && whatToExpectModal().service && whatToExpectModal().info) {
+    <button 
+      type="button"
+      class="modal-backdrop" 
+      (click)="closeWhatToExpectModal()" 
+      (keydown.escape)="closeWhatToExpectModal()"
+      (keydown.enter)="closeWhatToExpectModal()"
+      aria-label="Close modal">
+      <dialog 
+        open
+        class="modal modal-lg" 
+        (click)="$event.stopPropagation()" 
+        (keydown)="$event.stopPropagation()"
+        aria-modal="true"
+        aria-labelledby="expect-modal-title">
+        <button class="modal-close" (click)="closeWhatToExpectModal()" aria-label="Close information modal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <div class="modal-content">
+          <div class="expect-header">
+            <div class="expect-icon">{{ whatToExpectModal().service!.icon }}</div>
+            <div>
+              <h2 class="modal-title" id="expect-modal-title">{{ whatToExpectModal().service!.name }}</h2>
+              <p class="expect-category">{{ getCategoryBadge(whatToExpectModal().service!.category) }}</p>
+            </div>
+          </div>
+          
+          <div class="expect-info">
+            <div class="expect-row">
+              <span class="expect-label">Form type:</span>
+              <span class="expect-value">{{ whatToExpectModal().info!.formType }}</span>
+            </div>
+            <div class="expect-row">
+              <span class="expect-label">Estimated time:</span>
+              <span class="expect-value">{{ whatToExpectModal().info!.estimatedTime }}</span>
+            </div>
+            <div class="expect-row">
+              <span class="expect-label">Approval timeline:</span>
+              <span class="expect-value">{{ whatToExpectModal().info!.approvalTimeline }}</span>
+            </div>
+          </div>
+
+          <div class="expect-requirements">
+            <h3>You'll need:</h3>
+            <ul>
+              @for (req of whatToExpectModal().info!.requirements; track req) {
+                <li>{{ req }}</li>
+              }
+            </ul>
+          </div>
+          <button class="btn-primary btn-full btn-large" (click)="proceedWithService()">
+            Let's Begin
+          </button>
+        </div>
+      </dialog>
+    </button>
+  }
+
+  <!-- Help Modal -->
+  @if (helpModal()) {
+    <button 
+      type="button"
+      type="button"
+      class="modal-backdrop" 
+      (click)="toggleHelpModal()" 
+      (keydown.escape)="toggleHelpModal()" 
+      (keydown.enter)="toggleHelpModal()" 
+      aria-label="Close modal">
+      <dialog 
+        open
+        class="modal" 
+        (click)="$event.stopPropagation()" 
+        (keydown)="$event.stopPropagation()"
+        aria-modal="true">
+        <button class="modal-close" (click)="toggleHelpModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <div class="modal-content">
+          <h2 class="modal-title">Need help choosing?</h2>
+          
+          <div class="help-faq">
+            <div class="faq-item">
+              <h4>🚀 Quick Services</h4>
+              <p>For simple, routine tasks like AC servicing, appliance repairs, or tool supplies. Fast turnaround, minimal paperwork.</p>
+            </div>
+            <div class="faq-item">
+              <h4>🏠 Home & Office Services</h4>
+              <p>For projects requiring more planning like interior work, painting, furniture, or signage. Moderate complexity.</p>
+            </div>
+            <div class="faq-item">
+              <h4>⚙️ Industrial & Technical</h4>
+              <p>For complex engineering projects requiring detailed specifications like fabrication, electrical work, or transformer services.</p>
+            </div>
+          </div>
+
+          <div class="help-contact">
+            <a routerLink="/contact" class="btn-outline btn-full" (click)="toggleHelpModal()">
+              Contact Support
+            </a>
+          </div>
+        </div>
+      </dialog>
+    </button>
+  }
+</div>
