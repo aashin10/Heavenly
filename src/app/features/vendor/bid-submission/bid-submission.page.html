@@ -1,0 +1,552 @@
+@if (tender(); as tender) {
+<div class="bid-submission-container">
+  
+  <!-- Header -->
+  <div class="submission-header">
+    <button class="btn-back" (click)="confirmExit()">← Exit</button>
+    <div class="header-info">
+      <h1>Submit Bid</h1>
+      <p class="tender-ref">For: {{ tender.title }}</p>
+    </div>
+    <div class="auto-save-indicator" [class.saved]="lastSavedTime()">
+      @if (lastSavedTime()) {
+        <span class="save-icon">✓</span>
+        <span>Draft saved</span>
+      }
+    </div>
+  </div>
+  
+  <!-- Progress Stepper -->
+  <nav class="stepper" aria-label="Bid submission progress">
+    @for (label of stepLabels; track label; let i = $index) {
+      <button 
+        type="button"
+        class="step" 
+        [class.active]="currentStep() === i + 1"
+        [class.completed]="currentStep() > i + 1"
+        [class.clickable]="i + 1 < currentStep()"
+        [disabled]="i + 1 >= currentStep()"
+        (click)="goToStep(i + 1)"
+        [attr.aria-current]="currentStep() === i + 1 ? 'step' : null">
+        <span class="step-number">
+          @if (currentStep() > i + 1) {
+            <span class="check" aria-hidden="true">✓</span>
+          } @else {
+            {{ i + 1 }}
+          }
+        </span>
+        <span class="step-label">{{ label }}</span>
+      </button>
+      @if (i < stepLabels.length - 1) {
+        <div class="step-connector" [class.active]="currentStep() > i + 1" aria-hidden="true"></div>
+      }
+    }
+  </nav>
+  
+  <!-- Form Content -->
+  <form [formGroup]="bidForm" class="bid-form">
+    
+    <!-- Step 1: Eligibility Confirmation -->
+    @if (currentStep() === 1) {
+      <div class="form-step">
+        <h2 class="step-title">Confirm Eligibility</h2>
+        
+        <div class="eligibility-checklist">
+          <h3>Before you proceed, please confirm that you meet the following criteria:</h3>
+          
+          <div class="checklist-items">
+            @for (criterion of tender.eligibilityCriteria; track criterion) {
+              <div class="checklist-item">
+                <span class="check-icon">✓</span>
+                <span>{{ criterion }}</span>
+              </div>
+            }
+          </div>
+          
+          <div class="confirmation-checkbox">
+            <label class="checkbox-large">
+              <input type="checkbox" formControlName="confirmEligibility">
+              <span class="checkbox-mark"></span>
+              <span class="checkbox-label">
+                <strong>I confirm</strong> that I/we meet all the eligibility criteria listed above
+              </span>
+            </label>
+            @if (isFieldInvalid('confirmEligibility')) {
+              <span class="error-text">You must confirm eligibility to proceed</span>
+            }
+          </div>
+          
+          <div class="warning-box">
+            <span class="warning-icon">⚠️</span>
+            <p>
+              Submitting a bid without meeting eligibility criteria may result in 
+              disqualification and could affect your future bidding eligibility.
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+    
+    <!-- Step 2: Technical Proposal -->
+    @if (currentStep() === 2) {
+      <div class="form-step">
+        <h2 class="step-title">Technical Proposal</h2>
+        
+        <div class="important-notice">
+          ⚠️ <strong>Important:</strong> Do NOT include any pricing information in this section. 
+          Pricing details will be submitted separately in the next step.
+        </div>
+        
+        <!-- Company Profile -->
+        <div class="form-field">
+          <label class="field-label required" for="company-profile">Company Profile</label>
+          <p class="field-hint" id="company-profile-hint">Brief overview of your company and capabilities</p>
+          <textarea 
+            id="company-profile"
+            formControlName="companyProfile" 
+            rows="5" 
+            class="form-textarea"
+            [class.invalid]="isFieldInvalid('companyProfile')"
+            aria-describedby="company-profile-hint"
+            placeholder="Describe your company, years in business, team size, core competencies..."></textarea>
+          @if (isFieldInvalid('companyProfile')) {
+            <span class="error-text">Company profile is required</span>
+          }
+        </div>
+        
+        <!-- Relevant Experience -->
+        <div class="form-field">
+          <label class="field-label required" for="relevant-experience">Relevant Experience</label>
+          <p class="field-hint" id="relevant-experience-hint">Describe your experience in similar projects</p>
+          <textarea 
+            id="relevant-experience"
+            formControlName="relevantExperience" 
+            rows="5" 
+            class="form-textarea"
+            [class.invalid]="isFieldInvalid('relevantExperience')"
+            aria-describedby="relevant-experience-hint"
+            placeholder="Detail your experience with similar projects, industries served..."></textarea>
+          @if (isFieldInvalid('relevantExperience')) {
+            <span class="error-text">Relevant experience is required</span>
+          }
+        </div>
+        
+        <!-- Similar Work References -->
+        <fieldset class="form-field" formArrayName="similarWorkReferences">
+          <legend class="field-label">Similar Work References</legend>
+          <p class="field-hint">Provide at least 2 references from similar projects</p>
+          
+          <div class="references-list">
+            @for (ref of similarWorkReferencesArray.controls; track ref; let i = $index) {
+              <div class="reference-item" [formGroupName]="i">
+                <div class="reference-header">
+                  <h4>Reference {{ i + 1 }}</h4>
+                  @if (similarWorkReferencesArray.length > 1) {
+                    <button type="button" class="btn-remove" (click)="removeReference(i)" [attr.aria-label]="'Remove reference ' + (i + 1)">×</button>
+                  }
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-field">
+                    <label [for]="'client-name-' + i">Client Name</label>
+                    <input type="text" [id]="'client-name-' + i" formControlName="clientName" class="form-input">
+                  </div>
+                  <div class="form-field">
+                    <label [for]="'project-type-' + i">Project Type</label>
+                    <input type="text" [id]="'project-type-' + i" formControlName="projectType" class="form-input">
+                  </div>
+                </div>
+                
+                <div class="form-row">
+                  <div class="form-field">
+                    <label [for]="'contact-person-' + i">Contact Person</label>
+                    <input type="text" [id]="'contact-person-' + i" formControlName="contactPerson" class="form-input">
+                  </div>
+                  <div class="form-field">
+                    <label [for]="'phone-' + i">Phone</label>
+                    <input type="tel" [id]="'phone-' + i" formControlName="phone" class="form-input">
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+          
+          <button type="button" class="btn btn-outline btn-sm" (click)="addReference()">
+            + Add Another Reference
+          </button>
+        </fieldset>
+        
+        <!-- Technical Approach -->
+        <div class="form-field">
+          <label for="technicalApproach" class="field-label required">Technical Approach / Methodology</label>
+          <p class="field-hint" id="technicalApproach-hint">Explain how you plan to execute this project</p>
+          <textarea 
+            id="technicalApproach"
+            formControlName="technicalApproach" 
+            rows="8" 
+            class="form-textarea"
+            [class.invalid]="isFieldInvalid('technicalApproach')"
+            aria-describedby="technicalApproach-hint"
+            placeholder="Describe your approach, methodology, quality control measures..."></textarea>
+          @if (isFieldInvalid('technicalApproach')) {
+            <span class="error-text">Technical approach is required</span>
+          }
+        </div>
+        
+        <!-- Manpower & Equipment -->
+        <div class="form-row">
+          <div class="form-field">
+            <label for="manpowerPlan" class="field-label">Manpower Plan</label>
+            <textarea 
+              id="manpowerPlan"
+              formControlName="manpowerPlan" 
+              rows="4" 
+              class="form-textarea"
+              placeholder="Team composition, roles, qualifications..."></textarea>
+          </div>
+          
+          <div class="form-field">
+            <label for="equipmentPlan" class="field-label">Equipment Plan</label>
+            <textarea 
+              id="equipmentPlan"
+              formControlName="equipmentPlan" 
+              rows="4" 
+              class="form-textarea"
+              placeholder="Equipment, tools, machinery to be used..."></textarea>
+          </div>
+        </div>
+        
+        <!-- Delivery Timeline -->
+        <div class="form-field">
+          <label for="deliveryTimeline" class="field-label required">Delivery Timeline</label>
+          <p class="field-hint" id="deliveryTimeline-hint">Provide a realistic timeline for project completion</p>
+          <input 
+            type="text" 
+            id="deliveryTimeline"
+            formControlName="deliveryTimeline" 
+            class="form-input"
+            [class.invalid]="isFieldInvalid('deliveryTimeline')"
+            aria-describedby="deliveryTimeline-hint"
+            placeholder="e.g., 15 working days from award">
+          @if (isFieldInvalid('deliveryTimeline')) {
+            <span class="error-text">Delivery timeline is required</span>
+          }
+        </div>
+        
+        <!-- Deviations -->
+        <div class="form-field">
+          <label for="deviations" class="field-label">Deviations from Tender Requirements</label>
+          <p class="field-hint" id="deviations-hint">List any deviations or alternate proposals (if applicable)</p>
+          <textarea 
+            id="deviations"
+            formControlName="deviations" 
+            rows="4" 
+            class="form-textarea"
+            aria-describedby="deviations-hint"
+            placeholder="If none, leave blank"></textarea>
+        </div>
+      </div>
+    }
+    
+    <!-- Step 3: Commercial Proposal -->
+    @if (currentStep() === 3) {
+      <div class="form-step">
+        <h2 class="step-title">Commercial Proposal</h2>
+        
+        <div class="important-notice sealed">
+          🔒 <strong>Sealed Commercial Proposal:</strong> Your commercial details will remain 
+          sealed until the technical evaluation is complete. They will not be visible to the 
+          requester or management during technical evaluation.
+        </div>
+        
+        <!-- Total Price -->
+        <div class="form-field highlight">
+          <label for="totalPrice" class="field-label required">Total Bid Price (₹)</label>
+          <p class="field-hint" id="totalPrice-hint">All-inclusive price (excluding taxes unless specified)</p>
+          <input 
+            type="number" 
+            id="totalPrice"
+            formControlName="totalPrice" 
+            class="form-input large"
+            [class.invalid]="isFieldInvalid('totalPrice')"
+            aria-describedby="totalPrice-hint"
+            placeholder="Enter total amount in INR">
+          @if (isFieldInvalid('totalPrice')) {
+            <span class="error-text">Total price is required</span>
+          }
+        </div>
+        
+        <!-- Price Breakdown -->
+        <fieldset class="form-field" formArrayName="priceBreakdown">
+          <legend class="field-label">Price Breakdown</legend>
+          <p class="field-hint">Itemized breakdown of your pricing</p>
+          
+          <div class="price-breakdown-list">
+            @for (item of priceBreakdownArray.controls; track item; let i = $index) {
+              <div class="price-item" [formGroupName]="i">
+                <div class="form-row">
+                  <div class="form-field flex-2">
+                    <label [for]="'price-' + i + '-description'" class="sr-only">Item description</label>
+                    <input 
+                      type="text" 
+                      [id]="'price-' + i + '-description'"
+                      formControlName="description" 
+                      class="form-input"
+                      placeholder="Item description">
+                  </div>
+                  <div class="form-field flex-1">
+                    <label [for]="'price-' + i + '-amount'" class="sr-only">Amount in INR</label>
+                    <input 
+                      type="number" 
+                      [id]="'price-' + i + '-amount'"
+                      formControlName="amount" 
+                      class="form-input"
+                      placeholder="Amount (₹)">
+                  </div>
+                  @if (priceBreakdownArray.length > 1) {
+                    <button type="button" class="btn-remove" (click)="removePriceItem(i)" [attr.aria-label]="'Remove price item ' + (i + 1)">×</button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+          
+          <button type="button" class="btn btn-outline btn-sm" (click)="addPriceItem()">
+            + Add Line Item
+          </button>
+        </fieldset>
+        
+        <!-- Taxes & Duties -->
+        <div class="form-field">
+          <label for="taxesAndDuties" class="field-label required">Taxes & Duties</label>
+          <p class="field-hint" id="taxesAndDuties-hint">Specify GST and any other applicable taxes</p>
+          <input 
+            type="text" 
+            id="taxesAndDuties"
+            formControlName="taxesAndDuties" 
+            class="form-input"
+            [class.invalid]="isFieldInvalid('taxesAndDuties')"
+            aria-describedby="taxesAndDuties-hint"
+            placeholder="e.g., GST @ 18% extra, or GST inclusive">
+          @if (isFieldInvalid('taxesAndDuties')) {
+            <span class="error-text">Taxes & duties information is required</span>
+          }
+        </div>
+        
+        <!-- Payment Terms -->
+        <div class="form-field">
+          <label for="paymentTerms" class="field-label required">Payment Terms</label>
+          <p class="field-hint" id="paymentTerms-hint">Specify your payment terms and milestones</p>
+          <textarea 
+            id="paymentTerms"
+            formControlName="paymentTerms" 
+            rows="4" 
+            class="form-textarea"
+            [class.invalid]="isFieldInvalid('paymentTerms')"
+            aria-describedby="paymentTerms-hint"
+            placeholder="e.g., 30% advance, 60% on completion, 10% retention..."></textarea>
+          @if (isFieldInvalid('paymentTerms')) {
+            <span class="error-text">Payment terms are required</span>
+          }
+        </div>
+        
+        <!-- Validity Period -->
+        <div class="form-field">
+          <label for="validityPeriod" class="field-label required">Bid Validity Period</label>
+          <p class="field-hint" id="validityPeriod-hint">How long is this bid valid for?</p>
+          <input 
+            type="text" 
+            id="validityPeriod"
+            formControlName="validityPeriod" 
+            class="form-input"
+            [class.invalid]="isFieldInvalid('validityPeriod')"
+            aria-describedby="validityPeriod-hint"
+            placeholder="e.g., 90 days from bid submission">
+          @if (isFieldInvalid('validityPeriod')) {
+            <span class="error-text">Validity period is required</span>
+          }
+        </div>
+        
+        <!-- Warranty / AMC Pricing -->
+        <div class="form-row">
+          <div class="form-field">
+            <label for="warrantyPricing" class="field-label">Warranty Pricing</label>
+            <input 
+              type="text" 
+              id="warrantyPricing"
+              formControlName="warrantyPricing" 
+              class="form-input"
+              placeholder="Warranty terms and additional cost (if any)">
+          </div>
+          
+          <div class="form-field">
+            <label for="amcPricing" class="field-label">AMC Pricing (if applicable)</label>
+            <input 
+              type="text" 
+              id="amcPricing"
+              formControlName="amcPricing" 
+              class="form-input"
+              placeholder="Annual maintenance contract pricing">
+          </div>
+        </div>
+      </div>
+    }
+    
+    <!-- Step 4: Review & Submit -->
+    @if (currentStep() === 4) {
+      <div class="form-step">
+        <h2 class="step-title">Review & Submit</h2>
+        
+        <p class="review-intro">
+          Please review your bid carefully before submitting. Once submitted, you cannot 
+          modify your bid unless the tender is extended.
+        </p>
+        
+        <!-- Technical Proposal Summary -->
+        <div class="review-section">
+          <div class="review-section-header">
+            <h3>📋 Technical Proposal</h3>
+            <button type="button" class="btn-edit" (click)="goToStep(2)">Edit</button>
+          </div>
+          
+          <div class="review-content">
+            <div class="review-item">
+              <span class="review-label">Company Profile:</span>
+              <span class="review-value">{{ truncateText(bidForm.get('companyProfile')?.value, 200) }}</span>
+            </div>
+            <div class="review-item">
+              <span class="review-label">Relevant Experience:</span>
+              <span class="review-value">{{ truncateText(bidForm.get('relevantExperience')?.value, 200) }}</span>
+            </div>
+            <div class="review-item">
+              <span class="review-label">Delivery Timeline:</span>
+              <span class="review-value">{{ bidForm.get('deliveryTimeline')?.value }}</span>
+            </div>
+            @if (bidForm.get('deviations')?.value) {
+              <div class="review-item">
+                <span class="review-label">Deviations:</span>
+                <span class="review-value">{{ bidForm.get('deviations')?.value }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        
+        <!-- Commercial Proposal Summary -->
+        <div class="review-section">
+          <div class="review-section-header">
+            <h3>💰 Commercial Proposal 🔒</h3>
+            <button type="button" class="btn-edit" (click)="goToStep(3)">Edit</button>
+          </div>
+          
+          <div class="review-content">
+            <div class="review-item highlight">
+              <span class="review-label">Total Bid Price:</span>
+              <span class="review-value large">{{ formatCurrency(bidForm.get('totalPrice')?.value) }}</span>
+            </div>
+            <div class="review-item">
+              <span class="review-label">Taxes & Duties:</span>
+              <span class="review-value">{{ bidForm.get('taxesAndDuties')?.value }}</span>
+            </div>
+            <div class="review-item">
+              <span class="review-label">Payment Terms:</span>
+              <span class="review-value">{{ bidForm.get('paymentTerms')?.value }}</span>
+            </div>
+            <div class="review-item">
+              <span class="review-label">Validity:</span>
+              <span class="review-value">{{ bidForm.get('validityPeriod')?.value }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Final Confirmation -->
+        <div class="final-confirmation">
+          <div class="warning-box">
+            <h4>⚠️ Before You Submit</h4>
+            <ul>
+              <li>Ensure all information is accurate and complete</li>
+              <li>Once submitted, you cannot modify your bid</li>
+              <li>Your commercial proposal will remain sealed until technical evaluation</li>
+              <li>False information may lead to disqualification</li>
+            </ul>
+          </div>
+          
+          <label class="checkbox-large">
+            <input type="checkbox" id="finalConfirmation" [checked]="finalConfirmation()" (change)="finalConfirmation.set(!finalConfirmation())">
+            <span class="checkbox-mark"></span>
+            <span class="checkbox-label">
+              I confirm that all information provided is accurate and I agree to the 
+              <a href="/terms" target="_blank">Terms &amp; Conditions</a>
+            </span>
+          </label>
+        </div>
+      </div>
+    }
+  </form>
+  
+  <!-- Navigation Buttons -->
+  <div class="form-actions">
+    @if (currentStep() > 1) {
+      <button type="button" class="btn btn-secondary" (click)="previousStep()">
+        ← Back
+      </button>
+    } @else {
+      <div></div>
+    }
+    
+    <button type="button" class="btn btn-link" (click)="saveDraftAndExit()">
+      Save & Exit
+    </button>
+    
+    @if (currentStep() < totalSteps) {
+      <button type="button" class="btn btn-primary" (click)="nextStep()">
+        Next →
+      </button>
+    } @else {
+      <button 
+        type="button" 
+        class="btn btn-primary btn-lg" 
+        (click)="submitBid()"
+        [disabled]="!finalConfirmation() || bidForm.invalid">
+        Submit Bid
+      </button>
+    }
+  </div>
+</div>
+
+<!-- Success Modal -->
+@if (showSuccessModal()) {
+  <div class="modal-overlay">
+    <div class="modal-dialog success-modal">
+      <div class="success-icon">
+        <span>✓</span>
+      </div>
+      
+      <h2>Bid Submitted Successfully!</h2>
+      <p>Your bid has been submitted and is now under review.</p>
+      
+      <div class="bid-summary">
+        <span class="bid-id">Bid ID: {{ submittedBidId() }}</span>
+        <span class="tender-title">{{ tender.title }}</span>
+      </div>
+      
+      <div class="next-steps">
+        <h4>What happens next?</h4>
+        <ul>
+          <li>Your technical proposal will be evaluated first</li>
+          <li>Commercial proposals are opened only after technical evaluation</li>
+          <li>You'll be notified of the result via email</li>
+        </ul>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="closeSuccessModal()">
+          View All Bids
+        </button>
+        <button class="btn btn-primary" (click)="viewSubmittedBid()">
+          View This Bid
+        </button>
+      </div>
+    </div>
+  </div>
+}
+}

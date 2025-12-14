@@ -1,19 +1,26 @@
 import { Component, inject, ElementRef, QueryList, ViewChildren } from '@angular/core';
+import { Router } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
 import { ManagementService } from './management.service';
-import { JobFilter } from './management.model';
+import { ServiceRequestManagementService } from './service-request-management.service';
+import { JobFilter, ServiceRequest, ServiceRequestFilter } from './management.model';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-management-page',
   standalone: true,
-  imports: [TitleCasePipe],
+  imports: [TitleCasePipe, StatusBadgeComponent],
   templateUrl: './management.page.html',
   styleUrl: './management.page.scss'
 })
 export class ManagementPageComponent {
+  private readonly router = inject(Router);
   protected readonly managementService = inject(ManagementService);
+  protected readonly srManagementService = inject(ServiceRequestManagementService);
 
   @ViewChildren('tabButton') tabButtons!: QueryList<ElementRef<HTMLButtonElement>>;
+
+  activeTab: 'service-requests' | 'jobs' = 'service-requests';
 
   readonly filterOptions: { value: JobFilter; label: string }[] = [
     { value: 'pending', label: 'Pending' },
@@ -22,8 +29,26 @@ export class ManagementPageComponent {
     { value: 'all', label: 'All Jobs' }
   ];
 
+  readonly srFilterOptions: { value: ServiceRequestFilter; label: string }[] = [
+    { value: 'pending', label: 'Pending Review' },
+    { value: 'under_review', label: 'Under Review' },
+    { value: 'high_priority', label: 'High Priority' },
+    { value: 'technical', label: 'Technical' },
+    { value: 'needs_attention', label: 'Needs Attention' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'all', label: 'All Requests' }
+  ];
+
+  setActiveTab(tab: 'service-requests' | 'jobs'): void {
+    this.activeTab = tab;
+  }
+
   setFilter(filter: JobFilter): void {
     this.managementService.setFilter(filter);
+  }
+
+  setSRFilter(filter: ServiceRequestFilter): void {
+    this.srManagementService.setFilter(filter);
   }
 
   approveJob(jobId: string): void {
@@ -32,6 +57,83 @@ export class ManagementPageComponent {
 
   rejectJob(jobId: string): void {
     this.managementService.updateJobStatus(jobId, 'rejected');
+  }
+
+  reviewRequest(request: ServiceRequest): void {
+    this.router.navigate(['/management/review', request.id]);
+  }
+
+  quickApprove(request: ServiceRequest): void {
+    const defaultReviewData = {
+      tenderTitle: `${request.serviceName} - ${request.city}`,
+      scopeSummary: request.description,
+      commercialStructure: request.budgetMin && request.budgetMax 
+        ? `Budget: ${request.budgetCurrency} ${request.budgetMin} - ${request.budgetMax}` 
+        : 'To be discussed',
+      bidWindowStart: this.addDays(new Date(), 1).toISOString().split('T')[0],
+      bidWindowEnd: this.addDays(new Date(), 7).toISOString().split('T')[0],
+      budgetVisibility: 'show_range' as const,
+      tenderType: 'open' as const,
+      eligibilityCriteria: {
+        minExperience: true,
+        minExperienceYears: 2,
+        certifications: false,
+        financialCapacity: false,
+        previousWork: false
+      },
+      internalNotes: 'Quick approved from dashboard'
+    };
+    this.srManagementService.approveRequest(request.id, defaultReviewData);
+  }
+
+  publishTender(request: ServiceRequest): void {
+    this.router.navigate(['/management/publish', request.id]);
+  }
+
+  getTimeAgo(dateString: string): string {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return `${diffDays}d ago`;
+  }
+
+  getUrgencyClass(urgency: string): string {
+    switch (urgency) {
+      case 'urgent': return 'urgency--urgent';
+      case 'high': return 'urgency--high';
+      case 'medium': return 'urgency--medium';
+      default: return 'urgency--low';
+    }
+  }
+
+  getCategoryLabel(category: string): string {
+    switch (category) {
+      case 'technical': return 'Technical';
+      case 'mid_complexity': return 'Mid-Complexity';
+      case 'quick_service': return 'Quick Service';
+      default: return category;
+    }
+  }
+
+  getCategoryClass(category: string): string {
+    switch (category) {
+      case 'technical': return 'category--technical';
+      case 'mid_complexity': return 'category--mid';
+      case 'quick_service': return 'category--quick';
+      default: return '';
+    }
+  }
+
+  private addDays(date: Date, days: number): Date {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
   }
 
   /**
@@ -60,7 +162,6 @@ export class ManagementPageComponent {
     }
 
     event.preventDefault();
-    // Focus the new tab and activate it
     tabs[newIndex].nativeElement.focus();
     this.setFilter(this.filterOptions[newIndex].value);
   }

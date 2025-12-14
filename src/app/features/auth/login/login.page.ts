@@ -2,13 +2,19 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { ServiceAuthService } from '../../../core/services/service-auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserType } from '../../../core/models/user.model';
+import { Vendor } from '../../../core/models/service.model';
 import { 
   LoginFormData, 
   SignupFormData, 
+  ServiceLoginFormData,
+  ServiceLoginUserType,
+  PortalType,
   INITIAL_LOGIN_DATA, 
-  INITIAL_SIGNUP_DATA 
+  INITIAL_SIGNUP_DATA,
+  INITIAL_SERVICE_LOGIN_DATA
 } from './login.model';
 import { TermsModalComponent } from './terms-modal.component';
 
@@ -25,8 +31,15 @@ const PHONE_PATTERN = /^[\d\s\-+()]{10,}$/;
 })
 export class LoginPageComponent {
   private readonly authService = inject(AuthService);
+  private readonly serviceAuthService = inject(ServiceAuthService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+
+  // Portal toggle - Jobs vs Services
+  portalType = signal<PortalType>('jobs');
+  
+  // Service user type toggle - Requester vs Vendor
+  serviceUserType = signal<ServiceLoginUserType>('service_requester');
 
   isLogin = signal<boolean>(true);
   showTerms = signal<boolean>(false);
@@ -36,6 +49,31 @@ export class LoginPageComponent {
 
   loginData = signal<LoginFormData>({ ...INITIAL_LOGIN_DATA });
   signupData = signal<SignupFormData>({ ...INITIAL_SIGNUP_DATA });
+  serviceLoginData = signal<ServiceLoginFormData>({ ...INITIAL_SERVICE_LOGIN_DATA });
+
+  setPortalType(type: PortalType): void {
+    this.portalType.set(type);
+    this.error.set('');
+    // Reset forms when switching portals
+    this.loginData.set({ ...INITIAL_LOGIN_DATA });
+    this.serviceLoginData.set({ ...INITIAL_SERVICE_LOGIN_DATA });
+  }
+
+  setServiceUserType(type: ServiceLoginUserType): void {
+    this.serviceUserType.set(type);
+    this.serviceLoginData.update(current => ({
+      ...current,
+      serviceUserType: type
+    }));
+    this.error.set('');
+  }
+
+  updateServiceLoginField(field: keyof ServiceLoginFormData, value: string): void {
+    this.serviceLoginData.update(current => ({
+      ...current,
+      [field]: value
+    }));
+  }
 
   updateLoginField(field: keyof LoginFormData, value: string): void {
     this.loginData.update(current => ({
@@ -105,6 +143,44 @@ export class LoginPageComponent {
 
     if (success) {
       this.router.navigate(['/dashboard']);
+    } else {
+      // Generic error message to prevent user enumeration
+      this.error.set('Invalid credentials. Please check your email and password.');
+    }
+    
+    this.isSubmitting.set(false);
+  }
+
+  handleServiceLoginSubmit(): void {
+    this.error.set('');
+    
+    const data = this.serviceLoginData();
+    
+    // Validate email format
+    if (!this.isValidEmail(data.email)) {
+      this.error.set('Please enter a valid email address');
+      return;
+    }
+
+    this.isSubmitting.set(true);
+    const user = this.serviceAuthService.loginServiceUser(
+      data.email, 
+      data.password, 
+      data.serviceUserType
+    );
+
+    if (user) {
+      // Navigate based on user type - we use the form data since we know what type was selected
+      if (data.serviceUserType === 'vendor') {
+        const vendor = user as Vendor;
+        if (vendor.verificationStatus === 'pending') {
+          this.router.navigate(['/verification-pending']);
+        } else {
+          this.router.navigate(['/vendor-dashboard']);
+        }
+      } else {
+        this.router.navigate(['/service-requester-dashboard']);
+      }
     } else {
       // Generic error message to prevent user enumeration
       this.error.set('Invalid credentials. Please check your email and password.');

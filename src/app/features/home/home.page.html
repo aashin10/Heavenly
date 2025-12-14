@@ -25,6 +25,38 @@
   </div>
 </section>
 
+<!-- Services Section -->
+<section class="services-section">
+  <div class="container">
+    <div class="services-header">
+      <h2 class="section-title">Need Professional Services?</h2>
+      <p class="section-subtitle">
+        From quick AC servicing to industrial fabrication - submit requests, get competitive tenders, hire verified vendors
+      </p>
+    </div>
+    <div class="services-icons-grid">
+      @for (service of serviceIcons; track service.id) {
+        <a [routerLink]="['/services']" [fragment]="service.id" class="service-icon-card">
+          <div class="service-icon-emoji">{{ service.icon }}</div>
+          <div class="service-icon-name">{{ service.name }}</div>
+        </a>
+      }
+    </div>
+    <div class="services-cta">
+      <a routerLink="/services" class="btn-primary btn-large">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Explore Services
+      </a>
+      <a routerLink="/vendor-signup" class="btn-subtle">
+        For Vendors: Register Here →
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- Domains Section -->
 <section class="domains-section">
   <div class="container">

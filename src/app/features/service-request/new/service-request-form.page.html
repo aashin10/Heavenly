@@ -1,0 +1,95 @@
+<div class="service-request-page">
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading form...</p>
+    </div>
+  } @else {
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <ol>
+        <li><a routerLink="/">Home</a></li>
+        <li><a routerLink="/services">Services</a></li>
+        <li>
+          <span aria-current="page">{{ service()?.name || 'New Request' }}</span>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div class="header-content">
+        <span class="service-icon">{{ service()?.icon || '📋' }}</span>
+        <div class="header-text">
+          <h1>{{ service()?.name }}</h1>
+          <p class="category-badge" [class]="category()">
+            {{ formConfig()?.totalSteps }} steps • {{ category() === 'technical' ? 'Technical Service' : category() === 'mid_complexity' ? 'Standard Service' : 'Quick Service' }}
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Form Container -->
+    <div class="form-container">
+      @switch (category()) {
+        @case ('technical') {
+          <app-technical-service-form
+            [serviceId]="serviceId()"
+            [serviceName]="service()?.name || ''"
+            [draftId]="draftId()"
+            [initialStep]="initialStep()"
+            (saved)="onFormSaved($event)"
+            (completed)="onFormComplete()"
+            (cancelled)="onFormCancel()">
+          </app-technical-service-form>
+        }
+        @case ('mid_complexity') {
+          <app-mid-complexity-form
+            [serviceId]="serviceId()"
+            [serviceName]="service()?.name || ''"
+            [draftId]="draftId()"
+            [initialStep]="initialStep()"
+            (saved)="onFormSaved($event)"
+            (completed)="onFormComplete()"
+            (cancelled)="onFormCancel()">
+          </app-mid-complexity-form>
+        }
+        @case ('quick_service') {
+          <app-quick-service-form
+            [serviceId]="serviceId()"
+            [serviceName]="service()?.name || ''"
+            [draftId]="draftId()"
+            [initialStep]="initialStep()"
+            (saved)="onFormSaved($event)"
+            (completed)="onFormComplete()"
+            (cancelled)="onFormCancel()">
+          </app-quick-service-form>
+        }
+      }
+    </div>
+  }
+
+  <!-- Draft Restore Modal -->
+  @if (restoreModal().isOpen) {
+        <button type="button" class="modal-backdrop" (click)="onStartFresh()" (keydown.escape)="onStartFresh()" (keydown.enter)="onStartFresh()">
+      <dialog open class="modal-content" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" aria-modal="true">
+        <div class="modal-icon">📄</div>
+        <h2>Continue where you left off?</h2>
+        <p class="modal-description">
+          You have an incomplete request for this service.
+          <br>
+          <span class="last-saved">Last saved: {{ formatLastSaved(restoreModal().lastSaved) }}</span>
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" (click)="onStartFresh()">
+            Start Fresh
+          </button>
+          <button type="button" class="btn btn-primary" (click)="onRestoreDraft()">
+            Continue Draft
+          </button>
+        </div>
+      </dialog>
+    </button>
+  }
+</div>

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Domain, Feature } from './home.model';
+import { Domain, Feature, ServiceIcon } from './home.model';
 
 @Component({
   selector: 'app-home-page',
@@ -50,5 +50,16 @@ export class HomePageComponent {
       title: 'Global Reach',
       description: 'Opportunities across various locations and industries',
     },
+  ];
+
+  readonly serviceIcons: ServiceIcon[] = [
+    { id: 'ac-servicing', name: 'AC/Appliance Servicing', icon: '❄️' },
+    { id: 'interior-finishing', name: 'Interior & Finishing', icon: '🏠' },
+    { id: 'paint-polish', name: 'Paint & Polish', icon: '🎨' },
+    { id: 'electrical-materials', name: 'Electrical Materials', icon: '💡' },
+    { id: 'fabrication', name: 'Fabrication', icon: '⚙️' },
+    { id: 'cctv-fire', name: 'CCTV & Fire', icon: '📹' },
+    { id: 'office-furniture', name: 'Furniture Supply', icon: '🪑' },
+    { id: 'transformer-rewinding', name: 'Transformer Rewinding', icon: '⚡' },
   ];
 }

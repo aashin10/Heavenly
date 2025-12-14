@@ -1,0 +1,268 @@
+@if (bid(); as bid) {
+<div class="bid-detail-container">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <button class="btn-back" (click)="goBack()">← Back to My Bids</button>
+    
+    <div class="header-content">
+      <div class="header-info">
+        <span class="bid-id">{{ bid.bidId }}</span>
+        <h1>{{ bid.tenderTitle }}</h1>
+      </div>
+      <span class="status-badge" [ngClass]="getStatusBadgeClass(bid.status)">
+        {{ getStatusLabel(bid.status) }}
+      </span>
+    </div>
+  </div>
+  
+  <div class="content-layout">
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      
+      <!-- Status Alert -->
+      @if (bid.status === 'awarded') {
+        <div class="status-alert success">
+          <span class="alert-icon">🏆</span>
+          <div class="alert-content">
+            <h3>Congratulations! Your bid has been awarded</h3>
+            <p>Please contact the procurement team for next steps.</p>
+          </div>
+        </div>
+      }
+      
+      @if (bid.status === 'shortlisted') {
+        <div class="status-alert info">
+          <span class="alert-icon">✨</span>
+          <div class="alert-content">
+            <h3>Your technical proposal has been shortlisted</h3>
+            <p>Your commercial proposal is now under evaluation.</p>
+          </div>
+        </div>
+      }
+      
+      @if (bid.status === 'rejected') {
+        <div class="status-alert error">
+          <span class="alert-icon">ℹ️</span>
+          <div class="alert-content">
+            <h3>Your bid was not selected</h3>
+            @if (bid.rejectionReason) {
+              <p>Reason: {{ bid.rejectionReason }}</p>
+            } @else {
+              <p>Thank you for your participation. Better luck next time!</p>
+            }
+          </div>
+        </div>
+      }
+      
+      <!-- Technical Proposal -->
+      <section class="detail-section">
+        <h2>📋 Technical Proposal</h2>
+        
+        <div class="detail-grid">
+          <div class="detail-item full">
+            <span class="detail-label">Company Profile</span>
+            <p class="detail-text">{{ bid.technicalProposal.companyProfile }}</p>
+          </div>
+          
+          <div class="detail-item full">
+            <span class="detail-label">Relevant Experience</span>
+            <p class="detail-text">{{ bid.technicalProposal.relevantExperience }}</p>
+          </div>
+          
+          <div class="detail-item full">
+            <span class="detail-label">Technical Approach / Methodology</span>
+            <p class="detail-text">{{ bid.technicalProposal.technicalApproach }}</p>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Delivery Timeline</span>
+            <p class="detail-value">{{ bid.technicalProposal.deliveryTimeline }}</p>
+          </div>
+          
+          @if (bid.technicalProposal.manpowerPlan) {
+            <div class="detail-item">
+              <span class="detail-label">Manpower Plan</span>
+              <p class="detail-value">{{ bid.technicalProposal.manpowerPlan }}</p>
+            </div>
+          }
+          
+          @if (bid.technicalProposal.equipmentPlan) {
+            <div class="detail-item">
+              <span class="detail-label">Equipment Plan</span>
+              <p class="detail-value">{{ bid.technicalProposal.equipmentPlan }}</p>
+            </div>
+          }
+          
+          @if (bid.technicalProposal.deviations) {
+            <div class="detail-item full">
+              <span class="detail-label">Deviations</span>
+              <p class="detail-text warning">{{ bid.technicalProposal.deviations }}</p>
+            </div>
+          }
+        </div>
+        
+        <!-- References -->
+        @if (bid.technicalProposal.similarWorkReferences && bid.technicalProposal.similarWorkReferences.length > 0) {
+          <div class="references-section">
+            <h3>Similar Work References</h3>
+            <div class="references-grid">
+              @for (ref of bid.technicalProposal.similarWorkReferences; track $index) {
+                <div class="reference-card">
+                  <span class="ref-index">{{ $index + 1 }}</span>
+                  <div class="ref-content">
+                    <strong>{{ ref.clientName || 'N/A' }}</strong>
+                    <span>{{ ref.projectType || 'Project details not provided' }}</span>
+                    @if (ref.contactPerson) {
+                      <small>Contact: {{ ref.contactPerson }} @if (ref.phone) { ({{ ref.phone }}) }</small>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </section>
+      
+      <!-- Commercial Proposal -->
+      <section class="detail-section">
+        <div class="section-header">
+          <h2>💰 Commercial Proposal</h2>
+          <span class="sealed-badge">🔒 Sealed</span>
+        </div>
+        
+        <div class="price-summary">
+          <div class="total-price">
+            <span class="label">Total Bid Amount</span>
+            <span class="value">{{ formatCurrency(bid.bidAmount) }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Taxes & Duties</span>
+            <p class="detail-value">{{ bid.commercialProposal.taxesAndDuties }}</p>
+          </div>
+          
+          <div class="detail-item">
+            <span class="detail-label">Bid Validity</span>
+            <p class="detail-value">{{ bid.commercialProposal.validityPeriod }}</p>
+          </div>
+          
+          <div class="detail-item full">
+            <span class="detail-label">Payment Terms</span>
+            <p class="detail-text">{{ bid.commercialProposal.paymentTerms }}</p>
+          </div>
+          
+          @if (bid.commercialProposal.warrantyPricing) {
+            <div class="detail-item">
+              <span class="detail-label">Warranty Terms</span>
+              <p class="detail-value">{{ bid.commercialProposal.warrantyPricing }}</p>
+            </div>
+          }
+          
+          @if (bid.commercialProposal.amcPricing) {
+            <div class="detail-item">
+              <span class="detail-label">AMC Pricing</span>
+              <p class="detail-value">{{ bid.commercialProposal.amcPricing }}</p>
+            </div>
+          }
+        </div>
+        
+        @if (bid.commercialProposal.priceBreakdown && bid.commercialProposal.priceBreakdown.length > 0) {
+          <div class="price-breakdown">
+            <h3>Price Breakdown</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of bid.commercialProposal.priceBreakdown; track $index) {
+                  <tr>
+                    <td>{{ item.description }}</td>
+                    <td>{{ formatCurrency(item.amount) }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td>Total</td>
+                  <td>{{ formatCurrency(bid.bidAmount) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        }
+      </section>
+    </div>
+    
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      
+      <!-- Status Timeline -->
+      <div class="sidebar-card">
+        <h3>Status Timeline</h3>
+        <div class="timeline">
+          @for (step of getStatusTimeline(); track step.label) {
+            <div class="timeline-item" 
+                 [class.active]="step.active" 
+                 [class.completed]="step.completed"
+                 [class.pending]="!step.active && !step.completed">
+              <div class="timeline-marker">
+                @if (step.completed) {
+                  <span>✓</span>
+                } @else if (step.active) {
+                  <span class="pulse"></span>
+                }
+              </div>
+              <div class="timeline-content">
+                <span class="timeline-label">{{ step.label }}</span>
+                @if (step.date) {
+                  <span class="timeline-date">{{ formatDate(step.date) }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      
+      <!-- Quick Info -->
+      <div class="sidebar-card">
+        <h3>Quick Info</h3>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Bid ID</span>
+            <span class="info-value mono">{{ bid.bidId }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Submitted</span>
+            <span class="info-value">{{ bid.submittedAt | timeAgo }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Tender Closes</span>
+            <span class="info-value">{{ bid.tenderClosingDate | date:'dd MMM yyyy' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Tender ID</span>
+            <span class="info-value mono">{{ bid.tenderId }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Actions -->
+      <div class="sidebar-card actions">
+        <button class="btn btn-outline btn-full" (click)="viewTender()">
+          View Original Tender
+        </button>
+        <button class="btn btn-outline btn-full" disabled>
+          Download PDF
+        </button>
+      </div>
+    </aside>
+  </div>
+</div>
+}

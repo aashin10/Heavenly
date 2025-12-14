@@ -1,0 +1,179 @@
+<div class="tender-browse-container">
+  <!-- Header -->
+  <div class="browse-header">
+    <div class="header-title">
+      <h1>Browse Tenders</h1>
+      <p class="subtitle">Find opportunities matching your expertise</p>
+    </div>
+    
+    <div class="header-actions">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input 
+          type="text" 
+          [ngModel]="filters().searchQuery"
+          (ngModelChange)="onSearchChange($event)"
+          placeholder="Search tenders..."
+          class="search-input">
+      </div>
+      
+      <select 
+        [ngModel]="sortBy()" 
+        (ngModelChange)="onSortChange($event)" 
+        class="sort-select">
+        <option value="newest">Newest First</option>
+        <option value="closing_soon">Closing Soon</option>
+        <option value="budget_high">Highest Budget</option>
+        <option value="budget_low">Lowest Budget</option>
+      </select>
+      
+      <button class="btn-filter-mobile" (click)="toggleMobileFilters()">
+        <span>🎚️</span>
+        Filters
+        @if (hasActiveFilters()) {
+          <span class="filter-badge">●</span>
+        }
+      </button>
+    </div>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="browse-content">
+    
+    <!-- Filters Sidebar -->
+    <aside class="filters-sidebar" [class.mobile-open]="showMobileFilters()">
+      <div class="sidebar-header">
+        <h3>Filters</h3>
+        <button class="btn-close-mobile" (click)="toggleMobileFilters()">×</button>
+      </div>
+      
+      <!-- Service Type Filter -->
+      <div class="filter-section">
+        <h4 class="filter-title">Service Type</h4>
+        <div class="checkbox-list">
+          @for (type of filterOptions().serviceTypes; track type.value) {
+            <label class="checkbox-item">
+              <input 
+                type="checkbox" 
+                [value]="type.value"
+                [checked]="filters().serviceTypes.includes(type.value)"
+                (change)="toggleServiceType(type.value)">
+              <span class="checkmark"></span>
+              <span class="label-text">{{ type.label }}</span>
+            </label>
+          }
+        </div>
+      </div>
+      
+      <!-- Location Filter -->
+      <div class="filter-section">
+        <h4 class="filter-title">Location</h4>
+        <div class="checkbox-list">
+          @for (location of filterOptions().locations; track location) {
+            <label class="checkbox-item">
+              <input 
+                type="checkbox"
+                [value]="location"
+                [checked]="filters().locations.includes(location)"
+                (change)="toggleLocation(location)">
+              <span class="checkmark"></span>
+              <span class="label-text">{{ location }}</span>
+            </label>
+          }
+        </div>
+      </div>
+      
+      <!-- Closing Soon Filter -->
+      <div class="filter-section">
+        <h4 class="filter-title">Closing Soon</h4>
+        <div class="radio-list">
+          <label class="radio-item">
+            <input 
+              type="radio" 
+              name="closingSoon" 
+              [value]="null"
+              [checked]="filters().closingSoon === null"
+              (change)="onClosingSoonChange(null)">
+            <span class="radio-mark"></span>
+            <span class="label-text">All</span>
+          </label>
+          <label class="radio-item">
+            <input 
+              type="radio" 
+              name="closingSoon" 
+              value="24h"
+              [checked]="filters().closingSoon === '24h'"
+              (change)="onClosingSoonChange('24h')">
+            <span class="radio-mark"></span>
+            <span class="label-text">Next 24 hours</span>
+          </label>
+          <label class="radio-item">
+            <input 
+              type="radio" 
+              name="closingSoon" 
+              value="3d"
+              [checked]="filters().closingSoon === '3d'"
+              (change)="onClosingSoonChange('3d')">
+            <span class="radio-mark"></span>
+            <span class="label-text">Next 3 days</span>
+          </label>
+          <label class="radio-item">
+            <input 
+              type="radio" 
+              name="closingSoon" 
+              value="7d"
+              [checked]="filters().closingSoon === '7d'"
+              (change)="onClosingSoonChange('7d')">
+            <span class="radio-mark"></span>
+            <span class="label-text">Next week</span>
+          </label>
+        </div>
+      </div>
+      
+      <button class="btn-clear-filters" (click)="clearFilters()">
+        Clear All Filters
+      </button>
+    </aside>
+    
+    <!-- Tender List -->
+    <main class="tender-list">
+      <div class="results-info">
+        <p>{{ filteredTenders().length }} tenders found</p>
+      </div>
+      
+      @if (filteredTenders().length > 0) {
+        <div class="tender-grid">
+          @for (tender of filteredTenders(); track tender.id) {
+            <app-tender-card
+              [tender]="tender"
+              (cardClick)="viewTenderDetail(tender.id)"
+              (viewDetails)="viewTenderDetail(tender.id)">
+            </app-tender-card>
+          }
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>No tenders found</h3>
+          <p>Try adjusting your filters or check back later for new opportunities</p>
+          @if (hasActiveFilters()) {
+            <button class="btn btn-primary" (click)="clearFilters()">
+              Clear Filters
+            </button>
+          }
+        </div>
+      }
+    </main>
+  </div>
+</div>
+
+<!-- Mobile Filter Overlay -->
+@if (showMobileFilters()) {
+  <button 
+    type="button"
+    class="filter-overlay" 
+    (click)="toggleMobileFilters()" 
+    (keydown.escape)="toggleMobileFilters()"
+    aria-label="Close filters"></button>
+}

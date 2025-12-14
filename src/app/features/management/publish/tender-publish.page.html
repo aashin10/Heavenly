@@ -1,0 +1,262 @@
+<div class="tender-publish-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <button class="back-button" (click)="goBack()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back to Dashboard
+      </button>
+    </div>
+    <div class="header-content">
+      <h1>Publish Tender</h1>
+      <p class="subtitle">Review and publish to vendor portal</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="downloadPDF()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download PDF
+      </button>
+    </div>
+  </header>
+
+  @if (tender()) {
+    <div class="publish-content">
+      <!-- Tender Preview Section -->
+      <section class="tender-preview">
+        <div class="section-header">
+          <h2>Tender Preview</h2>
+          <button class="btn btn-text" (click)="previewFullDocument()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+            Preview Full Document
+          </button>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-header">
+            <span class="tender-id">{{ tender()!.tenderId }}</span>
+            <span class="status-badge approved">Ready to Publish</span>
+          </div>
+
+          <h3 class="tender-title">{{ tender()!.title }}</h3>
+
+          <div class="preview-grid">
+            <div class="preview-item">
+              <div class="form-label">Category</div>
+              <span>{{ tender()!.category }}</span>
+            </div>
+            <div class="preview-item">
+              <div class="form-label">Commercial Structure</div>
+              <span>{{ tender()!.commercialStructure }}</span>
+            </div>
+            <div class="preview-item">
+              <div class="form-label">Bid Window</div>
+              <span>{{ tender()!.bidWindowStart | date:'mediumDate' }} - {{ tender()!.bidWindowEnd | date:'mediumDate' }}</span>
+            </div>
+            <div class="preview-item">
+              <div class="form-label">Budget Visibility</div>
+              <span>{{ formatBudgetVisibility(tender()!.budgetVisibility) }}</span>
+            </div>
+          </div>
+
+          <div class="preview-section">
+            <h4>Scope Summary</h4>
+            <p>{{ tender()!.scopeSummary }}</p>
+          </div>
+
+          <div class="preview-section">
+            <h4>Eligibility Criteria</h4>
+            <div class="criteria-list">
+              @if (tender()!.eligibilityCriteria.certifications.required) {
+                <div class="criteria-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>{{ tender()!.eligibilityCriteria.certifications.details || 'Certifications required' }}</span>
+                </div>
+              }
+              @if (tender()!.eligibilityCriteria.insurance.required) {
+                <div class="criteria-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Insurance required - Min coverage: {{ tender()!.eligibilityCriteria.insurance.minCoverage }}</span>
+                </div>
+              }
+              @if (tender()!.eligibilityCriteria.bondCapability.required) {
+                <div class="criteria-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Bond capability required - Min: {{ tender()!.eligibilityCriteria.bondCapability.minAmount }}</span>
+                </div>
+              }
+              @if (tender()!.eligibilityCriteria.regionalPresence.required) {
+                <div class="criteria-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Regional presence required - {{ tender()!.eligibilityCriteria.regionalPresence.regions?.join(', ') }}</span>
+                </div>
+              }
+              @if (tender()!.eligibilityCriteria.experienceYears.required) {
+                <div class="criteria-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Minimum {{ tender()!.eligibilityCriteria.experienceYears.minimum }} years experience</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          @if (tender()!.attachments?.length) {
+            <div class="preview-section">
+              <h4>Attachments</h4>
+              <div class="attachment-list">
+                @for (attachment of tender()!.attachments; track attachment.name) {
+                  <div class="attachment-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>{{ attachment.name }}</span>
+                    <span class="file-size">{{ attachment.size }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Publishing Options -->
+      <section class="publishing-options">
+        <div class="section-header">
+          <h2>Publishing Options</h2>
+        </div>
+
+        <form [formGroup]="publishSettings" class="options-form">
+          <div class="option-card">
+            <h4>Notification Settings</h4>
+            <p class="option-description">Choose who gets notified when this tender is published</p>
+
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="notifyVendors">
+                <span class="checkbox-custom"></span>
+                <div class="checkbox-content">
+                  <span class="checkbox-title">Notify Registered Vendors</span>
+                  <span class="checkbox-description">Send email to all vendors registered in this category</span>
+                </div>
+              </label>
+
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="notifyRequester">
+                <span class="checkbox-custom"></span>
+                <div class="checkbox-content">
+                  <span class="checkbox-title">Notify Original Requester</span>
+                  <span class="checkbox-description">Send email to {{ request()?.requesterName || 'requester' }} when published</span>
+                </div>
+              </label>
+
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="inAppNotifications">
+                <span class="checkbox-custom"></span>
+                <div class="checkbox-content">
+                  <span class="checkbox-title">In-App Notifications</span>
+                  <span class="checkbox-description">Show notification in vendor portal dashboard</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="option-card">
+            <h4>Schedule Publishing</h4>
+            <p class="option-description">Optionally schedule this tender to go live at a future date</p>
+
+            <div class="schedule-input">
+              <label for="scheduledDate">Scheduled Publish Date (Optional)</label>
+              <input 
+                type="datetime-local" 
+                id="scheduledDate" 
+                formControlName="scheduledPublishDate"
+              >
+              <span class="input-hint">Leave empty to publish immediately</span>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Action Bar -->
+      <div class="action-bar">
+        <div class="action-info">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>Once published, this tender will be visible to all eligible vendors on the portal.</span>
+        </div>
+        <div class="action-buttons">
+          <button class="btn btn-outline" (click)="goBack()">Cancel</button>
+          @if (publishSettings.value.scheduledPublishDate) {
+            <button class="btn btn-secondary" (click)="scheduleForLater()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Schedule Publish
+            </button>
+          }
+          <button class="btn btn-primary" (click)="publishNow()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13"></path>
+              <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
+            </svg>
+            Publish Now
+          </button>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading tender details...</p>
+    </div>
+  }
+</div>
+
+<!-- Success Modal -->
+@if (showSuccessModal()) {
+  <button type="button" class="modal-overlay" (click)="closeSuccessModal()" (keydown.escape)="closeSuccessModal()" (keydown.enter)="closeSuccessModal()">
+    <div class="modal-dialog success-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+      <div class="success-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+      
+      <h2>Tender Published Successfully!</h2>
+      <p>The tender is now live on the vendor portal and eligible vendors have been notified.</p>
+
+      <div class="tender-summary">
+        <span class="tender-id">{{ tender()?.tenderId }}</span>
+        <span class="tender-title">{{ tender()?.title }}</span>
+      </div>
+
+            <div class="modal-actions">
+        <button class="btn-primary" (click)="closeSuccessModal()">Go to Dashboard</button>
+      </div>
+    </div>
+  </button>
+}

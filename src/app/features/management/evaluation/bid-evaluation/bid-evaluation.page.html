@@ -1,0 +1,150 @@
+<div class="bid-evaluation-page">
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading tender details...</p>
+    </div>
+  } @else {
+    @if (tender(); as t) {
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-nav">
+        <a routerLink="/management/evaluation" class="back-link">
+          <span class="back-icon">←</span>
+          Back to Dashboard
+        </a>
+      </div>
+      
+      <div class="header-content">
+        <div class="header-main">
+          <div class="tender-id-badge">{{ t.tenderId }}</div>
+          <h1>{{ t.title }}</h1>
+          <div class="tender-meta">
+            <span class="meta-item">
+              <span class="icon">📁</span>
+              {{ t.category }}
+            </span>
+            <span class="meta-item">
+              <span class="icon">💰</span>
+              {{ formatCurrency(t.budgetEstimate) }}
+            </span>
+            <span class="meta-item">
+              <span class="icon">📅</span>
+              Bid Window End: {{ formatDate(t.bidWindowEnd) }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="header-status">
+          <app-evaluation-status-badge [tender]="t"></app-evaluation-status-badge>
+          <div class="bid-summary">
+            <span class="bid-count">{{ t.totalBids }}</span>
+            <span class="bid-label">Total Bids</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Evaluation Progress -->
+    <div class="evaluation-progress">
+      <div class="progress-step" [class.active]="t.evaluationPhase === 'technical_review' || t.evaluationPhase === 'bid_closed'" [class.completed]="(t.technicalCompliant + t.technicalRejected) === t.totalBids && t.totalBids > 0">
+        <div class="step-icon">1</div>
+        <div class="step-content">
+          <span class="step-title">Technical Review</span>
+          <span class="step-status">{{ t.technicalCompliant + t.technicalRejected }}/{{ t.totalBids }} reviewed</span>
+        </div>
+      </div>
+      <div class="progress-connector" [class.completed]="(t.technicalCompliant + t.technicalRejected) === t.totalBids && t.totalBids > 0"></div>
+      
+      <div class="progress-step" [class.active]="t.evaluationPhase === 'commercial_review'" [class.completed]="t.commercialEvaluated === t.technicalCompliant && t.technicalCompliant > 0">
+        <div class="step-icon">2</div>
+        <div class="step-content">
+          <span class="step-title">Commercial Review</span>
+          <span class="step-status">{{ t.commercialEvaluated }}/{{ t.technicalCompliant }} compared</span>
+        </div>
+      </div>
+      <div class="progress-connector" [class.completed]="t.shortlistedCount > 0"></div>
+      
+      <div class="progress-step" [class.active]="t.evaluationPhase === 'shortlisted'" [class.completed]="t.shortlistedCount > 0">
+        <div class="step-icon">3</div>
+        <div class="step-content">
+          <span class="step-title">Shortlisted</span>
+          <span class="step-status">{{ t.shortlistedCount }} vendors</span>
+        </div>
+      </div>
+      <div class="progress-connector" [class.completed]="t.evaluationPhase === 'awarded'"></div>
+      
+      <div class="progress-step" [class.active]="t.evaluationPhase === 'awarded'" [class.completed]="t.evaluationPhase === 'awarded'">
+        <div class="step-icon">4</div>
+        <div class="step-content">
+          <span class="step-title">Awarded</span>
+          <span class="step-status">{{ t.evaluationPhase === 'awarded' ? 'Complete' : 'Pending' }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
+      @for (tab of tabs; track tab.id) {
+        <button 
+          class="tab-button"
+          [class.active]="activeTab() === tab.id"
+          [class.disabled]="isTabDisabled(tab.id)"
+          [disabled]="isTabDisabled(tab.id)"
+          (click)="setActiveTab(tab.id)">
+          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-label">{{ tab.label }}</span>
+          @if (getTabCount(tab.id) > 0) {
+            <span class="tab-badge">{{ getTabCount(tab.id) }}</span>
+          }
+        </button>
+      }
+    </div>
+    
+    <!-- Tab Content -->
+    <div class="tab-content">
+      @switch (activeTab()) {
+        @case ('technical') {
+          <app-technical-evaluation-tab 
+            [tender]="t"
+            [bids]="bids()"
+            (bidUpdated)="onBidUpdated()">
+          </app-technical-evaluation-tab>
+        }
+        @case ('commercial') {
+          <app-commercial-evaluation-tab 
+            [tender]="t"
+            [bids]="bids()"
+            (bidUpdated)="onBidUpdated()">
+          </app-commercial-evaluation-tab>
+        }
+        @case ('shortlisted') {
+          <app-shortlisted-tab 
+            [tender]="t"
+            [bids]="bids()"
+            (bidUpdated)="onBidUpdated()">
+          </app-shortlisted-tab>
+        }
+        @case ('award') {
+          <app-award-tab 
+            [tender]="t"
+            [bids]="bids()"
+            (bidUpdated)="onBidUpdated()">
+          </app-award-tab>
+        }
+      }
+    </div>
+    } @else {
+    <!-- Tender Not Found -->
+    <div class="not-found">
+      <div class="not-found-icon">🔍</div>
+      <h2>Tender Not Found</h2>
+      <p>The requested tender could not be found or has been removed.</p>
+      <a routerLink="/management/evaluation" class="btn-back">
+        Back to Dashboard
+      </a>
+    </div>
+    }
+  }
+</div>

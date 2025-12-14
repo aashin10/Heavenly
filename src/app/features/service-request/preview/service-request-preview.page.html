@@ -1,0 +1,97 @@
+<div class="preview-page">
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading preview...</p>
+    </div>
+  } @else {
+    <!-- Header -->
+    <header class="page-header">
+      <div class="header-content">
+        <h1>Review Your Request</h1>
+        <p class="header-description">Please review all the information before submitting.</p>
+      </div>
+    </header>
+
+    <!-- Service Info Card -->
+    <div class="service-info-card">
+      <div class="service-icon">📋</div>
+      <div class="service-details">
+        <h2>{{ draft()?.serviceName }}</h2>
+        <span class="category-badge" [class]="draft()?.category">
+          {{ draft()?.category === 'technical' ? 'Technical Service' : 
+             draft()?.category === 'mid_complexity' ? 'Standard Service' : 
+             'Quick Service' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Sections -->
+    <div class="sections-container">
+      @for (section of sections(); track section.stepNumber) {
+        <section class="preview-section">
+          <div class="section-header">
+            <h3>
+              <span class="section-number">{{ section.stepNumber }}</span>
+              {{ section.title }}
+            </h3>
+            <button type="button" class="btn-edit" (click)="editStep(section.stepNumber)">
+              Edit
+            </button>
+          </div>
+          <div class="section-content">
+            @for (field of section.fields; track field.label) {
+              <div class="field-row">
+                <span class="field-label">{{ field.label }}</span>
+                <span class="field-value" [class.multiline]="field.value.includes('\n')">
+                  @if (field.type === 'file') {
+                    <span class="file-indicator">📎 {{ field.value }}</span>
+                  } @else if (field.value.includes('\n')) {
+                    @for (line of field.value.split('\n'); track $index) {
+                      <span class="line">{{ line }}</span>
+                    }
+                  } @else {
+                    {{ field.value }}
+                  }
+                </span>
+              </div>
+            }
+          </div>
+        </section>
+      }
+    </div>
+
+    <!-- Important Notice -->
+    <div class="notice-card">
+      <div class="notice-icon">ℹ️</div>
+      <div class="notice-content">
+        <h4>What happens next?</h4>
+        <ul>
+          <li>Your request will be sent to verified vendors</li>
+          <li>You'll receive quotations within 24-48 hours</li>
+          <li>Compare quotes and choose the best vendor</li>
+          <li>Schedule the service at your convenience</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="page-actions">
+      <button type="button" class="btn btn-secondary" (click)="goBack()">
+        ← Back to Form
+      </button>
+      <button 
+        type="button" 
+        class="btn btn-primary btn-submit"
+        [disabled]="isSubmitting()"
+        (click)="submitRequest()">
+        @if (isSubmitting()) {
+          <span class="spinner"></span>
+          Submitting...
+        } @else {
+          Submit Request ✓
+        }
+      </button>
+    </div>
+  }
+</div>

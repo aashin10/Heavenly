@@ -1,0 +1,208 @@
+<div class="live-tenders-dashboard">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Bid Evaluation Dashboard</h1>
+      <p class="subtitle">Review and evaluate vendor bids for active tenders</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-refresh" (click)="refreshData()">
+        <span class="icon">🔄</span>
+        Refresh
+      </button>
+    </div>
+  </div>
+  
+  <!-- Stats Cards -->
+  @if (stats(); as s) {
+    <div class="stats-grid">
+      <div class="stat-card stat-active">
+        <div class="stat-icon">📋</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ s.activeTenders }}</span>
+          <span class="stat-label">Active Tenders</span>
+        </div>
+      </div>
+      
+      <div class="stat-card stat-receiving">
+        <div class="stat-icon">📥</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ s.receivingBids }}</span>
+          <span class="stat-label">Receiving Bids</span>
+        </div>
+      </div>
+      
+      <div class="stat-card stat-ready">
+        <div class="stat-icon">📋</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ s.readyForEvaluation }}</span>
+          <span class="stat-label">Ready for Evaluation</span>
+        </div>
+      </div>
+      
+      <div class="stat-card stat-evaluation">
+        <div class="stat-icon">🔍</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ s.underEvaluation }}</span>
+          <span class="stat-label">Under Evaluation</span>
+        </div>
+      </div>
+      
+      <div class="stat-card stat-awarded">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ s.awarded }}</span>
+          <span class="stat-label">Awarded</span>
+        </div>
+      </div>
+    </div>
+  }
+  
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        placeholder="Search tenders by ID, title, category, or location..."
+        [value]="searchQuery()"
+        (input)="onSearch($event)"
+      />
+    </div>
+    
+    <div class="filter-controls">
+      <div class="filter-group">
+        <div class="form-label">Phase</div>
+        <select [value]="selectedPhase()" (change)="onPhaseChange($event)">
+          @for (option of phaseOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <div class="form-label">Category</div>
+        <select [value]="selectedCategory()" (change)="onCategoryChange($event)">
+          <option value="all">All Categories</option>
+          @for (cat of categories(); track cat) {
+            <option [value]="cat">{{ cat }}</option>
+          }
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <div class="form-label">Sort By</div>
+        <div class="sort-control">
+          <select [value]="sortBy()" (change)="onSortChange($event)">
+            <option value="deadline">Deadline</option>
+            <option value="bids">Total Bids</option>
+            <option value="created">Created Date</option>
+          </select>
+          <button class="sort-order-btn" (click)="toggleSortOrder()">
+            {{ sortOrder() === 'asc' ? '↑' : '↓' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading tenders...</p>
+    </div>
+  } @else {
+    <!-- Tenders Grid -->
+    @if (filteredTenders().length > 0) {
+      <div class="tenders-grid">
+        @for (tender of filteredTenders(); track tender.id) {
+          <div class="tender-card" [class.expired]="getDeadlineStatus(tender.bidWindowEnd) === 'expired'">
+            <!-- Card Header -->
+            <div class="card-header">
+              <div class="tender-id">{{ tender.tenderId }}</div>
+              <app-evaluation-status-badge [tender]="tender"></app-evaluation-status-badge>
+            </div>
+            
+            <!-- Card Body -->
+            <div class="card-body">
+              <h3 class="tender-title">{{ tender.title }}</h3>
+              
+              <div class="tender-meta">
+                <span class="meta-item">
+                  <span class="meta-icon">📁</span>
+                  {{ tender.category }}
+                </span>
+                
+              </div>
+              
+              <div class="tender-budget">
+                <span class="budget-label">Budget</span>
+                <span class="budget-value">{{ formatCurrency(tender.budgetEstimate) }}</span>
+              </div>
+              
+              <!-- Bid Stats -->
+              <div class="bid-stats">
+                <div class="stat-item">
+                  <span class="stat-number">{{ tender.totalBids }}</span>
+                  <span class="stat-text">Total Bids</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">{{ tender.technicalCompliant }}</span>
+                  <span class="stat-text">Tech Compliant</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">{{ tender.commercialEvaluated }}</span>
+                  <span class="stat-text">Comm Evaluated</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-number">{{ tender.shortlistedCount }}</span>
+                  <span class="stat-text">Shortlisted</span>
+                </div>
+              </div>
+              
+              <!-- Deadline -->
+              <div class="deadline-section" [class]="'deadline-' + getDeadlineStatus(tender.bidWindowEnd)">
+                @if (getDeadlineStatus(tender.bidWindowEnd) === 'expired') {
+                  <span class="deadline-icon">⏰</span>
+                  <span class="deadline-text">Deadline passed</span>
+                } @else if (getDeadlineStatus(tender.bidWindowEnd) === 'urgent') {
+                  <span class="deadline-icon">⚠️</span>
+                  <span class="deadline-text">{{ getDaysRemaining(tender.bidWindowEnd) }} days remaining</span>
+                } @else {
+                  <span class="deadline-icon">📅</span>
+                  <span class="deadline-text">Due: {{ formatDate(tender.bidWindowEnd) }}</span>
+                }
+              </div>
+            </div>
+            
+            <!-- Card Footer -->
+            <div class="card-footer">
+              <a [routerLink]="['/management/evaluation', tender.id]" class="btn-evaluate">
+                <span class="btn-icon">📊</span>
+                Evaluate Bids
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No Tenders Found</h3>
+        <p>
+          @if (searchQuery() || selectedPhase() !== 'all' || selectedCategory() !== 'all') {
+            No tenders match your current filters. Try adjusting your search criteria.
+          } @else {
+            There are no active tenders available for evaluation.
+          }
+        </p>
+        @if (searchQuery() || selectedPhase() !== 'all' || selectedCategory() !== 'all') {
+          <button class="btn-clear-filters" (click)="searchQuery.set(''); selectedPhase.set('all'); selectedCategory.set('all')">
+            Clear Filters
+          </button>
+        }
+      </div>
+    }
+  }
+</div>

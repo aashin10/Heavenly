@@ -1,0 +1,284 @@
+<div class="technical-bid-review-page">
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Loading bid details...</p>
+    </div>
+  } @else {
+    @if (bid(); as b) {
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-nav">
+        <a [routerLink]="['/management/evaluation', tender()?.id]" class="back-link">
+          <span class="back-icon">←</span>
+          Back to Evaluation
+        </a>
+      </div>
+      
+      <div class="header-content">
+        <div class="header-main">
+          <div class="bid-id-badge">{{ b.bidId }}</div>
+          <h1>Technical Proposal Review</h1>
+          <div class="vendor-name">{{ b.vendorDisplayName }}</div>
+        </div>
+        
+        <div class="header-score">
+          <div class="score-display" [class]="getScoreClass(calculateOverallScore())">
+            <span class="score-value">{{ calculateOverallScore() }}</span>
+            <span class="score-label">Overall Score</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="content-grid">
+      <!-- Left Column: Proposal Details -->
+      <div class="proposal-column">
+        <!-- Company Profile Section -->
+        <section class="proposal-section">
+          <h2>
+            <span class="section-icon">🏢</span>
+            Company Profile
+          </h2>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <span class="item-label">Company Name</span>
+              <span class="item-value">{{ b.companyName }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="item-label">Years of Experience</span>
+              <span class="item-value">{{ b.yearsOfExperience }} years</span>
+            </div>
+            <div class="profile-item">
+              <span class="item-label">Location</span>
+              <span class="item-value">{{ b.location }}</span>
+            </div>
+            <div class="profile-item">
+              <span class="item-label">Company Profile</span>
+              <span class="item-value">{{ b.companyProfile }}</span>
+            </div>
+          </div>
+          
+          @if (b.relevantExperience) {
+            <div class="experience-section">
+              <h4>Relevant Experience</h4>
+              <p>{{ b.relevantExperience }}</p>
+            </div>
+          }
+        </section>
+        
+        <!-- Technical Approach Section -->
+        <section class="proposal-section">
+          <h2>
+            <span class="section-icon">📋</span>
+            Technical Approach
+          </h2>
+          <div class="approach-content">
+            <h4>Approach & Methodology</h4>
+            <p>{{ b.technicalApproach }}</p>
+            
+            <h4>Manpower Plan</h4>
+            <p>{{ b.manpowerPlan }}</p>
+            
+            <h4>Equipment Plan</h4>
+            <p>{{ b.equipmentPlan }}</p>
+            
+            <h4>Delivery Timeline</h4>
+            <p>{{ b.deliveryTimeline }}</p>
+          </div>
+        </section>
+        
+        <!-- Past Projects Section -->
+        <section class="proposal-section">
+          <h2>
+            <span class="section-icon">📂</span>
+            Similar Work References ({{ b.similarWorkReferences.length }})
+          </h2>
+          <div class="references-list">
+            @for (reference of b.similarWorkReferences; track $index) {
+              <div class="reference-item">
+                <div class="reference-header">
+                  <span class="reference-number">#{{ $index + 1 }}</span>
+                  <span class="reference-content">{{ reference }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+        
+        <!-- Deviations Section -->
+        @if (b.deviations && b.deviations.length > 0) {
+          <section class="proposal-section">
+            <h2>
+              <span class="section-icon">⚠️</span>
+              Deviations ({{ b.deviations.length }})
+            </h2>
+            <div class="deviations-list">
+              @for (deviation of b.deviations; track $index) {
+                <div class="deviation-item">{{ deviation }}</div>
+              }
+            </div>
+          </section>
+        }
+        
+        <!-- Documents Section -->
+        <section class="proposal-section">
+          <h2>
+            <span class="section-icon">📎</span>
+            Attached Documents
+          </h2>
+          <div class="documents-list">
+            @for (doc of b.documents; track $index) {
+              <div class="document-item">
+                <span class="doc-icon">📄</span>
+                <div class="doc-info">
+                  <span class="doc-name">{{ doc.name }}</span>
+                  <span class="doc-type">{{ doc.type }}</span>
+                </div>
+                @if (doc.url) {
+                  <button class="btn-view-doc" (click)="openDocument(doc.url)">View</button>
+                } @else {
+                  <span class="doc-unavailable">Not available</span>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+      
+      <!-- Right Column: Evaluation Form -->
+      <div class="evaluation-column">
+        <div class="evaluation-form-card">
+          <h2>Technical Evaluation</h2>
+          
+          <form [formGroup]="evaluationForm">
+            <!-- Compliance Score -->
+            <div class="form-group">
+              <div class="form-label">Compliance Score (0-100)</div>
+              <p class="field-hint">How well does the proposal meet the tender requirements?</p>
+              <div class="score-input">
+                <input 
+                  type="range" 
+                  formControlName="complianceScore"
+                  min="0" 
+                  max="100" 
+                />
+                <span class="score-display-value" [class]="getScoreClass(evaluationForm.get('complianceScore')?.value)">
+                  {{ evaluationForm.get('complianceScore')?.value }}
+                </span>
+              </div>
+            </div>
+            
+            <!-- Experience Rating -->
+            <div class="form-group">
+              <div class="form-label">Experience & Track Record</div>
+              <p class="field-hint">Rate vendor's relevant experience and past performance</p>
+              <app-star-rating 
+                formControlName="experienceRating"
+                [maxStars]="5"
+                [showValue]="true">
+              </app-star-rating>
+            </div>
+            
+            <!-- Technical Approach Rating -->
+            <div class="form-group">
+              <div class="form-label">Technical Approach</div>
+              <p class="field-hint">Rate the proposed methodology and work plan</p>
+              <app-star-rating 
+                formControlName="technicalApproachRating"
+                [maxStars]="5"
+                [showValue]="true">
+              </app-star-rating>
+            </div>
+            
+            <!-- Timeline Rating -->
+            <div class="form-group">
+              <div class="form-label">Timeline & Delivery</div>
+              <p class="field-hint">Rate the proposed schedule and milestones</p>
+              <app-star-rating 
+                formControlName="timelineRating"
+                [maxStars]="5"
+                [showValue]="true">
+              </app-star-rating>
+            </div>
+            
+            <!-- Team Quality Rating -->
+            <div class="form-group">
+              <div class="form-label">Team Quality</div>
+              <p class="field-hint">Rate the qualifications of proposed team members</p>
+              <app-star-rating 
+                formControlName="teamQualityRating"
+                [maxStars]="5"
+                [showValue]="true">
+              </app-star-rating>
+            </div>
+            
+            <!-- Strengths -->
+            <div class="form-group">
+              <div class="form-label">Strengths</div>
+              <p class="field-hint">List key strengths (one per line)</p>
+              <textarea formControlName="strengths" rows="3" placeholder="Enter strengths..."></textarea>
+            </div>
+            
+            <!-- Weaknesses -->
+            <div class="form-group">
+              <div class="form-label">Weaknesses / Concerns</div>
+              <p class="field-hint">List any weaknesses or concerns (one per line)</p>
+              <textarea formControlName="weaknesses" rows="3" placeholder="Enter weaknesses..."></textarea>
+            </div>
+            
+            <!-- Notes -->
+            <div class="form-group">
+              <div class="form-label">Evaluation Notes</div>
+              <textarea formControlName="notes" rows="4" placeholder="Additional notes and observations..."></textarea>
+            </div>
+            
+            <!-- Recommendation -->
+            <div class="form-group">
+              <div class="form-label">Recommendation</div>
+              <div class="recommendation-options">
+                <label class="radio-option approve">
+                  <input type="radio" formControlName="recommendation" value="approve" />
+                  <span class="radio-label">
+                    <span class="icon">✅</span>
+                    Approve for Commercial Evaluation
+                  </span>
+                </label>
+                <label class="radio-option reject">
+                  <input type="radio" formControlName="recommendation" value="reject" />
+                  <span class="radio-label">
+                    <span class="icon">❌</span>
+                    Reject Proposal
+                  </span>
+                </label>
+              </div>
+            </div>
+          </form>
+          
+          <!-- Action Buttons -->
+          <div class="form-actions">
+            <button class="btn-reject" (click)="rejectBid()">
+              Disqualify Bid
+            </button>
+            <div class="right-actions">
+              <button class="btn-save-draft" (click)="saveDraft()" [disabled]="saving()">
+                {{ saving() ? 'Saving...' : 'Save Draft' }}
+              </button>
+              <button class="btn-submit" (click)="submitEvaluation()" [disabled]="saving() || evaluationForm.invalid">
+                {{ saving() ? 'Submitting...' : 'Submit Evaluation' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    } @else {
+      <div class="not-found">
+        <div class="not-found-icon">🔍</div>
+        <h2>Bid Not Found</h2>
+        <p>The requested bid could not be found.</p>
+        <a routerLink="/management/evaluation" class="btn-back">Back to Dashboard</a>
+      </div>
+    }
+  }
+</div>

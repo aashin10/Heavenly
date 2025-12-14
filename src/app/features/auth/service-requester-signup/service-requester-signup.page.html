@@ -1,0 +1,578 @@
+<div class="signup-page">
+  <div class="signup-container">
+    <div class="signup-grid">
+      <!-- Left Side - Branding -->
+      <div class="branding-section">
+        <img src="assets/logo.png" alt="Heavenly Corporation" class="brand-logo" />
+        <h1 class="brand-title">Service Requester Signup</h1>
+        <p class="brand-subtitle">
+          Create an account to submit service requests, receive competitive tenders, and hire verified vendors.
+        </p>
+        <div class="benefits-list">
+          <div class="benefit-item">
+            <span class="benefit-icon">📋</span>
+            <span>Submit service requests easily</span>
+          </div>
+          <div class="benefit-item">
+            <span class="benefit-icon">📢</span>
+            <span>Receive competitive tenders</span>
+          </div>
+          <div class="benefit-item">
+            <span class="benefit-icon">✅</span>
+            <span>Hire verified vendors</span>
+          </div>
+          <div class="benefit-item">
+            <span class="benefit-icon">💾</span>
+            <span>Save drafts for up to 7 days</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side - Form -->
+      <div class="form-section">
+        <!-- Mobile Logo -->
+        <div class="mobile-logo">
+          <img src="assets/logo.png" alt="Heavenly Corporation" />
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="stepper">
+          @for (step of steps(); track step.number) {
+            <div class="step" [class.active]="step.isActive" [class.completed]="step.isCompleted">
+              <div class="step-circle">
+                @if (step.isCompleted) {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                } @else {
+                  {{ step.number }}
+                }
+              </div>
+              <span class="step-label">{{ step.title }}</span>
+            </div>
+            @if (step.number < totalSteps) {
+              <div class="step-connector" [class.completed]="step.isCompleted"></div>
+            }
+          }
+        </div>
+
+        <!-- Error Message -->
+        @if (error()) {
+          <div class="error-message" role="alert">
+            {{ error() }}
+          </div>
+        }
+
+        <!-- Step 1: Account Type -->
+        @if (currentStep() === 1) {
+          <div class="step-content">
+            <h2 class="step-title">Choose your account type</h2>
+            <p class="step-description">Select the option that best describes your needs</p>
+            
+            <div class="account-type-grid">
+              @for (accountType of accountTypes; track accountType.type) {
+                <button
+                  class="account-type-card"
+                  [class.selected]="selectedRequesterType() === accountType.type"
+                  (click)="selectAccountType(accountType.type)"
+                >
+                  <span class="type-icon">{{ accountType.icon }}</span>
+                  <span class="type-title">{{ accountType.title }}</span>
+                  <span class="type-description">{{ accountType.description }}</span>
+                </button>
+              }
+            </div>
+
+            <button class="btn-primary btn-full" (click)="nextStep()">
+              Next
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
+          </div>
+        }
+
+        <!-- Step 2: Basic Information -->
+        @if (currentStep() === 2) {
+          <div class="step-content">
+            <h2 class="step-title">Basic Information</h2>
+            <p class="step-description">Enter your contact details</p>
+            
+            <form class="signup-form" (ngSubmit)="nextStep()">
+              <div class="form-group">
+                <label for="fullName" class="form-label">Full Name <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <input
+                    type="text"
+                    id="fullName"
+                    class="form-input"
+                    placeholder="John Doe"
+                    [ngModel]="step2Data().fullName"
+                    (ngModelChange)="updateStep2Field('fullName', $event)"
+                    name="fullName"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="email" class="form-label">Email Address <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                    <polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                  <input
+                    type="email"
+                    id="email"
+                    class="form-input"
+                    placeholder="you@example.com"
+                    [ngModel]="step2Data().email"
+                    (ngModelChange)="updateStep2Field('email', $event)"
+                    name="email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="phone" class="form-label">Phone Number <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <input
+                    type="tel"
+                    id="phone"
+                    class="form-input"
+                    placeholder="+91 98765 43210"
+                    [ngModel]="step2Data().phone"
+                    (ngModelChange)="updateStep2Field('phone', $event)"
+                    name="phone"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="password" class="form-label">Password <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <input
+                    type="password"
+                    id="password"
+                    class="form-input"
+                    placeholder="••••••••"
+                    [ngModel]="step2Data().password"
+                    (ngModelChange)="updateStep2Field('password', $event)"
+                    name="password"
+                    required
+                  />
+                </div>
+                @if (step2Data().password) {
+                  <div class="password-strength">
+                    <div class="strength-bar">
+                      <div 
+                        class="strength-fill" 
+                        [style.width.%]="passwordStrength().level * 20"
+                        [class]="'strength-' + passwordStrength().color"
+                      ></div>
+                    </div>
+                    <span class="strength-label" [class]="'text-' + passwordStrength().color">
+                      {{ passwordStrength().label }}
+                    </span>
+                  </div>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="confirmPassword" class="form-label">Confirm Password <span class="required">*</span></label>
+                <div class="input-wrapper">
+                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <input
+                    type="password"
+                    id="confirmPassword"
+                    class="form-input"
+                    placeholder="••••••••"
+                    [ngModel]="step2Data().confirmPassword"
+                    (ngModelChange)="updateStep2Field('confirmPassword', $event)"
+                    name="confirmPassword"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="button-row">
+                <button type="button" class="btn-outline" (click)="prevStep()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                  </svg>
+                  Back
+                </button>
+                <button type="submit" class="btn-primary">
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <!-- Step 3: Additional Details -->
+        @if (currentStep() === 3) {
+          <div class="step-content">
+            <h2 class="step-title">Additional Details</h2>
+            <p class="step-description">
+              @switch (selectedRequesterType()) {
+                @case ('individual') {
+                  Tell us about your location
+                }
+                @case ('sme') {
+                  Tell us about your business
+                }
+                @case ('large_organization') {
+                  Tell us about your organization
+                }
+              }
+            </p>
+
+            <form class="signup-form" (ngSubmit)="handleSubmit()">
+              <!-- Individual Fields -->
+              @if (selectedRequesterType() === 'individual') {
+                <div class="form-group">
+                  <label for="city" class="form-label">City/Location <span class="required">*</span></label>
+                  <div class="input-wrapper">
+                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                      <circle cx="12" cy="10" r="3"/>
+                    </svg>
+                    <input
+                      type="text"
+                      id="city"
+                      class="form-input"
+                      placeholder="Mumbai"
+                      [ngModel]="step3Individual().city"
+                      (ngModelChange)="updateStep3IndividualField('city', $event)"
+                      name="city"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="address" class="form-label">Address <span class="optional">(Optional)</span></label>
+                  <textarea
+                    id="address"
+                    class="form-textarea"
+                    placeholder="Your address"
+                    rows="3"
+                    [ngModel]="step3Individual().address"
+                    (ngModelChange)="updateStep3IndividualField('address', $event)"
+                    name="address"
+                  ></textarea>
+                </div>
+              }
+
+              <!-- SME Fields -->
+              @if (selectedRequesterType() === 'sme') {
+                <div class="form-group">
+                  <label for="orgName" class="form-label">Organization Name <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    id="orgName"
+                    class="form-input form-input-full"
+                    placeholder="Your Company Name"
+                    [ngModel]="step3SME().organizationName"
+                    (ngModelChange)="updateStep3SMEField('organizationName', $event)"
+                    name="orgName"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="gstNumber" class="form-label">GST Number <span class="optional">(Optional)</span></label>
+                  <input
+                    type="text"
+                    id="gstNumber"
+                    class="form-input form-input-full"
+                    placeholder="22AAAAA0000A1Z5"
+                    [ngModel]="step3SME().gstNumber"
+                    (ngModelChange)="updateStep3SMEField('gstNumber', $event)"
+                    name="gstNumber"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="businessAddress" class="form-label">Business Address <span class="required">*</span></label>
+                  <textarea
+                    id="businessAddress"
+                    class="form-textarea"
+                    placeholder="Complete business address"
+                    rows="2"
+                    [ngModel]="step3SME().businessAddress"
+                    (ngModelChange)="updateStep3SMEField('businessAddress', $event)"
+                    name="businessAddress"
+                    required
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="smeCity" class="form-label">City <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    id="smeCity"
+                    class="form-input form-input-full"
+                    placeholder="Mumbai"
+                    [ngModel]="step3SME().city"
+                    (ngModelChange)="updateStep3SMEField('city', $event)"
+                    name="smeCity"
+                    required
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="authPerson" class="form-label">Authorized Person <span class="required">*</span></label>
+                    <input
+                      type="text"
+                      id="authPerson"
+                      class="form-input form-input-full"
+                      placeholder="Name"
+                      [ngModel]="step3SME().authorizedPersonName"
+                      (ngModelChange)="updateStep3SMEField('authorizedPersonName', $event)"
+                      name="authPerson"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="designation" class="form-label">Designation <span class="required">*</span></label>
+                    <input
+                      type="text"
+                      id="designation"
+                      class="form-input form-input-full"
+                      placeholder="Manager"
+                      [ngModel]="step3SME().designation"
+                      (ngModelChange)="updateStep3SMEField('designation', $event)"
+                      name="designation"
+                      required
+                    />
+                  </div>
+                </div>
+              }
+
+              <!-- Large Organization Fields -->
+              @if (selectedRequesterType() === 'large_organization') {
+                <div class="form-group">
+                  <label for="orgNameLarge" class="form-label">Organization Name <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    id="orgNameLarge"
+                    class="form-input form-input-full"
+                    placeholder="Your Organization Name"
+                    [ngModel]="step3LargeOrg().organizationName"
+                    (ngModelChange)="updateStep3LargeOrgField('organizationName', $event)"
+                    name="orgNameLarge"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="gstNumberLarge" class="form-label">GST Number <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    id="gstNumberLarge"
+                    class="form-input form-input-full"
+                    placeholder="22AAAAA0000A1Z5"
+                    [ngModel]="step3LargeOrg().gstNumber"
+                    (ngModelChange)="updateStep3LargeOrgField('gstNumber', $event)"
+                    name="gstNumberLarge"
+                    required
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label for="regAddress" class="form-label">Registered Address <span class="required">*</span></label>
+                  <textarea
+                    id="regAddress"
+                    class="form-textarea"
+                    placeholder="Complete registered address"
+                    rows="2"
+                    [ngModel]="step3LargeOrg().registeredAddress"
+                    (ngModelChange)="updateStep3LargeOrgField('registeredAddress', $event)"
+                    name="regAddress"
+                    required
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="largeCity" class="form-label">City <span class="required">*</span></label>
+                  <input
+                    type="text"
+                    id="largeCity"
+                    class="form-input form-input-full"
+                    placeholder="Mumbai"
+                    [ngModel]="step3LargeOrg().city"
+                    (ngModelChange)="updateStep3LargeOrgField('city', $event)"
+                    name="largeCity"
+                    required
+                  />
+                </div>
+
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="authPersonLarge" class="form-label">Authorized Person <span class="required">*</span></label>
+                    <input
+                      type="text"
+                      id="authPersonLarge"
+                      class="form-input form-input-full"
+                      placeholder="Name"
+                      [ngModel]="step3LargeOrg().authorizedPersonName"
+                      (ngModelChange)="updateStep3LargeOrgField('authorizedPersonName', $event)"
+                      name="authPersonLarge"
+                      required
+                    />
+                  </div>
+
+                  <div class="form-group">
+                    <label for="designationLarge" class="form-label">Designation <span class="required">*</span></label>
+                    <input
+                      type="text"
+                      id="designationLarge"
+                      class="form-input form-input-full"
+                      placeholder="Director"
+                      [ngModel]="step3LargeOrg().designation"
+                      (ngModelChange)="updateStep3LargeOrgField('designation', $event)"
+                      name="designationLarge"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="department" class="form-label">Department <span class="optional">(Optional)</span></label>
+                  <input
+                    type="text"
+                    id="department"
+                    class="form-input form-input-full"
+                    placeholder="Procurement"
+                    [ngModel]="step3LargeOrg().department"
+                    (ngModelChange)="updateStep3LargeOrgField('department', $event)"
+                    name="department"
+                  />
+                </div>
+              }
+
+              <!-- Terms & Conditions -->
+              <div class="terms-section">
+                <label class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    [checked]="termsAccepted()"
+                    (change)="handleTermsChange($event)"
+                    class="checkbox-input"
+                  />
+                  <span class="checkbox-label">
+                    I agree to the
+                    <button type="button" class="terms-link" (click)="openTerms()">
+                      Terms and Conditions
+                    </button>
+                    <span class="required">*</span>
+                  </span>
+                </label>
+
+                <label class="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    [checked]="marketingConsent()"
+                    (change)="handleMarketingChange($event)"
+                    class="checkbox-input"
+                  />
+                  <span class="checkbox-label">
+                    I agree to receive service updates via email/SMS
+                  </span>
+                </label>
+              </div>
+
+              <div class="button-row">
+                <button type="button" class="btn-outline" (click)="prevStep()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"/>
+                    <polyline points="12 19 5 12 12 5"/>
+                  </svg>
+                  Back
+                </button>
+                <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
+                  @if (isSubmitting()) {
+                    <span class="loading-spinner"></span>
+                    Creating...
+                  } @else {
+                    Create Account
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+        <!-- Back to Home Link -->
+        <div class="back-link">
+          <a routerLink="/">← Back to Home</a>
+          <span class="divider">|</span>
+          <a routerLink="/service-login">Already have an account? Login</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terms Modal -->
+  @if (showTerms()) {
+    <dialog 
+      open
+      class="modal-backdrop" 
+      (click)="closeTerms()" 
+      (keydown.escape)="closeTerms()"
+      aria-modal="true"
+      aria-labelledby="requester-terms-title">
+      <div class="modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeTerms()" aria-label="Close terms modal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        <div class="modal-content">
+          <h2 id="requester-terms-title">Terms and Conditions</h2>
+          <div class="terms-text">
+            <p>By creating an account on Heavenly Corporation's Service Request Portal, you agree to the following terms:</p>
+            <ol>
+              <li>You will provide accurate and truthful information in your service requests.</li>
+              <li>You understand that service requests are subject to review and approval.</li>
+              <li>Draft requests will be automatically deleted after 7 days of inactivity.</li>
+              <li>You agree to use the platform responsibly and in accordance with applicable laws.</li>
+              <li>Heavenly Corporation reserves the right to modify these terms at any time.</li>
+            </ol>
+          </div>
+          <button class="btn-primary btn-full" (click)="acceptTerms()">
+            Accept Terms
+          </button>
+        </div>
+      </div>
+    </dialog>
+  }
+</div>
