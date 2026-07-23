@@ -3,11 +3,12 @@ import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../dashboard.service';
 import { DOMAIN_OPTIONS, JOB_TYPE_OPTIONS } from '../../dashboard.model';
 import { JobCardComponent } from '../../widgets/job-card/job-card.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-job-seeker-dashboard',
   standalone: true,
-  imports: [FormsModule, JobCardComponent],
+  imports: [FormsModule, JobCardComponent, IconComponent],
   templateUrl: './job-seeker.page.html',
   styleUrl: './job-seeker.page.scss'
 })

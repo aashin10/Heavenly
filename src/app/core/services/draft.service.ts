@@ -12,6 +12,12 @@ export interface ServiceRequestDraft {
   lastSaved: Date;
   createdAt: Date;
   expiresAt: Date;
+  /**
+   * Set when this draft is an edit of a request the admin sent back
+   * (`changes_required`). On submit the wizard resubmits that request rather
+   * than creating a new one. See docs/backend/04-API-SERVICE-REQUESTS.md §7.
+   */
+  resubmitOfRequestId?: string;
 }
 
 export interface DraftRestoreResult {

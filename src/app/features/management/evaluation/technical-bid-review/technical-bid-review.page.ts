@@ -5,6 +5,8 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { EvaluationService } from '../evaluation.service';
 import { LiveTender, EvaluationBid, TechnicalEvaluation } from '../evaluation.model';
 import { StarRatingComponent } from '../../../../shared/components/star-rating/star-rating.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { formatAppDate } from '../../../../shared/utils/date-format.util';
 
 @Component({
   selector: 'app-technical-bid-review',
@@ -14,7 +16,8 @@ import { StarRatingComponent } from '../../../../shared/components/star-rating/s
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    StarRatingComponent
+    StarRatingComponent,
+    IconComponent
   ],
   templateUrl: './technical-bid-review.page.html',
   styleUrls: ['./technical-bid-review.page.scss']
@@ -203,10 +206,6 @@ export class TechnicalBidReviewPage implements OnInit {
   }
   
   formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return formatAppDate(date);
   }
 }

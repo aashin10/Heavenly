@@ -135,7 +135,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-icon {
@@ -236,7 +236,7 @@
   &:hover {
     border-color: var(--primary-color);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 
   &.quick-action-primary {
@@ -328,7 +328,7 @@
   background-color: var(--white);
   border-radius: 0.75rem;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .requests-list {
@@ -338,10 +338,13 @@
 }
 
 .request-card {
+  display: block;
   padding: 1rem;
   border: 1px solid var(--gray-200);
   border-radius: 0.5rem;
   transition: border-color 0.2s;
+  text-decoration: none;
+  color: inherit;
 
   &:hover {
     border-color: var(--primary-color);
@@ -428,7 +431,7 @@
   background-color: var(--white);
   border-radius: 0.75rem;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .drafts-list {

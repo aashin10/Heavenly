@@ -1,15 +1,18 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+
 import { ServiceRequestManagementService } from '../service-request-management.service';
 import { ServiceRequest, TenderDocument, PublishSettings } from '../management.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-tender-publish',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe],
+  imports: [ReactiveFormsModule, AppDatePipe, StatusBadgeComponent, IconComponent],
   templateUrl: './tender-publish.page.html',
   styleUrl: './tender-publish.page.scss'
 })

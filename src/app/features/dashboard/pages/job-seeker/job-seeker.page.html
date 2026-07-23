@@ -7,9 +7,7 @@
   <!-- Search and Filters -->
   <div class="filters-section">
     <div class="filters-header">
-      <svg class="filter-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-      </svg>
+      <app-icon class="filter-icon" name="funnel" [size]="20" />
       <h3 class="filters-title">Search & Filter</h3>
     </div>
 
@@ -17,10 +15,7 @@
       <div class="search-group">
         <label for="search" class="form-label">Search</label>
         <div class="search-input-wrapper">
-          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
+          <app-icon class="search-icon" name="search" [size]="20" />
           <input
             type="text"
             id="search"
@@ -75,10 +70,7 @@
     <div class="jobs-list">
       @if (filteredJobs().length === 0) {
         <div class="empty-state">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
+          <app-icon name="search" [size]="48" />
           <p>No jobs found matching your criteria.</p>
           <p class="empty-hint">Try adjusting your filters or search terms.</p>
         </div>

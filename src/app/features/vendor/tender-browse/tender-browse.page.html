@@ -8,7 +8,7 @@
     
     <div class="header-actions">
       <div class="search-box">
-        <span class="search-icon">🔍</span>
+        <span class="search-icon"><app-icon name="search" [size]="18" /></span>
         <input 
           type="text" 
           [ngModel]="filters().searchQuery"
@@ -28,7 +28,7 @@
       </select>
       
       <button class="btn-filter-mobile" (click)="toggleMobileFilters()">
-        <span>🎚️</span>
+        <app-icon name="sliders-horizontal" [size]="18" />
         Filters
         @if (hasActiveFilters()) {
           <span class="filter-badge">●</span>
@@ -146,23 +146,23 @@
           @for (tender of filteredTenders(); track tender.id) {
             <app-tender-card
               [tender]="tender"
-              (cardClick)="viewTenderDetail(tender.id)"
-              (viewDetails)="viewTenderDetail(tender.id)">
+              [detailLink]="['/vendor/tenders', tender.id]"
+              (cardClick)="viewTenderDetail(tender.id)">
             </app-tender-card>
           }
         </div>
       } @else {
         <!-- Empty State -->
-        <div class="empty-state">
-          <div class="empty-icon">📭</div>
-          <h3>No tenders found</h3>
-          <p>Try adjusting your filters or check back later for new opportunities</p>
+        <app-empty-state
+          icon="inbox"
+          title="No tenders found"
+          message="Try adjusting your filters, or check back later for new opportunities.">
           @if (hasActiveFilters()) {
-            <button class="btn btn-primary" (click)="clearFilters()">
+            <button class="btn-primary" type="button" (click)="clearFilters()">
               Clear Filters
             </button>
           }
-        </div>
+        </app-empty-state>
       }
     </main>
   </div>

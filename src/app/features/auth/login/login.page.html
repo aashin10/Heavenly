@@ -3,7 +3,7 @@
     <div class="login-grid">
       <!-- Left Side - Branding -->
       <div class="branding-section">
-        <img src="assets/logo.png" alt="Heavenly Corporation" class="brand-logo" />
+        <div class="brand-logo"><app-logo [markSize]="44" /></div>
         <h1 class="brand-title">Welcome to Heavenly Corporation</h1>
         <p class="brand-subtitle">
           Your trusted partner in manpower solutions and professional services. Connect with opportunities or find the perfect talent.
@@ -12,10 +12,7 @@
           @if (portalType() === 'jobs') {
             <div class="feature-item">
               <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
+                <app-icon name="briefcase" [size]="24" />
               </div>
               <div class="feature-content">
                 <h3 class="feature-title">For Employers</h3>
@@ -24,10 +21,7 @@
             </div>
             <div class="feature-item">
               <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
+                <app-icon name="user" [size]="24" />
               </div>
               <div class="feature-content">
                 <h3 class="feature-title">For Job Seekers</h3>
@@ -37,12 +31,7 @@
           } @else {
             <div class="feature-item">
               <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                </svg>
+                <app-icon name="file-text" [size]="24" />
               </div>
               <div class="feature-content">
                 <h3 class="feature-title">For Service Requesters</h3>
@@ -51,9 +40,7 @@
             </div>
             <div class="feature-item">
               <div class="feature-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                </svg>
+                <app-icon name="key-round" [size]="24" />
               </div>
               <div class="feature-content">
                 <h3 class="feature-title">For Vendors</h3>
@@ -68,34 +55,33 @@
       <div class="form-section">
         <!-- Logo for mobile -->
         <div class="mobile-logo">
-          <img src="assets/logo.png" alt="Heavenly Corporation" />
+          <app-logo [markSize]="36" />
         </div>
 
         <!-- Portal Toggle - Jobs vs Services -->
         <div class="portal-toggle" role="tablist" aria-label="Choose portal type">
-          <button 
-            class="portal-button" 
+          <button
+            class="portal-button"
             [class.active]="portalType() === 'jobs'"
             (click)="setPortalType('jobs')"
+            type="button"
             role="tab"
+            aria-label="Jobs Portal"
             [attr.aria-selected]="portalType() === 'jobs'"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-            </svg>
+            <app-icon name="briefcase" [size]="18" />
             <span>Jobs Portal</span>
           </button>
-          <button 
-            class="portal-button" 
+          <button
+            class="portal-button"
             [class.active]="portalType() === 'services'"
             (click)="setPortalType('services')"
+            type="button"
             role="tab"
+            aria-label="Services Portal"
             [attr.aria-selected]="portalType() === 'services'"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-            </svg>
+            <app-icon name="wrench" [size]="18" />
             <span>Services Portal</span>
           </button>
         </div>
@@ -104,37 +90,32 @@
         @if (portalType() === 'jobs') {
           <!-- Toggle Tabs -->
           <div class="tabs-container" role="tablist" aria-label="Login or Sign Up">
-            <button 
-              class="tab-button" 
+            <button
+              class="tab-button"
               [class.active]="isLogin()"
               [attr.aria-selected]="isLogin()"
+              type="button"
               role="tab"
               id="login-tab"
+              aria-label="Login"
               [attr.aria-controls]="isLogin() ? 'login-panel' : null"
               (click)="toggleView(true)"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                <polyline points="10 17 15 12 10 7"/>
-                <line x1="15" y1="12" x2="3" y2="12"/>
-              </svg>
+              <app-icon name="log-in" [size]="18" />
               <span>Login</span>
             </button>
-            <button 
-              class="tab-button" 
+            <button
+              class="tab-button"
               [class.active]="!isLogin()"
               [attr.aria-selected]="!isLogin()"
+              type="button"
               role="tab"
               id="signup-tab"
+              aria-label="Sign Up"
               [attr.aria-controls]="!isLogin() ? 'signup-panel' : null"
               (click)="toggleView(false)"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-              </svg>
+              <app-icon name="user-plus" [size]="18" />
               <span>Sign Up</span>
             </button>
           </div>
@@ -152,10 +133,7 @@
               <div class="form-group">
                 <label for="login-email" class="form-label">Email Address</label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
+                  <app-icon class="input-icon" name="mail" [size]="20" />
                   <input
                     type="email"
                     id="login-email"
@@ -172,10 +150,7 @@
               <div class="form-group">
                 <label for="login-password" class="form-label">Password</label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
+                  <app-icon class="input-icon" name="lock" [size]="20" />
                   <input
                     type="password"
                     id="login-password"
@@ -189,9 +164,23 @@
                 </div>
               </div>
 
-              <button 
-                type="submit" 
-                class="submit-button" 
+              <div class="form-meta">
+                <label class="remember-me">
+                  <input
+                    type="checkbox"
+                    name="rememberMe"
+                    [checked]="rememberMe()"
+                    (change)="handleRememberMeChange($event)"
+                  />
+                  <span>Remember me</span>
+                </label>
+                <a routerLink="/contact" class="forgot-link">Forgot password?</a>
+              </div>
+
+              <button
+                type="submit"
+                class="submit-button"
+                aria-label="Login to Dashboard"
                 [disabled]="isSubmitting()"
                 [attr.aria-busy]="isSubmitting()"
               >
@@ -217,10 +206,7 @@
                   [attr.aria-pressed]="signupData().userType === 'applicant'"
                   (click)="setUserType('applicant')"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
+                  <app-icon name="user" [size]="28" />
                   <span>Find Jobs</span>
                 </button>
                 <button
@@ -230,10 +216,7 @@
                   [attr.aria-pressed]="signupData().userType === 'employer'"
                   (click)="setUserType('employer')"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                  </svg>
+                  <app-icon name="briefcase" [size]="28" />
                   <span>Hire Talent</span>
                 </button>
               </div>
@@ -242,10 +225,7 @@
             <div class="form-group">
               <label for="signup-name" class="form-label">Full Name</label>
               <div class="input-wrapper">
-                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
+                <app-icon class="input-icon" name="user" [size]="20" />
                 <input
                   type="text"
                   id="signup-name"
@@ -262,10 +242,7 @@
             <div class="form-group">
               <label for="signup-email" class="form-label">Email Address</label>
               <div class="input-wrapper">
-                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                  <polyline points="22,6 12,13 2,6"/>
-                </svg>
+                <app-icon class="input-icon" name="mail" [size]="20" />
                 <input
                   type="email"
                   id="signup-email"
@@ -283,15 +260,7 @@
               <div class="form-group">
                 <label for="signup-company" class="form-label">Company Name</label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
-                    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
-                    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
-                    <path d="M10 6h4"/>
-                    <path d="M10 10h4"/>
-                    <path d="M10 14h4"/>
-                    <path d="M10 18h4"/>
-                  </svg>
+                  <app-icon class="input-icon" name="building-2" [size]="20" />
                   <input
                     type="text"
                     id="signup-company"
@@ -310,9 +279,7 @@
               <div class="form-group">
                 <label for="signup-phone" class="form-label">Phone <span class="optional-label">(Optional)</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                  </svg>
+                  <app-icon class="input-icon" name="phone" [size]="20" />
                   <input
                     type="tel"
                     id="signup-phone"
@@ -329,10 +296,7 @@
               <div class="form-group">
                 <label for="signup-location" class="form-label">Location <span class="optional-label">(Optional)</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                    <circle cx="12" cy="10" r="3"/>
-                  </svg>
+                  <app-icon class="input-icon" name="map-pin" [size]="20" />
                   <input
                     type="text"
                     id="signup-location"
@@ -349,10 +313,7 @@
             <div class="form-group">
               <label for="signup-password" class="form-label">Password</label>
               <div class="input-wrapper">
-                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
+                <app-icon class="input-icon" name="lock" [size]="20" />
                 <input
                   type="password"
                   id="signup-password"
@@ -369,10 +330,7 @@
             <div class="form-group">
               <label for="signup-confirm-password" class="form-label">Confirm Password</label>
               <div class="input-wrapper">
-                <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
+                <app-icon class="input-icon" name="lock" [size]="20" />
                 <input
                   type="password"
                   id="signup-confirm-password"
@@ -403,9 +361,10 @@
               </label>
             </div>
 
-            <button 
-              type="submit" 
-              class="submit-button" 
+            <button
+              type="submit"
+              class="submit-button"
+              aria-label="Create Account"
               [disabled]="isSubmitting()"
               [attr.aria-busy]="isSubmitting()"
             >
@@ -420,37 +379,34 @@
         }
 
         <div class="back-link">
-          <a routerLink="/">← Back to Home</a>
+          <a routerLink="/"><app-icon name="arrow-left" [size]="16" /> Back to Home</a>
         </div>
         } @else {
         <!-- SERVICES PORTAL -->
         <!-- Service User Type Toggle -->
         <div class="service-type-toggle" role="tablist" aria-label="Choose service user type">
-          <button 
-            class="service-type-button" 
+          <button
+            class="service-type-button"
             [class.active]="serviceUserType() === 'service_requester'"
             (click)="setServiceUserType('service_requester')"
+            type="button"
             role="tab"
+            aria-label="Service Requester"
             [attr.aria-selected]="serviceUserType() === 'service_requester'"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
+            <app-icon name="file-text" [size]="18" />
             <span>Service Requester</span>
           </button>
-          <button 
-            class="service-type-button" 
+          <button
+            class="service-type-button"
             [class.active]="serviceUserType() === 'vendor'"
             (click)="setServiceUserType('vendor')"
+            type="button"
             role="tab"
+            aria-label="Vendor"
             [attr.aria-selected]="serviceUserType() === 'vendor'"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-            </svg>
+            <app-icon name="wrench" [size]="18" />
             <span>Vendor</span>
           </button>
         </div>
@@ -467,10 +423,7 @@
           <div class="form-group">
             <label for="service-login-email" class="form-label">Email Address</label>
             <div class="input-wrapper">
-              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                <polyline points="22,6 12,13 2,6"/>
-              </svg>
+              <app-icon class="input-icon" name="mail" [size]="20" />
               <input
                 type="email"
                 id="service-login-email"
@@ -487,10 +440,7 @@
           <div class="form-group">
             <label for="service-login-password" class="form-label">Password</label>
             <div class="input-wrapper">
-              <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
+              <app-icon class="input-icon" name="lock" [size]="20" />
               <input
                 type="password"
                 id="service-login-password"
@@ -504,9 +454,10 @@
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            class="submit-button" 
+          <button
+            type="submit"
+            class="submit-button"
+            [attr.aria-label]="'Login to ' + (serviceUserType() === 'service_requester' ? 'Requester' : 'Vendor') + ' Dashboard'"
             [disabled]="isSubmitting()"
             [attr.aria-busy]="isSubmitting()"
           >
@@ -524,17 +475,17 @@
           <p class="signup-prompt">Don't have an account?</p>
           @if (serviceUserType() === 'service_requester') {
             <a routerLink="/service-requester-signup" class="signup-link">
-              Create Service Requester Account →
+              Create Service Requester Account <app-icon name="arrow-right" [size]="16" />
             </a>
           } @else {
             <a routerLink="/vendor-signup" class="signup-link">
-              Create Vendor Account →
+              Create Vendor Account <app-icon name="arrow-right" [size]="16" />
             </a>
           }
         </div>
 
         <div class="back-link">
-          <a routerLink="/">← Back to Home</a>
+          <a routerLink="/"><app-icon name="arrow-left" [size]="16" /> Back to Home</a>
           <span class="divider">|</span>
           <a routerLink="/services">Browse Services</a>
         </div>

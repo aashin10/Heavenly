@@ -2,11 +2,13 @@ import { Component, Input, inject, signal } from '@angular/core';
 import { Job } from '../../dashboard.model';
 import { ToastService } from '../../../../core/services/toast.service';
 import { formatDateSafe } from '../../../../shared/utils/helpers';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-job-card',
   standalone: true,
-  imports: [],
+  imports: [StatusBadgeComponent, IconComponent],
   templateUrl: './job-card.component.html',
   styleUrl: './job-card.component.scss'
 })

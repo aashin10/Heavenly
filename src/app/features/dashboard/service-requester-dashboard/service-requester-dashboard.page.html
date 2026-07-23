@@ -11,20 +11,9 @@
       </div>
       <div class="header-right">
         <a routerLink="/services" class="header-btn btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
+          <app-icon name="plus" [size]="18" />
           New Request
         </a>
-        <button class="header-btn btn-outline" (click)="logout()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          Logout
-        </button>
       </div>
     </div>
   </header>
@@ -35,12 +24,7 @@
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon stat-icon-primary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
+            <app-icon name="file-text" [size]="24" />
           </div>
           <div class="stat-content">
             <span class="stat-value">{{ stats().totalRequests }}</span>
@@ -50,10 +34,7 @@
 
         <div class="stat-card">
           <div class="stat-icon stat-icon-success">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
+            <app-icon name="clock" [size]="24" />
           </div>
           <div class="stat-content">
             <span class="stat-value">{{ stats().activeRequests }}</span>
@@ -63,12 +44,7 @@
 
         <div class="stat-card">
           <div class="stat-icon stat-icon-warning">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 9h.01"/>
-              <path d="M15 9h.01"/>
-              <path d="M12 12l-2 3h4l-2-3"/>
-              <circle cx="12" cy="12" r="10"/>
-            </svg>
+            <app-icon name="frown" [size]="24" />
           </div>
           <div class="stat-content">
             <span class="stat-value">{{ stats().activeTenders }}</span>
@@ -78,10 +54,7 @@
 
         <div class="stat-card">
           <div class="stat-icon stat-icon-neutral">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
+            <app-icon name="circle-check" [size]="24" />
           </div>
           <div class="stat-content">
             <span class="stat-value">{{ stats().completedRequests }}</span>
@@ -102,37 +75,7 @@
             (click)="navigateTo(action.route)"
           >
             <div class="action-icon">
-              @switch (action.icon) {
-                @case ('document-add') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="12" y1="18" x2="12" y2="12"/>
-                    <line x1="9" y1="15" x2="15" y2="15"/>
-                  </svg>
-                }
-                @case ('clipboard-list') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
-                    <path d="M9 14l2 2 4-4"/>
-                  </svg>
-                }
-                @case ('document-text') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                  </svg>
-                }
-                @case ('clock') {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                }
-              }
+              <app-icon [name]="action.icon" [size]="28" />
             </div>
             <span class="action-label">{{ action.label }}</span>
             <span class="action-description">{{ action.description }}</span>
@@ -146,42 +89,35 @@
       <section class="recent-requests-section">
         <div class="section-header">
           <h2 class="section-title">Recent Requests</h2>
-          <a routerLink="/request-history" class="view-all-link">View All →</a>
+          @if (recentRequests().length > 0) {
+            <a routerLink="/my-requests" class="view-all-link">View all <app-icon name="arrow-right" [size]="14" /></a>
+          }
         </div>
         <div class="requests-list">
           @for (request of recentRequests(); track request.id) {
-            <div class="request-card">
+            <a [routerLink]="['/my-requests', request.id]" class="request-card">
               <div class="request-header">
                 <h3 class="request-title">{{ request.title }}</h3>
-                <span class="request-status" [class]="getStatusClass(request.status)">
-                  {{ getStatusLabel(request.status) }}
-                </span>
+                <app-status-badge [status]="request.status" />
               </div>
               <div class="request-meta">
                 <span class="request-category">{{ getCategoryLabel(request.category) }}</span>
-                <span class="request-date">{{ request.createdAt | date:'MMM d, yyyy' }}</span>
+                <span class="request-date">{{ request.createdAt | appDate }}</span>
               </div>
               @if (request.bidCount) {
                 <div class="request-bids">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
+                  <app-icon name="users" [size]="16" />
                   <span>{{ request.bidCount }} bids received</span>
                 </div>
               }
-            </div>
+            </a>
           } @empty {
-            <div class="empty-state">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-              </svg>
-              <p>No requests yet</p>
-              <a routerLink="/services" class="empty-action">Create your first request →</a>
-            </div>
+            <app-empty-state
+              icon="file-text"
+              title="No requests yet"
+              message="Submit your first service request to start receiving competitive tenders.">
+              <a routerLink="/services" class="btn-primary">Browse services</a>
+            </app-empty-state>
           }
         </div>
       </section>
@@ -195,7 +131,6 @@
               <span class="draft-count">{{ stats().draftsCount }}</span>
             }
           </h2>
-          <a routerLink="/drafts" class="view-all-link">View All →</a>
         </div>
         <div class="drafts-list">
           @for (draft of drafts(); track draft.id) {
@@ -212,22 +147,21 @@
               </div>
               <div class="draft-meta">
                 <span class="draft-modified">
-                  Last modified {{ draft.lastModified | date:'MMM d' }}
+                  Last modified {{ draft.lastModified | appDate }}
                 </span>
-                <span class="draft-expires" [class.expiring-soon]="getDaysRemaining(draft.expiresAt) <= 2">
-                  Expires in {{ getDaysRemaining(draft.expiresAt) }} days
+                <span class="draft-expires" [class.expiring-soon]="isExpiringSoon(draft.expiresAt)">
+                  {{ getExpiryLabel(draft.expiresAt) }}
                 </span>
               </div>
-              <button class="continue-btn">Continue Editing</button>
+              <button type="button" class="continue-btn" (click)="continueDraft(draft.id)">
+                Continue Editing
+              </button>
             </div>
           } @empty {
-            <div class="empty-state">
-              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-              </svg>
-              <p>No saved drafts</p>
-            </div>
+            <app-empty-state
+              icon="save"
+              title="No saved drafts"
+              message="Drafts you start will appear here for up to 7 days." />
           }
         </div>
       </section>

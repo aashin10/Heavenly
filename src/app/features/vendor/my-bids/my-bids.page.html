@@ -35,7 +35,7 @@
   <!-- Filter Bar -->
   <div class="filter-bar">
     <div class="search-box">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon"><app-icon name="search" [size]="16" /></span>
       <input 
         type="text" 
         placeholder="Search by tender title or bid ID..."
@@ -61,21 +61,25 @@
   <!-- Bids List -->
   <div class="bids-list">
     @if (filteredBids().length === 0) {
-      <div class="empty-state">
-        <div class="empty-icon">📋</div>
-        <h3>No bids found</h3>
-        @if (selectedFilter() !== 'all' || searchQuery()) {
-          <p>Try adjusting your filters or search query</p>
-          <button class="btn btn-outline" (click)="setFilter('all'); searchQuery.set('')">
+      @if (selectedFilter() !== 'all' || searchQuery()) {
+        <app-empty-state
+          icon="clipboard-list"
+          title="No bids found"
+          message="Try adjusting your filters or search query.">
+          <button class="btn-outline" type="button" (click)="setFilter('all'); searchQuery.set('')">
             Clear Filters
           </button>
-        } @else {
-          <p>You haven't submitted any bids yet</p>
-          <button class="btn btn-primary" (click)="browseTenders()">
+        </app-empty-state>
+      } @else {
+        <app-empty-state
+          icon="clipboard-list"
+          title="No bids yet"
+          message="You haven't submitted any bids. Browse open tenders to place your first one.">
+          <button class="btn-primary" type="button" (click)="browseTenders()">
             Browse Tenders
           </button>
-        }
-      </div>
+        </app-empty-state>
+      }
     } @else {
       @for (bid of filteredBids(); track bid.bidId) {
         <article 
@@ -88,9 +92,7 @@
               <span class="bid-id">{{ bid.bidId }}</span>
               <h3 class="tender-title">{{ bid.tenderTitle }}</h3>
             </div>
-            <span class="status-badge" [ngClass]="getStatusBadgeClass(bid.status)">
-              {{ getStatusLabel(bid.status) }}
-            </span>
+            <app-status-badge [status]="bid.status" [label]="getStatusLabel(bid.status)" />
           </div>
           
           <div class="bid-details">
@@ -104,14 +106,14 @@
             </div>
             <div class="detail-item">
               <span class="detail-label">Tender Closes</span>
-              <span class="detail-value">{{ bid.tenderClosingDate | date:'dd MMM yyyy' }}</span>
+              <span class="detail-value">{{ bid.tenderClosingDate | appDate }}</span>
             </div>
           </div>
           
           @if (bid.status === 'shortlisted' || bid.status === 'awarded') {
             <div class="bid-footer success">
               @if (bid.status === 'awarded') {
-                <span class="award-badge">🏆 Congratulations! Your bid has been awarded</span>
+                <span class="award-badge"><app-icon name="trophy" [size]="16" /> Congratulations! Your bid has been awarded</span>
               } @else {
                 <span class="shortlist-notice">Your technical proposal has been shortlisted for commercial evaluation</span>
               }
@@ -128,7 +130,7 @@
             <button class="btn-action" (click)="$event.stopPropagation(); viewTender(bid.tenderId)">
               View Tender
             </button>
-            <span class="view-details">View Details →</span>
+            <span class="view-details">View Details <app-icon name="arrow-right" [size]="15" /></span>
           </div>
         </article>
       }

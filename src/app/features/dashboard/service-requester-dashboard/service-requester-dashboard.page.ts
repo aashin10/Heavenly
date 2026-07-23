@@ -1,8 +1,15 @@
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+
 import { ServiceAuthService } from '../../../core/services/service-auth.service';
 import { ServiceRequester } from '../../../core/models/service.model';
+import { ServiceRequestService } from '../../../core/services/service-request.service';
+import { DraftService } from '../../../core/services/draft.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { expiryLabel, isUrgent } from '../../../shared/utils/deadline.util';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import {
   QuickAction,
   RequestSummary,
@@ -14,12 +21,14 @@ import {
 @Component({
   selector: 'app-service-requester-dashboard-page',
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, IconComponent, EmptyStateComponent, StatusBadgeComponent, AppDatePipe],
   templateUrl: './service-requester-dashboard.page.html',
   styleUrl: './service-requester-dashboard.page.scss',
 })
 export class ServiceRequesterDashboardPageComponent implements OnInit {
   private readonly serviceAuthService = inject(ServiceAuthService);
+  private readonly requestService = inject(ServiceRequestService);
+  private readonly draftService = inject(DraftService);
   private readonly router = inject(Router);
 
   // User data
@@ -83,92 +92,66 @@ export class ServiceRequesterDashboardPageComponent implements OnInit {
   }
 
   private loadDashboardData(): void {
-    // Mock data for Phase 1 - will be replaced with actual API calls in Phase 2
+    const requesterId = this.serviceAuthService.getCurrentUserSession()?.id;
+    const requests = requesterId
+      ? this.requestService
+          .getRequestsByRequester(requesterId)
+          .sort((a, b) => this.timeOf(b.updatedAt) - this.timeOf(a.updatedAt))
+      : [];
+    const drafts = this.draftService
+      .getAllDrafts()
+      .sort((a, b) => this.timeOf(b.lastSaved) - this.timeOf(a.lastSaved));
+
+    const isActive = (s: string) =>
+      s === 'submitted' || s === 'under_review' || s === 'changes_required' || s === 'approved';
+
     this.stats.set({
-      totalRequests: 12,
-      activeRequests: 3,
-      pendingReview: 2,
-      completedRequests: 7,
-      draftsCount: 2,
-      activeTenders: 4,
+      totalRequests: requests.length,
+      activeRequests: requests.filter(r => isActive(r.status)).length,
+      pendingReview: requests.filter(r => r.status === 'submitted' || r.status === 'under_review').length,
+      completedRequests: requests.filter(r => r.status === 'closed').length,
+      draftsCount: drafts.length,
+      activeTenders: requests.filter(r => r.status === 'published').length,
     });
 
-    // Mock recent requests
-    this.recentRequests.set([
-      {
-        id: '1',
-        title: 'Office Deep Cleaning',
-        category: 'quick_service',
-        status: 'published',
-        createdAt: new Date('2024-01-15'),
-        dueDate: new Date('2024-01-22'),
-        bidCount: 5,
-      },
-      {
-        id: '2',
-        title: 'Electrical Maintenance',
-        category: 'mid_complexity',
-        status: 'approved',
-        createdAt: new Date('2024-01-10'),
-        bidCount: 3,
-      },
-      {
-        id: '3',
-        title: 'Plumbing Repair',
-        category: 'technical',
-        status: 'closed',
-        createdAt: new Date('2024-01-05'),
-      },
-    ]);
+    // Show the three most recent of each; the rest live on /my-requests.
+    this.recentRequests.set(
+      requests.slice(0, 3).map(r => ({
+        id: r.id!,
+        title: r.serviceName,
+        category: r.category,
+        status: r.status,
+        createdAt: r.submittedAt ?? r.createdAt,
+      }))
+    );
 
-    // Mock drafts
-    this.drafts.set([
-      {
-        id: 'd1',
-        title: 'Security System Installation',
-        category: 'technical',
-        lastModified: new Date('2024-01-18'),
-        expiresAt: new Date('2024-01-25'),
-        completionPercent: 60,
-      },
-      {
-        id: 'd2',
-        title: 'HVAC Maintenance',
-        category: 'mid_complexity',
-        lastModified: new Date('2024-01-17'),
-        expiresAt: new Date('2024-01-24'),
-        completionPercent: 30,
-      },
-    ]);
+    this.drafts.set(
+      drafts.slice(0, 3).map(d => ({
+        id: d.id,
+        title: d.serviceName,
+        category: d.category,
+        lastModified: d.lastSaved,
+        expiresAt: d.expiresAt,
+        completionPercent: d.totalSteps
+          ? Math.round(((d.currentStep - 1) / d.totalSteps) * 100)
+          : 0,
+      }))
+    );
   }
 
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      draft: 'Draft',
-      submitted: 'Submitted',
-      under_review: 'Under Review',
-      changes_required: 'Changes Required',
-      approved: 'Approved',
-      published: 'Published',
-      closed: 'Closed',
-      cancelled: 'Cancelled',
-    };
-    return labels[status] || status;
+  private timeOf(d: Date | string | undefined): number {
+    return d ? new Date(d).getTime() : 0;
   }
 
-  getStatusClass(status: string): string {
-    const classes: Record<string, string> = {
-      draft: 'status-draft',
-      submitted: 'status-submitted',
-      under_review: 'status-review',
-      changes_required: 'status-changes',
-      approved: 'status-approved',
-      published: 'status-published',
-      closed: 'status-closed',
-      cancelled: 'status-cancelled',
-    };
-    return classes[status] || '';
+  continueDraft(draftId: string): void {
+    const draft = this.draftService.getDraft(draftId);
+    this.router.navigate(['/service-request/new'], {
+      queryParams: { draftId, step: draft?.currentStep ?? 1 },
+    });
   }
+
+  // Status label/class helpers removed — the recent-requests card now uses the
+  // shared <app-status-badge>, so the per-page status map is no longer needed.
 
   getCategoryLabel(category: string): string {
     const labels: Record<string, string> = {
@@ -179,18 +162,19 @@ export class ServiceRequesterDashboardPageComponent implements OnInit {
     return labels[category] || category;
   }
 
-  getDaysRemaining(expiresAt: Date): number {
-    const now = new Date();
-    const diff = expiresAt.getTime() - now.getTime();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  /** Human label for draft expiry; never renders a negative count. */
+  getExpiryLabel(expiresAt: Date): string {
+    return expiryLabel(expiresAt);
+  }
+
+  isExpiringSoon(expiresAt: Date): boolean {
+    return isUrgent(expiresAt, 2);
   }
 
   navigateTo(route: string): void {
-    this.router.navigate([route]);
+    // Quick-action routes may carry query params (e.g. /my-requests?tab=drafts),
+    // so route via URL rather than a single path segment.
+    this.router.navigateByUrl(route);
   }
 
-  logout(): void {
-    this.serviceAuthService.logout();
-    this.router.navigate(['/login']);
-  }
 }

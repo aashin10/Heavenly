@@ -8,6 +8,9 @@ import { TechnicalEvaluationTabComponent } from '../components/technical-evaluat
 import { CommercialEvaluationTabComponent } from '../components/commercial-evaluation-tab/commercial-evaluation-tab.component';
 import { ShortlistedTabComponent } from '../components/shortlisted-tab/shortlisted-tab.component';
 import { AwardTabComponent } from '../components/award-tab/award-tab.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { getCategoryShortLabel } from '../../../../shared/utils/service-category.util';
+import { formatAppDate } from '../../../../shared/utils/date-format.util';
 
 type EvaluationTab = 'technical' | 'commercial' | 'shortlisted' | 'award';
 
@@ -21,12 +24,17 @@ type EvaluationTab = 'technical' | 'commercial' | 'shortlisted' | 'award';
     TechnicalEvaluationTabComponent,
     CommercialEvaluationTabComponent,
     ShortlistedTabComponent,
-    AwardTabComponent
+    AwardTabComponent,
+    IconComponent
   ],
   templateUrl: './bid-evaluation.page.html',
   styleUrls: ['./bid-evaluation.page.scss']
 })
 export class BidEvaluationPage implements OnInit {
+  categoryLabel(category: string): string {
+    return getCategoryShortLabel(category);
+  }
+
   private readonly route = inject(ActivatedRoute);
   private readonly evaluationService = inject(EvaluationService);
   
@@ -41,10 +49,10 @@ export class BidEvaluationPage implements OnInit {
   
   // Tab definitions
   tabs: { id: EvaluationTab; label: string; icon: string }[] = [
-    { id: 'technical', label: 'Technical Evaluation', icon: '🔍' },
-    { id: 'commercial', label: 'Commercial Evaluation', icon: '💰' },
-    { id: 'shortlisted', label: 'Shortlisted Vendors', icon: '⭐' },
-    { id: 'award', label: 'Award Decision', icon: '🏆' }
+    { id: 'technical', label: 'Technical Evaluation', icon: 'search' },
+    { id: 'commercial', label: 'Commercial Evaluation', icon: 'indian-rupee' },
+    { id: 'shortlisted', label: 'Shortlisted Vendors', icon: 'star' },
+    { id: 'award', label: 'Award Decision', icon: 'trophy' }
   ];
   
   // Computed bid counts for tabs
@@ -174,10 +182,6 @@ export class BidEvaluationPage implements OnInit {
   }
   
   formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return formatAppDate(date);
   }
 }

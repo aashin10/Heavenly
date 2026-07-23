@@ -69,7 +69,7 @@
   background: white;
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   
   @media (max-width: 768px) {
     flex-direction: column;
@@ -151,7 +151,7 @@
   background: white;
   border-radius: 16px;
   margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   overflow-x: auto;
   
   @media (max-width: 768px) {
@@ -169,7 +169,7 @@
   transition: all 0.3s ease;
   
   &.active {
-    background: #dbeafe;
+    background: var(--info-bg);
     
     .step-icon {
       background: var(--primary-color);
@@ -182,15 +182,15 @@
   }
   
   &.completed {
-    background: #d1fae5;
+    background: var(--success-bg);
     
     .step-icon {
-      background: #047857;
+      background: var(--success-fg);
       color: white;
     }
     
     .step-title {
-      color: #065f46;
+      color: var(--success-fg);
     }
   }
   
@@ -232,7 +232,7 @@
   flex-shrink: 0;
   
   &.completed {
-    background: #059669;
+    background: var(--success-solid);
   }
   
   @media (max-width: 900px) {
@@ -321,7 +321,7 @@
   background: white;
   border-radius: 0 0 16px 16px;
   padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   min-height: 400px;
 }
 
@@ -331,7 +331,7 @@
   padding: 100px 20px;
   background: white;
   border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   
   .not-found-icon {
     font-size: 64px;

@@ -137,7 +137,9 @@ export class AuthService {
     this.updateProfile({ acceptedTerms: true });
   }
 
-  getInitials(name: string): string {
+  getInitials(name: string | null | undefined): string {
+    // A malformed session must degrade to an empty avatar, not crash the navbar.
+    if (!name) return '';
     return name
       .split(' ')
       .filter(n => n.length > 0)

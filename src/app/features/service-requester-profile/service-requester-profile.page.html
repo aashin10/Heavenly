@@ -1,0 +1,120 @@
+<div class="requester-profile-page">
+  <header class="page-header">
+    <div class="container">
+      <h1 class="page-title">My Profile</h1>
+      <p class="page-subtitle">Your account details, used on every request you submit.</p>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div class="container">
+      @if (requester(); as r) {
+        <!-- Account summary (read-only identity) -->
+        <section class="summary-card">
+          <div class="summary-avatar" aria-hidden="true">
+            <app-icon name="user" [size]="28" />
+          </div>
+          <div class="summary-info">
+            <span class="summary-email">{{ r.email }}</span>
+            <div class="summary-meta">
+              <span class="summary-type">{{ typeLabel() }}</span>
+              <span class="summary-since">Member since {{ r.createdAt | appDate }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Editable details -->
+        <section class="section-card">
+          <div class="section-header">
+            <h2>Account Details</h2>
+            <p>Keep your contact and organization details current.</p>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="save()">
+            <div class="form-grid">
+              @if (isIndividual()) {
+                <div class="form-group">
+                  <label for="fullName" class="required">Full Name</label>
+                  <input id="fullName" type="text" formControlName="fullName"
+                         [class.invalid]="isInvalid('fullName')" />
+                  @if (isInvalid('fullName')) { <span class="error-text">Full name is required</span> }
+                </div>
+              }
+
+              @if (isOrganization()) {
+                <div class="form-group">
+                  <label for="organizationName" class="required">Organization Name</label>
+                  <input id="organizationName" type="text" formControlName="organizationName"
+                         [class.invalid]="isInvalid('organizationName')" />
+                  @if (isInvalid('organizationName')) { <span class="error-text">Organization name is required</span> }
+                </div>
+                <div class="form-group">
+                  <label for="gstNumber" [class.required]="gstRequired()">GST Number</label>
+                  <input id="gstNumber" type="text" formControlName="gstNumber"
+                         placeholder="07AABCU9603R1ZM" maxlength="15"
+                         [class.invalid]="isInvalid('gstNumber')" />
+                  @if (isInvalid('gstNumber')) { <span class="error-text">Enter a valid 15-character GSTIN</span> }
+                </div>
+                <div class="form-group">
+                  <label for="authorizedPersonName" class="required">Authorized Person</label>
+                  <input id="authorizedPersonName" type="text" formControlName="authorizedPersonName"
+                         [class.invalid]="isInvalid('authorizedPersonName')" />
+                  @if (isInvalid('authorizedPersonName')) { <span class="error-text">Authorized person is required</span> }
+                </div>
+                <div class="form-group">
+                  <label for="designation" class="required">Designation</label>
+                  <input id="designation" type="text" formControlName="designation"
+                         [class.invalid]="isInvalid('designation')" />
+                  @if (isInvalid('designation')) { <span class="error-text">Designation is required</span> }
+                </div>
+              }
+
+              <div class="form-group">
+                <label for="phone" class="required">Phone</label>
+                <input id="phone" type="tel" formControlName="phone"
+                       placeholder="+91 98765 43210" [class.invalid]="isInvalid('phone')" />
+                @if (isInvalid('phone')) { <span class="error-text">Phone number is required</span> }
+              </div>
+
+              <div class="form-group">
+                <label for="city" class="required">City</label>
+                <input id="city" type="text" formControlName="city"
+                       [class.invalid]="isInvalid('city')" />
+                @if (isInvalid('city')) { <span class="error-text">City is required</span> }
+              </div>
+
+              @if (isIndividual()) {
+                <div class="form-group full-width">
+                  <label for="address">Address</label>
+                  <textarea id="address" formControlName="address" rows="2"></textarea>
+                </div>
+              }
+
+              @if (requester()?.requesterType === 'sme') {
+                <div class="form-group full-width">
+                  <label for="businessAddress">Business Address</label>
+                  <textarea id="businessAddress" formControlName="businessAddress" rows="2"></textarea>
+                </div>
+              }
+
+              @if (requester()?.requesterType === 'large_organization') {
+                <div class="form-group full-width">
+                  <label for="registeredAddress">Registered Address</label>
+                  <textarea id="registeredAddress" formControlName="registeredAddress" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="department">Department</label>
+                  <input id="department" type="text" formControlName="department" />
+                </div>
+              }
+            </div>
+
+            <div class="save-bar">
+              <button type="submit" class="btn-primary" [disabled]="form.pristine">Save Changes</button>
+            </div>
+          </form>
+        </section>
+      }
+    </div>
+  </main>
+</div>

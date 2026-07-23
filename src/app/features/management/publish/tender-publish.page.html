@@ -3,9 +3,7 @@
   <header class="page-header">
     <div class="header-left">
       <button class="back-button" (click)="goBack()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
+        <app-icon name="chevron-left" [size]="20" />
         Back to Dashboard
       </button>
     </div>
@@ -15,11 +13,7 @@
     </div>
     <div class="header-actions">
       <button class="btn btn-outline" (click)="downloadPDF()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
+        <app-icon name="download" [size]="16" />
         Download PDF
       </button>
     </div>
@@ -32,11 +26,7 @@
         <div class="section-header">
           <h2>Tender Preview</h2>
           <button class="btn btn-text" (click)="previewFullDocument()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-              <polyline points="15 3 21 3 21 9"></polyline>
-              <line x1="10" y1="14" x2="21" y2="3"></line>
-            </svg>
+            <app-icon name="external-link" [size]="16" />
             Preview Full Document
           </button>
         </div>
@@ -44,7 +34,7 @@
         <div class="preview-card">
           <div class="preview-header">
             <span class="tender-id">{{ tender()!.tenderId }}</span>
-            <span class="status-badge approved">Ready to Publish</span>
+            <app-status-badge status="ready_to_publish" />
           </div>
 
           <h3 class="tender-title">{{ tender()!.title }}</h3>
@@ -60,7 +50,7 @@
             </div>
             <div class="preview-item">
               <div class="form-label">Bid Window</div>
-              <span>{{ tender()!.bidWindowStart | date:'mediumDate' }} - {{ tender()!.bidWindowEnd | date:'mediumDate' }}</span>
+              <span>{{ tender()!.bidWindowStart | appDate }} - {{ tender()!.bidWindowEnd | appDate }}</span>
             </div>
             <div class="preview-item">
               <div class="form-label">Budget Visibility</div>
@@ -78,41 +68,31 @@
             <div class="criteria-list">
               @if (tender()!.eligibilityCriteria.certifications.required) {
                 <div class="criteria-item">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+                  <app-icon name="check" [size]="16" />
                   <span>{{ tender()!.eligibilityCriteria.certifications.details || 'Certifications required' }}</span>
                 </div>
               }
               @if (tender()!.eligibilityCriteria.insurance.required) {
                 <div class="criteria-item">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+                  <app-icon name="check" [size]="16" />
                   <span>Insurance required - Min coverage: {{ tender()!.eligibilityCriteria.insurance.minCoverage }}</span>
                 </div>
               }
               @if (tender()!.eligibilityCriteria.bondCapability.required) {
                 <div class="criteria-item">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+                  <app-icon name="check" [size]="16" />
                   <span>Bond capability required - Min: {{ tender()!.eligibilityCriteria.bondCapability.minAmount }}</span>
                 </div>
               }
               @if (tender()!.eligibilityCriteria.regionalPresence.required) {
                 <div class="criteria-item">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+                  <app-icon name="check" [size]="16" />
                   <span>Regional presence required - {{ tender()!.eligibilityCriteria.regionalPresence.regions?.join(', ') }}</span>
                 </div>
               }
               @if (tender()!.eligibilityCriteria.experienceYears.required) {
                 <div class="criteria-item">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
+                  <app-icon name="check" [size]="16" />
                   <span>Minimum {{ tender()!.eligibilityCriteria.experienceYears.minimum }} years experience</span>
                 </div>
               }
@@ -125,10 +105,7 @@
               <div class="attachment-list">
                 @for (attachment of tender()!.attachments; track attachment.name) {
                   <div class="attachment-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
+                    <app-icon name="file-text" [size]="16" />
                     <span>{{ attachment.name }}</span>
                     <span class="file-size">{{ attachment.size }}</span>
                   </div>
@@ -200,29 +177,19 @@
       <!-- Action Bar -->
       <div class="action-bar">
         <div class="action-info">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="16" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12.01" y2="8"></line>
-          </svg>
+          <app-icon name="info" [size]="20" />
           <span>Once published, this tender will be visible to all eligible vendors on the portal.</span>
         </div>
         <div class="action-buttons">
           <button class="btn btn-outline" (click)="goBack()">Cancel</button>
           @if (publishSettings.value.scheduledPublishDate) {
             <button class="btn btn-secondary" (click)="scheduleForLater()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
+              <app-icon name="clock" [size]="16" />
               Schedule Publish
             </button>
           }
           <button class="btn btn-primary" (click)="publishNow()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 2L11 13"></path>
-              <path d="M22 2l-7 20-4-9-9-4 20-7z"></path>
-            </svg>
+            <app-icon name="send" [size]="16" />
             Publish Now
           </button>
         </div>
@@ -241,9 +208,7 @@
   <button type="button" class="modal-overlay" (click)="closeSuccessModal()" (keydown.escape)="closeSuccessModal()" (keydown.enter)="closeSuccessModal()">
     <div class="modal-dialog success-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
       <div class="success-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+        <app-icon name="check" [size]="48" />
       </div>
       
       <h2>Tender Published Successfully!</h2>

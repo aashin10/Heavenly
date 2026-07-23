@@ -6,6 +6,6 @@ export const PROFILE_ROUTES: Routes = [
     path: '',
     loadComponent: () => import('./profile.page').then(m => m.ProfilePageComponent),
     canActivate: [authGuard],
-    title: 'My Profile | Heavenly'
+    title: 'My Profile'
   }
 ];

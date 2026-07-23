@@ -4,12 +4,17 @@ import { TitleCasePipe } from '@angular/common';
 import { ManagementService } from './management.service';
 import { ServiceRequestManagementService } from './service-request-management.service';
 import { JobFilter, ServiceRequest, ServiceRequestFilter } from './management.model';
+import { VendorAdminService } from '../../core/services/vendor-admin.service';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
+import { IconComponent } from '../../shared/components/icon/icon.component';
+import { VendorQueueComponent } from './vendors/vendor-queue.component';
+
+type ManagementTab = 'service-requests' | 'jobs' | 'vendors';
 
 @Component({
   selector: 'app-management-page',
   standalone: true,
-  imports: [TitleCasePipe, StatusBadgeComponent],
+  imports: [TitleCasePipe, StatusBadgeComponent, IconComponent, VendorQueueComponent],
   templateUrl: './management.page.html',
   styleUrl: './management.page.scss'
 })
@@ -17,10 +22,11 @@ export class ManagementPageComponent {
   private readonly router = inject(Router);
   protected readonly managementService = inject(ManagementService);
   protected readonly srManagementService = inject(ServiceRequestManagementService);
+  protected readonly vendorAdminService = inject(VendorAdminService);
 
   @ViewChildren('tabButton') tabButtons!: QueryList<ElementRef<HTMLButtonElement>>;
 
-  activeTab: 'service-requests' | 'jobs' = 'service-requests';
+  activeTab: ManagementTab = 'service-requests';
 
   readonly filterOptions: { value: JobFilter; label: string }[] = [
     { value: 'pending', label: 'Pending' },
@@ -39,7 +45,7 @@ export class ManagementPageComponent {
     { value: 'all', label: 'All Requests' }
   ];
 
-  setActiveTab(tab: 'service-requests' | 'jobs'): void {
+  setActiveTab(tab: ManagementTab): void {
     this.activeTab = tab;
   }
 

@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Authenticated areas hold no indexable content.
+Disallow: /dashboard
+Disallow: /management
+Disallow: /profile
+Disallow: /vendor
+Disallow: /vendor-dashboard
+Disallow: /service-requester-dashboard
+Disallow: /service-request
+
+Sitemap: https://heavenlycorporation.com/sitemap.xml

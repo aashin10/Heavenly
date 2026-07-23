@@ -61,7 +61,7 @@
 .profile-card {
   background-color: var(--white);
   border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 
@@ -178,7 +178,7 @@
 }
 
 .required {
-  color: var(--red-500);
+  color: var(--danger-fg);
 }
 
 .form-input,
@@ -193,7 +193,7 @@
   &:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+    box-shadow: var(--ring-brand);
   }
 
   &::placeholder {
@@ -256,11 +256,15 @@
   gap: 1.5rem;
 }
 
+// Separator sits between adjacent sections rather than after every non-last
+// one — otherwise a lone rendered section still drew a rule, which combined
+// with the footer's border to look like empty divider rows.
 .profile-section {
   padding-bottom: 1.5rem;
 
-  &:not(:last-child) {
-    border-bottom: 1px solid var(--gray-200);
+  & + & {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--gray-200);
   }
 }
 

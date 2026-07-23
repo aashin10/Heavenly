@@ -31,13 +31,13 @@
                 <input type="radio" formControlName="serviceType" [value]="type">
                 <span class="type-icon">
                   @switch (type) {
-                    @case ('Regular Service') { 🔧 }
-                    @case ('Deep Cleaning') { ✨ }
-                    @case ('Repair') { 🛠️ }
-                    @case ('Installation') { 📦 }
-                    @case ('Gas Refill') { ⛽ }
-                    @case ('Inspection') { 🔍 }
-                    @default { 📋 }
+                    @case ('Regular Service') { <app-icon name="wrench" [size]="20" /> }
+                    @case ('Deep Cleaning') { <app-icon name="sparkles" [size]="20" /> }
+                    @case ('Repair') { <app-icon name="hammer" [size]="20" /> }
+                    @case ('Installation') { <app-icon name="package" [size]="20" /> }
+                    @case ('Gas Refill') { <app-icon name="fuel" [size]="20" /> }
+                    @case ('Inspection') { <app-icon name="search" [size]="20" /> }
+                    @default { <app-icon name="clipboard-list" [size]="20" /> }
                   }
                 </span>
                 <span class="type-name">{{ type }}</span>
@@ -89,7 +89,7 @@
         <h2 class="step-title">Equipment Details</h2>
         <p class="step-description">Tell us about the equipment that needs servicing.</p>
 
-        <div class="equipment-list">
+        <div class="equipment-list" formArrayName="equipmentList">
           @for (equipment of getEquipmentList().controls; track $index; let first = $first) {
             <div class="equipment-card" [formGroupName]="$index">
               <div class="equipment-header">
@@ -317,22 +317,22 @@
           <div class="payment-options">
             <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'cash'">
               <input type="radio" formControlName="paymentMode" value="cash">
-              <span class="payment-icon">💵</span>
+              <span class="payment-icon"><app-icon name="banknote" [size]="20" /></span>
               <span class="payment-name">Cash</span>
             </label>
             <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'upi'">
               <input type="radio" formControlName="paymentMode" value="upi">
-              <span class="payment-icon">📱</span>
+              <span class="payment-icon"><app-icon name="phone" [size]="16" /></span>
               <span class="payment-name">UPI</span>
             </label>
             <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'card'">
               <input type="radio" formControlName="paymentMode" value="card">
-              <span class="payment-icon">💳</span>
+              <span class="payment-icon"><app-icon name="credit-card" [size]="20" /></span>
               <span class="payment-name">Card</span>
             </label>
             <label class="payment-option" [class.selected]="getControl(4, 'paymentMode')?.value === 'online'">
               <input type="radio" formControlName="paymentMode" value="online">
-              <span class="payment-icon">🏦</span>
+              <span class="payment-icon"><app-icon name="landmark" [size]="20" /></span>
               <span class="payment-name">Online</span>
             </label>
           </div>
@@ -373,17 +373,17 @@
       <div class="right-actions">
         @if (canGoBack()) {
           <button type="button" class="btn btn-secondary" (click)="previousStep()">
-            ← Back
+            <app-icon name="arrow-left" [size]="16" /> Back
           </button>
         }
         @if (canGoNext()) {
           <button type="button" class="btn btn-primary" (click)="nextStep()">
-            Next →
+            Next <app-icon name="arrow-right" [size]="16" />
           </button>
         }
         @if (isLastStep()) {
           <button type="submit" class="btn btn-primary btn-submit">
-            Book Service ✓
+            Book Service <app-icon name="check" [size]="16" />
           </button>
         }
       </div>

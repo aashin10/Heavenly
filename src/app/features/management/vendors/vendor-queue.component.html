@@ -1,0 +1,125 @@
+<!-- Vendor verification statistics -->
+<section class="statistics-grid" aria-label="Vendor verification statistics">
+  <div class="stat-card">
+    <div class="stat-content">
+      <p class="stat-label">Pending Verification</p>
+      <p class="stat-value stat-value--yellow">{{ stats().pending }}</p>
+    </div>
+    <div class="stat-icon stat-icon--yellow" aria-hidden="true">
+      <app-icon name="clock" [size]="40" />
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-content">
+      <p class="stat-label">Verified</p>
+      <p class="stat-value stat-value--green">{{ stats().verified }}</p>
+    </div>
+    <div class="stat-icon stat-icon--green" aria-hidden="true">
+      <app-icon name="circle-check" [size]="40" />
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-content">
+      <p class="stat-label">Rejected</p>
+      <p class="stat-value stat-value--red">{{ stats().rejected }}</p>
+    </div>
+    <div class="stat-icon stat-icon--red" aria-hidden="true">
+      <app-icon name="circle-x" [size]="40" />
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-content">
+      <p class="stat-label">Suspended</p>
+      <p class="stat-value stat-value--red">{{ stats().suspended }}</p>
+    </div>
+    <div class="stat-icon stat-icon--red" aria-hidden="true">
+      <app-icon name="ban" [size]="40" />
+    </div>
+  </div>
+</section>
+
+<!-- Filter tabs -->
+<div class="filter-tabs" role="tablist" aria-label="Vendor status filter">
+  @for (option of filterOptions; track option.value) {
+    <button
+      type="button"
+      role="tab"
+      class="filter-tab"
+      [class.active]="filter() === option.value"
+      [attr.aria-selected]="filter() === option.value"
+      (click)="setFilter(option.value)"
+    >
+      {{ option.label }}
+    </button>
+  }
+</div>
+
+<!-- Vendor list -->
+<section class="vendors-section" aria-label="Vendors list">
+  <div class="section-header">
+    <h2 class="section-title">Vendors ({{ filteredVendors().length }})</h2>
+  </div>
+
+  @if (filteredVendors().length === 0) {
+    <app-empty-state
+      icon="handshake"
+      title="No vendors here"
+      message="Vendors matching this filter will appear here as they register and are reviewed." />
+  } @else {
+    <div class="vendors-table-wrapper">
+      <table class="vendors-table">
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Contact</th>
+            <th>Services</th>
+            <th>Docs</th>
+            <th>Registered</th>
+            <th>Status</th>
+            <th><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (vendor of filteredVendors(); track vendor.id) {
+            <tr>
+              <td>
+                <div class="business-info">
+                  <span class="business-name">{{ vendor.businessName }}</span>
+                  <span class="business-city">{{ vendor.city }}, {{ vendor.state }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="contact-info">
+                  <span class="contact-name">{{ vendor.primaryContactPerson }}</span>
+                  <span class="contact-phone">{{ vendor.phone }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="service-count">{{ vendor.serviceCapabilities.length }} services</span>
+              </td>
+              <td>
+                <span class="doc-count" [class.doc-count--incomplete]="documentCount(vendor) < 2">
+                  {{ documentCount(vendor) }}/4
+                </span>
+              </td>
+              <td>
+                <span class="registered-date">{{ vendor.createdAt | appDate }}</span>
+              </td>
+              <td>
+                <app-status-badge [status]="vendor.verificationStatus" />
+              </td>
+              <td class="actions-cell">
+                <a [routerLink]="['/management/vendors', vendor.id]" class="review-link">
+                  Review <app-icon name="arrow-right" [size]="14" />
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

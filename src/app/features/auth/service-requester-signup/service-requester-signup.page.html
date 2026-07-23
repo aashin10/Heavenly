@@ -3,26 +3,26 @@
     <div class="signup-grid">
       <!-- Left Side - Branding -->
       <div class="branding-section">
-        <img src="assets/logo.png" alt="Heavenly Corporation" class="brand-logo" />
+        <div class="brand-logo"><app-logo [markSize]="44" /></div>
         <h1 class="brand-title">Service Requester Signup</h1>
         <p class="brand-subtitle">
           Create an account to submit service requests, receive competitive tenders, and hire verified vendors.
         </p>
         <div class="benefits-list">
           <div class="benefit-item">
-            <span class="benefit-icon">📋</span>
+            <span class="benefit-icon"><app-icon name="clipboard-list" [size]="18" /></span>
             <span>Submit service requests easily</span>
           </div>
           <div class="benefit-item">
-            <span class="benefit-icon">📢</span>
+            <span class="benefit-icon"><app-icon name="megaphone" [size]="18" /></span>
             <span>Receive competitive tenders</span>
           </div>
           <div class="benefit-item">
-            <span class="benefit-icon">✅</span>
+            <span class="benefit-icon"><app-icon name="check-circle" [size]="18" /></span>
             <span>Hire verified vendors</span>
           </div>
           <div class="benefit-item">
-            <span class="benefit-icon">💾</span>
+            <span class="benefit-icon"><app-icon name="save" [size]="18" /></span>
             <span>Save drafts for up to 7 days</span>
           </div>
         </div>
@@ -32,7 +32,7 @@
       <div class="form-section">
         <!-- Mobile Logo -->
         <div class="mobile-logo">
-          <img src="assets/logo.png" alt="Heavenly Corporation" />
+          <app-logo [markSize]="36" />
         </div>
 
         <!-- Progress Steps -->
@@ -41,9 +41,7 @@
             <div class="step" [class.active]="step.isActive" [class.completed]="step.isCompleted">
               <div class="step-circle">
                 @if (step.isCompleted) {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
+                  <app-icon name="check" [size]="16" />
                 } @else {
                   {{ step.number }}
                 }
@@ -76,7 +74,7 @@
                   [class.selected]="selectedRequesterType() === accountType.type"
                   (click)="selectAccountType(accountType.type)"
                 >
-                  <span class="type-icon">{{ accountType.icon }}</span>
+                  <span class="type-icon"><app-icon [name]="accountType.icon" [size]="26" /></span>
                   <span class="type-title">{{ accountType.title }}</span>
                   <span class="type-description">{{ accountType.description }}</span>
                 </button>
@@ -85,10 +83,7 @@
 
             <button class="btn-primary btn-full" (click)="nextStep()">
               Next
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/>
-                <polyline points="12 5 19 12 12 19"/>
-              </svg>
+              <app-icon name="arrow-right" [size]="18" />
             </button>
           </div>
         }
@@ -103,10 +98,7 @@
               <div class="form-group">
                 <label for="fullName" class="form-label">Full Name <span class="required">*</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
+                  <app-icon class="input-icon" name="user" [size]="20" />
                   <input
                     type="text"
                     id="fullName"
@@ -123,10 +115,7 @@
               <div class="form-group">
                 <label for="email" class="form-label">Email Address <span class="required">*</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                    <polyline points="22,6 12,13 2,6"/>
-                  </svg>
+                  <app-icon class="input-icon" name="mail" [size]="20" />
                   <input
                     type="email"
                     id="email"
@@ -143,9 +132,7 @@
               <div class="form-group">
                 <label for="phone" class="form-label">Phone Number <span class="required">*</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                  </svg>
+                  <app-icon class="input-icon" name="phone" [size]="20" />
                   <input
                     type="tel"
                     id="phone"
@@ -162,10 +149,7 @@
               <div class="form-group">
                 <label for="password" class="form-label">Password <span class="required">*</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
+                  <app-icon class="input-icon" name="lock" [size]="20" />
                   <input
                     type="password"
                     id="password"
@@ -196,10 +180,7 @@
               <div class="form-group">
                 <label for="confirmPassword" class="form-label">Confirm Password <span class="required">*</span></label>
                 <div class="input-wrapper">
-                  <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
+                  <app-icon class="input-icon" name="lock" [size]="20" />
                   <input
                     type="password"
                     id="confirmPassword"
@@ -215,18 +196,12 @@
 
               <div class="button-row">
                 <button type="button" class="btn-outline" (click)="prevStep()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"/>
-                    <polyline points="12 19 5 12 12 5"/>
-                  </svg>
+                  <app-icon name="arrow-left" [size]="18" />
                   Back
                 </button>
                 <button type="submit" class="btn-primary">
                   Next
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
-                  </svg>
+                  <app-icon name="arrow-right" [size]="18" />
                 </button>
               </div>
             </form>
@@ -257,10 +232,7 @@
                 <div class="form-group">
                   <label for="city" class="form-label">City/Location <span class="required">*</span></label>
                   <div class="input-wrapper">
-                    <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
+                    <app-icon class="input-icon" name="map-pin" [size]="20" />
                     <input
                       type="text"
                       id="city"
@@ -511,10 +483,7 @@
 
               <div class="button-row">
                 <button type="button" class="btn-outline" (click)="prevStep()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"/>
-                    <polyline points="12 19 5 12 12 5"/>
-                  </svg>
+                  <app-icon name="arrow-left" [size]="18" />
                   Back
                 </button>
                 <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
@@ -532,9 +501,9 @@
 
         <!-- Back to Home Link -->
         <div class="back-link">
-          <a routerLink="/">← Back to Home</a>
+          <a routerLink="/"><app-icon name="arrow-left" [size]="16" /> Back to Home</a>
           <span class="divider">|</span>
-          <a routerLink="/service-login">Already have an account? Login</a>
+          <a routerLink="/login" [queryParams]="{ portal: 'services' }">Already have an account? Login</a>
         </div>
       </div>
     </div>
@@ -551,10 +520,7 @@
       aria-labelledby="requester-terms-title">
       <div class="modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
         <button class="modal-close" (click)="closeTerms()" aria-label="Close terms modal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
+          <app-icon name="x" [size]="24" />
         </button>
         <div class="modal-content">
           <h2 id="requester-terms-title">Terms and Conditions</h2>

@@ -3,11 +3,14 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LiveTender, EvaluationBid, NegotiationNote } from '../../evaluation.model';
 import { EvaluationService } from '../../evaluation.service';
+import { IconComponent } from '../../../../../shared/components/icon/icon.component';
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state.component';
+import { formatAppDateTime } from '../../../../../shared/utils/date-format.util';
 
 @Component({
   selector: 'app-shortlisted-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports: [CommonModule, FormsModule, DecimalPipe, IconComponent, EmptyStateComponent],
   template: `
     <div class="shortlisted-tab">
       <!-- Tab Header -->
@@ -19,11 +22,10 @@ import { EvaluationService } from '../../evaluation.service';
       </div>
       
       @if (shortlistedBids().length === 0) {
-        <div class="empty-state">
-          <div class="empty-icon">⭐</div>
-          <h3>No Vendors Shortlisted</h3>
-          <p>Use the Commercial Evaluation tab to add vendors to the shortlist for final negotiations.</p>
-        </div>
+        <app-empty-state
+          icon="star"
+          title="No Vendors Shortlisted"
+          message="Use the Commercial Evaluation tab to add vendors to the shortlist for final negotiations." />
       } @else {
         <div class="shortlisted-list">
           @for (bid of shortlistedBids(); track bid.id; let i = $index) {
@@ -40,7 +42,7 @@ import { EvaluationService } from '../../evaluation.service';
                 </div>
                 <div class="header-actions">
                   <button class="btn-remove" (click)="removeFromShortlist(bid)">
-                    <span class="icon">✖</span>
+                    <span class="icon"><app-icon name="x" [size]="18" /></span>
                     Remove
                   </button>
                 </div>
@@ -139,16 +141,16 @@ import { EvaluationService } from '../../evaluation.service';
               <div class="card-footer">
                 <div class="contact-info">
                   <span class="contact-item">
-                    <span class="icon">📧</span>
+                    <span class="icon"><app-icon name="mail" [size]="18" /></span>
                     {{ bid.companyName }}
                   </span>
                   <span class="contact-item">
-                    <span class="icon">📍</span>
+                    <span class="icon"><app-icon name="map-pin" [size]="18" /></span>
                     {{ bid.location }}
                   </span>
                 </div>
                 <button class="btn-select-winner" (click)="selectAsWinner(bid)">
-                  <span class="icon">🏆</span>
+                  <span class="icon"><app-icon name="trophy" [size]="18" /></span>
                   Select as Winner
                 </button>
               </div>
@@ -231,12 +233,6 @@ export class ShortlistedTabComponent {
   }
   
   formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatAppDateTime(date);
   }
 }

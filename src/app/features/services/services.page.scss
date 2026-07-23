@@ -11,14 +11,10 @@
 }
 
 .page-title {
-  font-size: 2.5rem;
-  font-weight: 400;
+  font-size: clamp(2rem, 3vw + 1rem, 3rem);
+  font-weight: var(--font-bold);
   text-align: center;
   margin-bottom: 1rem;
-
-  @media (min-width: 768px) {
-    font-size: 3rem;
-  }
 }
 
 .page-subtitle {
@@ -55,11 +51,11 @@
   border-radius: 0.75rem;
   font-size: 1rem;
   font-family: inherit;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    box-shadow: var(--ring-inverse);
   }
 
   &::placeholder {
@@ -101,6 +97,11 @@
 // Content Section
 .services-content {
   padding: 2rem 0 4rem;
+
+  // Clearance so the floating help button never covers the last cards.
+  @media (max-width: 639px) {
+    padding-bottom: 6rem;
+  }
 }
 
 // Popular Section
@@ -119,67 +120,9 @@
 }
 
 .heading-icon {
-  font-size: 1.5rem;
-}
-
-.popular-scroll {
-  display: flex;
-  gap: 1rem;
-  overflow-x: auto;
-  padding-bottom: 1rem;
-  scrollbar-width: thin;
-
-  &::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: var(--gray-100);
-    border-radius: 3px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--gray-300);
-    border-radius: 3px;
-  }
-}
-
-.popular-card {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
+  display: inline-flex;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  background: var(--white);
-  border: 2px solid var(--gray-100);
-  border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 140px;
-
-  &:hover {
-    border-color: var(--primary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 54, 100, 0.1);
-  }
-}
-
-.popular-icon {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.popular-name {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--gray-700);
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-
-.popular-badge {
-  font-size: 0.75rem;
-  color: var(--gray-500);
+  color: var(--accent-600);
 }
 
 // Service Groups
@@ -214,7 +157,9 @@
 }
 
 .group-emoji {
-  font-size: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  color: var(--navy-700);
 }
 
 .group-badges {
@@ -279,13 +224,20 @@
 
   &:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(0, 54, 100, 0.1);
+    box-shadow: var(--shadow-md);
   }
 }
 
 .card-icon {
-  font-size: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
   margin-bottom: 1rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--navy-50);
+  color: var(--navy-700);
 }
 
 .card-content {
@@ -303,7 +255,9 @@
 }
 
 .ai-badge {
-  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-600);
   cursor: help;
 }
 
@@ -321,6 +275,9 @@
 }
 
 .category-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.75rem;
   color: var(--gray-500);
 }
@@ -347,25 +304,26 @@
 // Floating Help Button
 .help-fab {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
+  bottom: 1.5rem;
+  right: 1.5rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: var(--primary-color);
+  background: var(--navy-800);
   color: var(--white);
   border: none;
-  border-radius: 2rem;
+  border-radius: var(--radius-full);
   font-family: inherit;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 54, 100, 0.3);
-  transition: all 0.2s;
-  z-index: 50;
+  box-shadow: var(--shadow-lg);
+  transition: background-color var(--transition), transform var(--transition);
+  z-index: var(--z-sticky);
 
   &:hover {
-    background: var(--primary-light);
+    background: var(--navy-700);
     transform: translateY(-2px);
   }
 
@@ -427,9 +385,15 @@
 }
 
 .modal-icon {
-  font-size: 3rem;
-  text-align: center;
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 1rem;
+  border-radius: var(--radius-full);
+  background-color: var(--navy-50);
+  color: var(--navy-700);
 }
 
 .modal-title {
@@ -523,7 +487,15 @@
 }
 
 .expect-icon {
-  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  border-radius: var(--radius-lg);
+  background-color: var(--navy-50);
+  color: var(--navy-700);
 }
 
 .expect-category {
@@ -594,10 +566,13 @@
   margin-bottom: 0.75rem;
 
   h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     margin: 0 0 0.5rem;
-    color: var(--gray-800);
+    color: var(--navy-700);
   }
 
   p {

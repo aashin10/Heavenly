@@ -48,25 +48,6 @@
   }
 }
 
-// Status Badges
-.status-badge {
-  display: inline-flex;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  flex-shrink: 0;
-}
-
-.badge-gray { background: var(--gray-100); color: var(--gray-600); }
-.badge-blue { background: #dbeafe; color: #1d4ed8; }
-.badge-purple { background: #ede9fe; color: #6d28d9; }
-.badge-yellow { background: #fef3c7; color: #92400e; }
-.badge-green { background: #d1fae5; color: #065f46; }
-.badge-red { background: #fee2e2; color: #991b1b; }
-
 // Layout
 .content-layout {
   display: grid;
@@ -102,30 +83,30 @@
   }
 
   &.success {
-    background: #ecfdf5;
-    border: 1px solid #a7f3d0;
+    background: var(--success-bg);
+    border: 1px solid var(--success-bg);
 
-    h3, p { color: #065f46; }
+    h3, p { color: var(--success-fg); }
   }
 
   &.info {
-    background: #eff6ff;
-    border: 1px solid #93c5fd;
+    background: var(--info-bg);
+    border: 1px solid var(--info-solid);
 
-    h3, p { color: #1e40af; }
+    h3, p { color: var(--info-fg); }
   }
 
   &.error {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
+    background: var(--danger-bg);
+    border: 1px solid var(--danger-bg);
 
-    h3, p { color: #991b1b; }
+    h3, p { color: var(--danger-fg); }
   }
 }
 
 // Detail Sections
 .detail-section {
-  background: #fff;
+  background: var(--white);
   border-radius: 12px;
   border: 1px solid var(--gray-200);
   padding: 24px;
@@ -196,10 +177,10 @@
       white-space: pre-wrap;
 
       &.warning {
-        background: #fef3c7;
+        background: var(--warning-bg);
         padding: 12px;
         border-radius: 6px;
-        border-left: 3px solid #f59e0b;
+        border-left: 3px solid var(--warning-solid);
       }
     }
   }
@@ -235,7 +216,7 @@
         width: 24px;
         height: 24px;
         background: var(--primary-color);
-        color: #fff;
+        color: var(--white);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -362,7 +343,7 @@
 }
 
 .sidebar-card {
-  background: #fff;
+  background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   padding: 20px;
@@ -423,7 +404,7 @@
       justify-content: center;
       flex-shrink: 0;
       font-size: 12px;
-      color: #fff;
+      color: var(--white);
       z-index: 1;
     }
 
@@ -437,7 +418,7 @@
       .pulse {
         width: 8px;
         height: 8px;
-        background: #fff;
+        background: var(--white);
         border-radius: 50%;
         animation: pulse 1.5s infinite;
       }
@@ -513,7 +494,7 @@
   text-align: center;
 
   &.btn-outline {
-    background: #fff;
+    background: var(--white);
     border: 1px solid var(--gray-300);
     color: var(--gray-700);
 

@@ -41,15 +41,15 @@
 }
 
 .brand-logo {
-  height: 5rem;
   margin-bottom: 2rem;
+  color: var(--white);
 }
 
 .brand-title {
-  font-size: 3rem;
+  font-size: clamp(2rem, 3vw + 1rem, 3rem);
   margin-bottom: 1.5rem;
-  font-weight: 400;
-  line-height: 1.2;
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
 }
 
 .brand-subtitle {
@@ -97,20 +97,55 @@
 .form-section {
   background-color: var(--white);
   border-radius: 1rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-xl);
   padding: 2rem;
 }
 
 .mobile-logo {
-  text-align: center;
+  display: flex;
+  justify-content: center;
   margin-bottom: 1.5rem;
+  color: var(--navy-800);
 
   @media (min-width: 768px) {
     display: none;
   }
+}
 
-  img {
-    height: 3rem;
+// Remember me / forgot password row
+.form-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.remember-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+  cursor: pointer;
+
+  input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--navy-800);
+    cursor: pointer;
+  }
+}
+
+.forgot-link {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--navy-700);
+
+  &:hover {
+    color: var(--accent-600);
+    text-decoration: underline;
   }
 }
 
@@ -146,7 +181,7 @@
   &.active {
     background-color: var(--primary-color);
     color: var(--white);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 }
 
@@ -259,7 +294,7 @@
   &.active {
     border-color: var(--primary-color);
     background-color: var(--blue-50);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 }
 
@@ -310,7 +345,7 @@
   font-family: inherit;
   cursor: pointer;
   transition: background-color 0.2s, opacity 0.2s;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -403,7 +438,7 @@
   &.active {
     background-color: var(--white);
     color: var(--primary-color);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 }
 
@@ -440,7 +475,7 @@
   &.active {
     background-color: var(--primary-color);
     color: var(--white);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 }
 

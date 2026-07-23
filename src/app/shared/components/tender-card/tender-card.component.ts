@@ -1,12 +1,14 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { PublishedTender } from '../../../features/vendor/vendor.model';
 import { TimeAgoPipe } from '../../pipes/time-ago.pipe';
 import { TimeRemainingPipe } from '../../pipes/time-remaining.pipe';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-tender-card',
   standalone: true,
-  imports: [TimeAgoPipe, TimeRemainingPipe],
+  imports: [TimeAgoPipe, TimeRemainingPipe, RouterLink, IconComponent],
   template: `
     <div class="tender-card" [class.highlighted]="highlighted" (click)="onCardClick()">
       <div class="card-header">
@@ -15,41 +17,53 @@ import { TimeRemainingPipe } from '../../pipes/time-remaining.pipe';
           {{ tender.categoryLabel }}
         </span>
       </div>
-      
+
       <div class="card-body">
         <div class="tender-info">
           <div class="info-item">
-            <span class="icon">📍</span>
+            <app-icon name="map-pin" [size]="15" />
             <span>{{ tender.location }}</span>
           </div>
           <div class="info-item">
-            <span class="icon">💰</span>
+            <app-icon name="indian-rupee" [size]="15" />
             <span>{{ getBudgetDisplay() }}</span>
           </div>
           <div class="info-item">
-            <span class="icon">📅</span>
+            <app-icon name="calendar" [size]="15" />
             <span>Posted {{ tender.publishedAt | timeAgo }}</span>
           </div>
         </div>
-        
+
         <p class="tender-summary">{{ getTruncatedSummary() }}</p>
-        
+
         <div class="tender-tags">
           @for (tag of tender.tags.slice(0, 3); track tag) {
             <span class="tag">{{ tag }}</span>
           }
         </div>
       </div>
-      
+
       <div class="card-footer">
         <div class="deadline-info" [class.urgent]="isClosingSoon()">
-          <span class="icon">⏰</span>
-          <span>Closes {{ tender.bidWindowEnd | timeRemaining }}</span>
+          <app-icon name="clock" [size]="15" />
+          @if (isClosed()) {
+            <span>Bidding closed</span>
+          } @else {
+            <span>Closes {{ tender.bidWindowEnd | timeRemaining }}</span>
+          }
         </div>
-        
-        <button class="btn-view" (click)="onViewDetails($event)">
-          View Details →
-        </button>
+
+        @if (detailLink) {
+          <a class="btn-view" [routerLink]="detailLink" (click)="$event.stopPropagation()">
+            View Details
+            <app-icon name="arrow-right" [size]="15" />
+          </a>
+        } @else {
+          <button class="btn-view" type="button" (click)="onViewDetails($event)">
+            View Details
+            <app-icon name="arrow-right" [size]="15" />
+          </button>
+        }
       </div>
     </div>
   `,
@@ -137,9 +151,10 @@ import { TimeRemainingPipe } from '../../pipes/time-remaining.pipe';
       gap: 0.375rem;
       font-size: 0.8125rem;
       color: var(--gray-600, #475569);
-      
-      .icon {
-        font-size: 0.875rem;
+
+      app-icon {
+        color: var(--gray-400, #9ca3af);
+        flex: none;
       }
     }
     
@@ -188,17 +203,30 @@ import { TimeRemainingPipe } from '../../pipes/time-remaining.pipe';
     }
     
     .btn-view {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
       background: none;
       border: none;
-      color: var(--primary-color, #003664);
+      color: var(--navy-800, #003664);
+      font-family: inherit;
       font-size: 0.875rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       padding: 0.375rem 0;
+      text-decoration: none;
       transition: color 0.2s;
-      
+
+      app-icon {
+        transition: transform 0.2s;
+      }
+
       &:hover {
-        color: var(--primary-dark, #002a4f);
+        color: var(--accent-600, #c8102e);
+      }
+
+      &:hover app-icon {
+        transform: translateX(3px);
       }
     }
   `]
@@ -206,8 +234,19 @@ import { TimeRemainingPipe } from '../../pipes/time-remaining.pipe';
 export class TenderCardComponent {
   @Input({ required: true }) tender!: PublishedTender;
   @Input() highlighted = false;
+  /**
+   * Router link for the tender detail page. When provided, "View Details"
+   * renders as a real anchor so it can be middle-clicked / opened in a new tab
+   * and is announced as a link. Falls back to the click output when omitted.
+   */
+  @Input() detailLink: string | unknown[] | null = null;
   @Output() cardClick = new EventEmitter<void>();
   @Output() viewDetails = new EventEmitter<void>();
+
+  /** Avoids rendering "Closes Closed" once the bid window has passed. */
+  isClosed(): boolean {
+    return new Date(this.tender.bidWindowEnd).getTime() <= Date.now();
+  }
 
   onCardClick(): void {
     this.cardClick.emit();

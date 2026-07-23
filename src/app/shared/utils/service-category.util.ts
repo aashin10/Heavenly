@@ -4,6 +4,7 @@
  */
 
 import { ServiceCategory, SERVICES, SERVICE_CATEGORIES, ServiceType, ServiceCategoryInfo } from '../../core/models/service.model';
+import { humanizeEnum } from './humanize.util';
 
 /** Service name to category mapping for quick lookup */
 export const SERVICE_TO_CATEGORY: Record<string, ServiceCategory> = {
@@ -102,14 +103,14 @@ export interface HomeServiceIcon {
 }
 
 export const HOMEPAGE_SERVICES: HomeServiceIcon[] = [
-  { id: 'ac-servicing', name: 'AC/Appliance Servicing', icon: '❄️', shortName: 'AC Servicing' },
-  { id: 'interior-finishing', name: 'Interior & Finishing', icon: '🏠', shortName: 'Interior' },
-  { id: 'paint-polish', name: 'Paint & Polish', icon: '🎨', shortName: 'Paint' },
-  { id: 'electrical-materials', name: 'Electrical Materials', icon: '💡', shortName: 'Electrical' },
-  { id: 'fabrication', name: 'Fabrication', icon: '⚙️', shortName: 'Fabrication' },
-  { id: 'cctv-fire', name: 'CCTV & Fire', icon: '📹', shortName: 'CCTV/Fire' },
-  { id: 'office-furniture', name: 'Furniture Supply', icon: '🪑', shortName: 'Furniture' },
-  { id: 'transformer-rewinding', name: 'Transformer Rewinding', icon: '⚡', shortName: 'Transformer' }
+  { id: 'ac-servicing', name: 'AC/Appliance Servicing', icon: 'air-vent', shortName: 'AC Servicing' },
+  { id: 'interior-finishing', name: 'Interior & Finishing', icon: 'house', shortName: 'Interior' },
+  { id: 'paint-polish', name: 'Paint & Polish', icon: 'paintbrush', shortName: 'Paint' },
+  { id: 'electrical-materials', name: 'Electrical Materials', icon: 'lightbulb', shortName: 'Electrical' },
+  { id: 'fabrication', name: 'Fabrication', icon: 'factory', shortName: 'Fabrication' },
+  { id: 'cctv-fire', name: 'CCTV & Fire', icon: 'cctv', shortName: 'CCTV/Fire' },
+  { id: 'office-furniture', name: 'Furniture Supply', icon: 'armchair', shortName: 'Furniture' },
+  { id: 'transformer-rewinding', name: 'Transformer Rewinding', icon: 'cable', shortName: 'Transformer' }
 ];
 
 /** Filter options for services page */
@@ -191,3 +192,20 @@ export const MAJOR_CITIES: string[] = [
   'Ludhiana', 'Rajkot', 'Agra', 'Siliguri', 'Nashik',
   'Faridabad', 'Patiala', 'Meerut', 'Kalyan-Dombivali', 'Vasai-Virar'
 ];
+
+/**
+ * Short, human-readable label for a service category.
+ *
+ * Raw enum values (`quick_service`, `mid_complexity`) were leaking into chips
+ * and badges; render this instead of the enum anywhere it faces a user.
+ */
+const CATEGORY_SHORT_LABELS: Record<string, string> = {
+  quick_service: 'Quick Service',
+  mid_complexity: 'Mid-Complexity',
+  technical: 'Technical'
+};
+
+export function getCategoryShortLabel(category: string): string {
+  // Fall back to humanizing any unmapped enum rather than showing snake_case.
+  return CATEGORY_SHORT_LABELS[category] ?? humanizeEnum(category);
+}

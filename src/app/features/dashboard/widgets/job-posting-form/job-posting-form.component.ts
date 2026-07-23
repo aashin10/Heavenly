@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output, inject, signal, computed } from '@angu
 import { FormsModule } from '@angular/forms';
 import { JobFormData, DOMAINS, JOB_TYPES, INITIAL_JOB_FORM } from '../../dashboard.model';
 import { ToastService } from '../../../../core/services/toast.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 interface ValidationErrors {
   title?: string;
@@ -15,7 +16,7 @@ interface ValidationErrors {
 @Component({
   selector: 'app-job-posting-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './job-posting-form.component.html',
   styleUrl: './job-posting-form.component.scss'
 })

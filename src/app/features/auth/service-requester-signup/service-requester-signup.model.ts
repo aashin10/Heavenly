@@ -10,19 +10,19 @@ export interface RequesterAccountTypeOption {
 export const REQUESTER_ACCOUNT_TYPES: RequesterAccountTypeOption[] = [
   {
     type: 'individual',
-    icon: '👤',
+    icon: 'user',
     title: 'Individual',
     description: 'For personal service needs'
   },
   {
     type: 'sme',
-    icon: '🏢',
+    icon: 'building-2',
     title: 'Small/Medium Enterprise (SME)',
     description: 'For business requirements'
   },
   {
     type: 'large_organization',
-    icon: '🏭',
+    icon: 'factory',
     title: 'Large Organization',
     description: 'For institutional/large-scale needs'
   }

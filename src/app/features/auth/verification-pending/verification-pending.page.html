@@ -2,122 +2,158 @@
   <div class="verification-container">
     <!-- Logo -->
     <div class="logo-section">
-      <img src="assets/logo.png" alt="Heavenly Corporation" class="logo" />
+      <app-logo variant="full" />
     </div>
 
-    <!-- Status Card -->
-    <div class="status-card">
-      <!-- Icon -->
-      <div class="status-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <polyline points="12 6 12 12 16 14"/>
-        </svg>
-      </div>
+    @switch (status()) {
+      <!-- ============ PENDING ============ -->
+      @case ('pending') {
+        <div class="status-card">
+          <div class="status-icon status-icon--pending">
+            <app-icon name="clock" [size]="56" />
+          </div>
 
-      <!-- Title -->
-      <h1 class="status-title">Verification in Progress</h1>
-      
-      <!-- Description -->
-      <p class="status-description">
-        Thank you for registering as a vendor! Our team is currently reviewing your application and documents.
-      </p>
+          <h1 class="status-title">Verification in Progress</h1>
+          <p class="status-description">
+            Thanks for registering as a vendor. Our team is reviewing your application and documents.
+          </p>
 
-      <!-- Timeline -->
-      <div class="verification-timeline">
-        <div class="timeline-item completed">
-          <div class="timeline-dot"></div>
-          <div class="timeline-content">
-            <h3>Application Submitted</h3>
-            <p>{{ submittedDate() }}</p>
+          <div class="verification-timeline">
+            <div class="timeline-item completed">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h3>Application Submitted</h3>
+                <p>{{ submittedDate() }}</p>
+              </div>
+            </div>
+            <div class="timeline-item active">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h3>Document Review</h3>
+                <p>Our team is verifying your documents</p>
+              </div>
+            </div>
+            <div class="timeline-item pending">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h3>Verification Complete</h3>
+                <p>You'll receive an email notification</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="expected-time">
+            <app-icon name="circle-alert" [size]="20" />
+            <span>Verification typically takes 1–2 business days</span>
+          </div>
+
+          <div class="whats-next">
+            <h2>What happens next?</h2>
+            <ul>
+              <li><app-icon name="check" [size]="16" /><span>We'll review your business documents and credentials</span></li>
+              <li><app-icon name="check" [size]="16" /><span>You'll receive an email once verification is complete</span></li>
+              <li><app-icon name="check" [size]="16" /><span>Once verified, you can start bidding on tenders</span></li>
+            </ul>
+          </div>
+
+          <div class="actions">
+            <a routerLink="/vendor-profile/documents" class="btn-primary">
+              <app-icon name="file-text" [size]="18" /> Complete Your Profile
+            </a>
+            <button class="btn-outline" (click)="refreshStatus()">
+              <app-icon name="refresh-cw" [size]="18" /> Refresh Status
+            </button>
           </div>
         </div>
-        <div class="timeline-item active">
-          <div class="timeline-dot"></div>
-          <div class="timeline-content">
-            <h3>Document Review</h3>
-            <p>Our team is verifying your documents</p>
+      }
+
+      <!-- ============ REJECTED ============ -->
+      @case ('rejected') {
+        <div class="status-card">
+          <div class="status-icon status-icon--rejected">
+            <app-icon name="circle-x" [size]="56" />
+          </div>
+
+          <h1 class="status-title">Application Not Approved</h1>
+          <p class="status-description">
+            Your vendor application couldn't be approved as submitted. You can fix the
+            issue below and resubmit for review.
+          </p>
+
+          @if (rejectionReason()) {
+            <div class="reason-box">
+              <span class="reason-label">Reason from our review team</span>
+              <p>{{ rejectionReason() }}</p>
+            </div>
+          }
+
+          <div class="whats-next">
+            <h2>How to get approved</h2>
+            <ul>
+              <li><app-icon name="check" [size]="16" /><span>Open your business profile and address the issue above</span></li>
+              <li><app-icon name="check" [size]="16" /><span>Make sure documents are clear and match your GST &amp; PAN</span></li>
+              <li><app-icon name="check" [size]="16" /><span>Resubmit — our team will review again within 1–2 business days</span></li>
+            </ul>
+          </div>
+
+          <div class="actions">
+            <a routerLink="/vendor-profile" class="btn-primary">
+              <app-icon name="pencil" [size]="18" /> Update Your Profile
+            </a>
+            <button class="btn-outline" (click)="resubmitForReview()">
+              <app-icon name="refresh-cw" [size]="18" /> Resubmit for Review
+            </button>
           </div>
         </div>
-        <div class="timeline-item pending">
-          <div class="timeline-dot"></div>
-          <div class="timeline-content">
-            <h3>Verification Complete</h3>
-            <p>You'll receive an email notification</p>
+      }
+
+      <!-- ============ SUSPENDED ============ -->
+      @case ('suspended') {
+        <div class="status-card">
+          <div class="status-icon status-icon--rejected">
+            <app-icon name="ban" [size]="56" />
+          </div>
+
+          <h1 class="status-title">Account Suspended</h1>
+          <p class="status-description">
+            Your vendor account has been suspended and portal access is paused.
+            Please contact our team to resolve this.
+          </p>
+
+          @if (rejectionReason()) {
+            <div class="reason-box">
+              <span class="reason-label">Reason</span>
+              <p>{{ rejectionReason() }}</p>
+            </div>
+          }
+
+          <div class="actions">
+            <a href="mailto:info@heavenlycorporation.com" class="btn-primary">
+              <app-icon name="mail" [size]="18" /> Contact Support
+            </a>
+            <button class="btn-outline" (click)="refreshStatus()">
+              <app-icon name="refresh-cw" [size]="18" /> Refresh Status
+            </button>
           </div>
         </div>
-      </div>
+      }
+    }
 
-      <!-- Expected Time -->
-      <div class="expected-time">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span>Verification typically takes 1-2 business days</span>
-      </div>
-
-      <!-- What's Next Section -->
-      <div class="whats-next">
-        <h2>What happens next?</h2>
-        <ul>
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>We'll review your business documents and credentials</span>
-          </li>
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>You'll receive an email once verification is complete</span>
-          </li>
-          <li>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-            <span>Once verified, you can start bidding on tenders</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Contact Support -->
+    <!-- Shared footer: support + logout + home -->
+    <div class="verification-footer">
       <div class="contact-support">
-        <p>Need help? Contact our support team</p>
-        <a href="mailto:support@heavenlycorp.com" class="support-email">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-            <polyline points="22,6 12,13 2,6"/>
-          </svg>
-          support&#64;heavenlycorp.com
+        <span>Need help?</span>
+        <a href="mailto:info@heavenlycorporation.com" class="support-email">
+          <app-icon name="mail" [size]="16" /> info&#64;heavenlycorporation.com
         </a>
       </div>
-
-      <!-- Actions -->
-      <div class="actions">
-        <button class="btn-primary" (click)="refreshStatus()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10"/>
-            <polyline points="1 20 1 14 7 14"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-          </svg>
-          Refresh Status
+      <div class="footer-actions">
+        <button class="btn-ghost" (click)="logout()">
+          <app-icon name="log-out" [size]="18" /> Logout
         </button>
-        <button class="btn-outline" (click)="logout()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          Logout
-        </button>
-      </div>
-
-      <!-- Back to Home -->
-      <div class="back-link">
-        <a routerLink="/">← Back to Home</a>
+        <a routerLink="/" class="home-link">
+          <app-icon name="arrow-left" [size]="16" /> Back to Home
+        </a>
       </div>
     </div>
   </div>

@@ -6,7 +6,7 @@
   transition: box-shadow 0.2s;
 
   &:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-lg);
   }
 }
 
@@ -35,29 +35,6 @@
   margin: 0;
 }
 
-.status-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-
-  &.pending {
-    background-color: var(--yellow-100);
-    color: var(--yellow-700);
-  }
-
-  &.approved {
-    background-color: var(--green-100);
-    color: var(--green-700);
-  }
-
-  &.rejected {
-    background-color: var(--red-100);
-    color: var(--red-700);
-  }
-}
 
 .company-name {
   display: flex;

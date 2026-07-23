@@ -15,7 +15,7 @@
 
     <!-- Service Info Card -->
     <div class="service-info-card">
-      <div class="service-icon">📋</div>
+      <div class="service-icon"><app-icon name="clipboard-list" [size]="16" /></div>
       <div class="service-details">
         <h2>{{ draft()?.serviceName }}</h2>
         <span class="category-badge" [class]="draft()?.category">
@@ -45,7 +45,7 @@
                 <span class="field-label">{{ field.label }}</span>
                 <span class="field-value" [class.multiline]="field.value.includes('\n')">
                   @if (field.type === 'file') {
-                    <span class="file-indicator">📎 {{ field.value }}</span>
+                    <span class="file-indicator"><app-icon name="paperclip" [size]="16" /> {{ field.value }}</span>
                   } @else if (field.value.includes('\n')) {
                     @for (line of field.value.split('\n'); track $index) {
                       <span class="line">{{ line }}</span>
@@ -63,7 +63,7 @@
 
     <!-- Important Notice -->
     <div class="notice-card">
-      <div class="notice-icon">ℹ️</div>
+      <div class="notice-icon"><app-icon name="info" [size]="28" /></div>
       <div class="notice-content">
         <h4>What happens next?</h4>
         <ul>
@@ -78,7 +78,7 @@
     <!-- Actions -->
     <div class="page-actions">
       <button type="button" class="btn btn-secondary" (click)="goBack()">
-        ← Back to Form
+        <app-icon name="arrow-left" [size]="16" /> Back to Form
       </button>
       <button 
         type="button" 
@@ -89,7 +89,7 @@
           <span class="spinner"></span>
           Submitting...
         } @else {
-          Submit Request ✓
+          Submit Request <app-icon name="check" [size]="16" />
         }
       </button>
     </div>

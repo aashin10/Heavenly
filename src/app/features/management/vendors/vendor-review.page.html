@@ -1,0 +1,211 @@
+<div class="vendor-review-page">
+  @if (vendor(); as v) {
+    <header class="page-header">
+      <div class="container">
+        <a routerLink="/management" class="back-link">
+          <app-icon name="arrow-left" [size]="16" /> Management
+        </a>
+        <div class="header-main">
+          <div>
+            <h1 class="page-title">{{ v.businessName }}</h1>
+            <span class="header-sub">{{ businessType() }} · Registered {{ v.createdAt | appDateTime }}</span>
+          </div>
+          <app-status-badge [status]="v.verificationStatus" [showIcon]="true" />
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="container">
+        <div class="review-grid">
+          <!-- Main: profile read-back -->
+          <div class="review-main">
+            <!-- Business identity -->
+            <section class="review-card">
+              <h2 class="review-card-title">Business Identity</h2>
+              <dl class="field-list">
+                <div class="field-row"><dt>Business Name</dt><dd>{{ v.businessName }}</dd></div>
+                <div class="field-row"><dt>Business Type</dt><dd>{{ businessType() }}</dd></div>
+                <div class="field-row"><dt>GST Number</dt><dd>{{ v.gstNumber || '—' }}</dd></div>
+                <div class="field-row"><dt>PAN Number</dt><dd>{{ v.panNumber }}</dd></div>
+                <div class="field-row"><dt>Year Established</dt><dd>{{ v.yearEstablished }}</dd></div>
+              </dl>
+            </section>
+
+            <!-- Contact -->
+            <section class="review-card">
+              <h2 class="review-card-title">Contact</h2>
+              <dl class="field-list">
+                <div class="field-row"><dt>Primary Contact</dt><dd>{{ v.primaryContactPerson }} ({{ v.designation }})</dd></div>
+                <div class="field-row"><dt>Email</dt><dd>{{ v.email }}</dd></div>
+                <div class="field-row"><dt>Phone</dt><dd>{{ v.phone }}</dd></div>
+                @if (v.alternatePhone) {
+                  <div class="field-row"><dt>Alternate Phone</dt><dd>{{ v.alternatePhone }}</dd></div>
+                }
+                <div class="field-row"><dt>Address</dt><dd>{{ v.registeredAddress }}, {{ v.city }}, {{ v.state }} {{ v.pinCode }}</dd></div>
+              </dl>
+            </section>
+
+            <!-- Services -->
+            <section class="review-card">
+              <h2 class="review-card-title">Services & Coverage</h2>
+              <div class="chip-group">
+                <span class="chip-group-label">Capabilities</span>
+                <div class="chip-list">
+                  @for (label of serviceLabels(); track label) {
+                    <span class="chip">{{ label }}</span>
+                  } @empty {
+                    <span class="empty-inline">None listed</span>
+                  }
+                </div>
+              </div>
+              <div class="chip-group">
+                <span class="chip-group-label">Service Areas</span>
+                <div class="chip-list">
+                  @for (area of v.serviceAreas; track area) {
+                    <span class="chip">{{ area }}</span>
+                  } @empty {
+                    <span class="empty-inline">None listed</span>
+                  }
+                </div>
+              </div>
+            </section>
+
+            <!-- Documents -->
+            <section class="review-card">
+              <h2 class="review-card-title">Documents</h2>
+              <ul class="doc-list">
+                @for (doc of documents(); track doc.key) {
+                  <li class="doc-item">
+                    <span class="doc-status" [class.uploaded]="doc.fileName">
+                      <app-icon [name]="doc.fileName ? 'circle-check' : 'circle'" [size]="18" />
+                    </span>
+                    <span class="doc-label">{{ doc.label }}</span>
+                    <span class="doc-file">{{ doc.fileName || 'Not uploaded' }}</span>
+                  </li>
+                }
+              </ul>
+            </section>
+
+            <!-- Bank -->
+            <section class="review-card">
+              <h2 class="review-card-title">Bank Details</h2>
+              <dl class="field-list">
+                <div class="field-row"><dt>Account Holder</dt><dd>{{ v.bankDetails.accountHolderName || '—' }}</dd></div>
+                <div class="field-row"><dt>Account Number</dt><dd>{{ maskedAccount() || '—' }}</dd></div>
+                <div class="field-row"><dt>IFSC Code</dt><dd>{{ v.bankDetails.ifscCode || '—' }}</dd></div>
+                <div class="field-row"><dt>Bank Name</dt><dd>{{ v.bankDetails.bankName || '—' }}</dd></div>
+              </dl>
+            </section>
+
+            @if (v.portfolio?.length) {
+              <section class="review-card">
+                <h2 class="review-card-title">Portfolio</h2>
+                <div class="portfolio-list">
+                  @for (entry of v.portfolio; track entry.id) {
+                    <article class="portfolio-entry">
+                      <h3>{{ entry.title }}</h3>
+                      <span class="portfolio-meta">{{ entry.year }}@if (entry.clientName) { · {{ entry.clientName }}}</span>
+                      <p>{{ entry.description }}</p>
+                    </article>
+                  }
+                </div>
+              </section>
+            }
+          </div>
+
+          <!-- Side: decision + timeline -->
+          <aside class="review-side">
+            <section class="decision-card">
+              <h2 class="review-card-title">Verification Decision</h2>
+              <p class="status-line">{{ statusDescription() }}</p>
+
+              @if (v.rejectionReason && (v.verificationStatus === 'rejected' || v.verificationStatus === 'suspended')) {
+                <div class="reason-recap">
+                  <span class="reason-recap-label">Reason on file</span>
+                  <p>{{ v.rejectionReason }}</p>
+                </div>
+              }
+
+              @if (pendingAction(); as action) {
+                <div class="reason-panel">
+                  <label for="reason" class="reason-label">
+                    {{ action === 'reject' ? 'Reason for rejection' : 'Reason for suspension' }}
+                  </label>
+                  <textarea
+                    id="reason"
+                    rows="3"
+                    [value]="reasonText()"
+                    (input)="reasonText.set($any($event.target).value)"
+                    placeholder="The vendor sees this, so be specific about what to fix."
+                  ></textarea>
+                  <div class="reason-actions">
+                    <button type="button" class="btn-ghost" (click)="cancelReason()">Cancel</button>
+                    <button type="button" class="btn-danger" [disabled]="!reasonText().trim()" (click)="confirmReason()">
+                      {{ action === 'reject' ? 'Confirm Rejection' : 'Confirm Suspension' }}
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="decision-actions">
+                  @switch (v.verificationStatus) {
+                    @case ('pending') {
+                      <button type="button" class="btn-primary" (click)="approve()">
+                        <app-icon name="circle-check" [size]="16" /> Approve Vendor
+                      </button>
+                      <button type="button" class="btn-outline" (click)="startReject()">Reject</button>
+                    }
+                    @case ('verified') {
+                      <button type="button" class="btn-danger" (click)="startSuspend()">
+                        <app-icon name="ban" [size]="16" /> Suspend Vendor
+                      </button>
+                    }
+                    @case ('rejected') {
+                      <button type="button" class="btn-primary" (click)="approve()">
+                        <app-icon name="circle-check" [size]="16" /> Approve Vendor
+                      </button>
+                      <button type="button" class="btn-outline" (click)="reinstate()">Return to Queue</button>
+                    }
+                    @case ('suspended') {
+                      <button type="button" class="btn-primary" (click)="reinstate()">
+                        Reinstate to Queue
+                      </button>
+                    }
+                  }
+                </div>
+              }
+            </section>
+
+            <section class="timeline-card">
+              <h2 class="review-card-title">History</h2>
+              <ol class="timeline">
+                @for (event of timeline(); track $index; let last = $last) {
+                  <li class="timeline-item" [class.current]="last">
+                    <span class="timeline-dot"></span>
+                    <div class="timeline-body">
+                      <span class="timeline-status">{{ eventLabel(event.status) }}</span>
+                      <span class="timeline-date">{{ event.at | appDateTime }}</span>
+                      @if (event.actor) {
+                        <span class="timeline-actor">by {{ event.actor }}</span>
+                      }
+                      @if (event.note) {
+                        <span class="timeline-note">{{ event.note }}</span>
+                      }
+                    </div>
+                  </li>
+                }
+              </ol>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  } @else if (notFound()) {
+    <div class="container not-found-block">
+      <app-icon name="circle-alert" [size]="40" />
+      <h1>Vendor not found</h1>
+      <p>This vendor doesn't exist or has been removed.</p>
+      <a routerLink="/management" class="btn-primary">Back to Management</a>
+    </div>
+  }
+</div>

@@ -1,9 +1,11 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ProfileFormData, INITIAL_PROFILE_DATA } from './profile.model';
+import { AppDatePipe } from '../../shared/pipes/app-date.pipe';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[\d\s\-+()]{10,}$/;
@@ -11,7 +13,7 @@ const PHONE_PATTERN = /^[\d\s\-+()]{10,}$/;
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, AppDatePipe, IconComponent],
   templateUrl: './profile.page.html',
   styleUrl: './profile.page.scss'
 })

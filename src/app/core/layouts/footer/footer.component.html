@@ -1,0 +1,73 @@
+<footer class="footer">
+  <div class="container footer__grid">
+    <!-- Brand -->
+    <div class="footer__brand">
+      <a routerLink="/" class="footer__logo" aria-label="Heavenly Corporation — home">
+        <app-logo />
+      </a>
+      <p class="footer__tagline">
+        Where experience and expertise blend seamlessly with dedication and timelines —
+        manpower supply, industrial services and technical contracting.
+      </p>
+      <div class="footer__social">
+        <a href="https://facebook.com/" target="_blank" rel="noopener" aria-label="Facebook">
+          <app-icon name="facebook" [size]="18" />
+        </a>
+        <a href="https://www.linkedin.com/" target="_blank" rel="noopener" aria-label="LinkedIn">
+          <app-icon name="linkedin" [size]="18" />
+        </a>
+        <a href="https://wa.me/919355633000" target="_blank" rel="noopener" aria-label="WhatsApp">
+          <app-icon name="message-circle" [size]="18" />
+        </a>
+      </div>
+    </div>
+
+    <!-- Services -->
+    <nav class="footer__col" aria-label="Services">
+      <h3 class="footer__heading">Services</h3>
+      <ul>
+        @for (link of services; track link.label) {
+          <li>
+            <a [routerLink]="link.path" [fragment]="link.fragment">{{ link.label }}</a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- Company -->
+    <nav class="footer__col" aria-label="Company">
+      <h3 class="footer__heading">Company</h3>
+      <ul>
+        @for (link of company; track link.label) {
+          <li><a [routerLink]="link.path">{{ link.label }}</a></li>
+        }
+      </ul>
+    </nav>
+
+    <!-- Contact -->
+    <div class="footer__col">
+      <h3 class="footer__heading">Contact</h3>
+      <ul class="footer__contact">
+        <li>
+          <app-icon name="map-pin" [size]="18" />
+          <span>64B, DDA Flats, Shivaji Enclave Extension,<br />New Delhi&nbsp;-&nbsp;110027</span>
+        </li>
+        <li>
+          <app-icon name="phone" [size]="18" />
+          <a href="tel:+919355633000">+91&nbsp;93556&nbsp;33000</a>
+        </li>
+        <li>
+          <app-icon name="mail" [size]="18" />
+          <a href="mailto:info@heavenlycorporation.com">info&#64;heavenlycorporation.com</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer__bar">
+    <div class="container footer__bar-inner">
+      <p>© {{ year }} Heavenly Corporation. All rights reserved.</p>
+      <p class="footer__streams">Manpower · Transformer Rewinding · Technical Services</p>
+    </div>
+  </div>
+</footer>

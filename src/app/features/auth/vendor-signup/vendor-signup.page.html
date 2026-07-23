@@ -3,31 +3,31 @@
     <div class="signup-grid">
       <!-- Left Side - Branding -->
       <div class="branding-section">
-        <img src="assets/logo.png" alt="Heavenly Corporation" class="brand-logo" />
+        <div class="brand-logo"><app-logo [markSize]="44" /></div>
         <h1 class="brand-title">Vendor Registration</h1>
         <p class="brand-subtitle">
           Register as a vendor to receive tender opportunities, submit competitive bids, and grow your business.
         </p>
         <div class="benefits-list">
           <div class="benefit-item">
-            <span class="benefit-icon">📢</span>
+            <span class="benefit-icon"><app-icon name="megaphone" [size]="18" /></span>
             <span>Access tender opportunities</span>
           </div>
           <div class="benefit-item">
-            <span class="benefit-icon">💼</span>
+            <span class="benefit-icon"><app-icon name="briefcase" [size]="18" /></span>
             <span>Submit competitive bids</span>
           </div>
           <div class="benefit-item">
-            <span class="benefit-icon">✅</span>
+            <span class="benefit-icon"><app-icon name="check-circle" [size]="18" /></span>
             <span>Get verified vendor status</span>
           </div>
           <div class="benefit-item">
-            <span class="benefit-icon">📈</span>
+            <span class="benefit-icon"><app-icon name="trending-up" [size]="18" /></span>
             <span>Grow your business</span>
           </div>
         </div>
         <div class="verification-note">
-          <span class="note-icon">🕐</span>
+          <span class="note-icon"><app-icon name="clock" [size]="18" /></span>
           <p>Verification typically takes 24-48 hours after submission</p>
         </div>
       </div>
@@ -36,7 +36,7 @@
       <div class="form-section">
         <!-- Mobile Logo -->
         <div class="mobile-logo">
-          <img src="assets/logo.png" alt="Heavenly Corporation" />
+          <app-logo [markSize]="36" />
         </div>
 
         <!-- Progress Steps -->
@@ -45,9 +45,7 @@
             <div class="step" [class.active]="step.isActive" [class.completed]="step.isCompleted">
               <div class="step-circle">
                 @if (step.isCompleted) {
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
+                  <app-icon name="check" [size]="16" />
                 } @else {
                   {{ step.number }}
                 }
@@ -158,10 +156,7 @@
 
               <button type="submit" class="btn-primary btn-full">
                 Next
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
-                </svg>
+                <app-icon name="arrow-right" [size]="18" />
               </button>
             </form>
           </div>
@@ -311,18 +306,12 @@
 
               <div class="button-row">
                 <button type="button" class="btn-outline" (click)="prevStep()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"/>
-                    <polyline points="12 19 5 12 12 5"/>
-                  </svg>
+                  <app-icon name="arrow-left" [size]="18" />
                   Back
                 </button>
                 <button type="submit" class="btn-primary">
                   Next
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
-                  </svg>
+                  <app-icon name="arrow-right" [size]="18" />
                 </button>
               </div>
             </form>
@@ -338,7 +327,7 @@
             <form class="signup-form scrollable-form" (ngSubmit)="nextStep()">
               <!-- Quick Services -->
               <div class="service-category">
-                <h3 class="category-title">🚀 Quick Services</h3>
+                <h3 class="category-title"><app-icon name="rocket" [size]="18" /> Quick Services</h3>
                 <div class="service-checkboxes">
                   @for (service of groupedServices.quick; track service.id) {
                     <label class="service-checkbox" [class.selected]="isServiceSelected(service.id)">
@@ -347,7 +336,7 @@
                         [checked]="isServiceSelected(service.id)"
                         (change)="toggleService(service.id)"
                       />
-                      <span class="service-icon">{{ service.icon }}</span>
+                      <span class="service-icon"><app-icon [name]="service.icon" [size]="18" /></span>
                       <span class="service-name">{{ service.name }}</span>
                     </label>
                   }
@@ -356,7 +345,7 @@
 
               <!-- Home & Office Services -->
               <div class="service-category">
-                <h3 class="category-title">🏠 Home & Office</h3>
+                <h3 class="category-title"><app-icon name="house" [size]="18" /> Home &amp; Office</h3>
                 <div class="service-checkboxes">
                   @for (service of groupedServices.midComplexity; track service.id) {
                     <label class="service-checkbox" [class.selected]="isServiceSelected(service.id)">
@@ -365,7 +354,7 @@
                         [checked]="isServiceSelected(service.id)"
                         (change)="toggleService(service.id)"
                       />
-                      <span class="service-icon">{{ service.icon }}</span>
+                      <span class="service-icon"><app-icon [name]="service.icon" [size]="18" /></span>
                       <span class="service-name">{{ service.name }}</span>
                     </label>
                   }
@@ -374,7 +363,7 @@
 
               <!-- Industrial & Technical Services -->
               <div class="service-category">
-                <h3 class="category-title">⚙️ Industrial & Technical</h3>
+                <h3 class="category-title"><app-icon name="cog" [size]="18" /> Industrial &amp; Technical</h3>
                 <div class="service-checkboxes">
                   @for (service of groupedServices.technical; track service.id) {
                     <label class="service-checkbox" [class.selected]="isServiceSelected(service.id)">
@@ -383,7 +372,7 @@
                         [checked]="isServiceSelected(service.id)"
                         (change)="toggleService(service.id)"
                       />
-                      <span class="service-icon">{{ service.icon }}</span>
+                      <span class="service-icon"><app-icon [name]="service.icon" [size]="18" /></span>
                       <span class="service-name">{{ service.name }}</span>
                     </label>
                   }
@@ -392,7 +381,7 @@
 
               <!-- Service Areas -->
               <div class="service-category">
-                <h3 class="category-title">📍 Service Areas</h3>
+                <h3 class="category-title"><app-icon name="map-pin" [size]="18" /> Service Areas</h3>
                 <p class="category-subtitle">Select cities where you provide services</p>
                 <div class="city-chips">
                   @for (city of cities; track city) {
@@ -410,18 +399,12 @@
 
               <div class="button-row">
                 <button type="button" class="btn-outline" (click)="prevStep()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"/>
-                    <polyline points="12 19 5 12 12 5"/>
-                  </svg>
+                  <app-icon name="arrow-left" [size]="18" />
                   Back
                 </button>
                 <button type="submit" class="btn-primary">
                   Next
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
-                  </svg>
+                  <app-icon name="arrow-right" [size]="18" />
                 </button>
               </div>
             </form>
@@ -443,12 +426,7 @@
                 <div class="upload-grid">
                   <div class="upload-item">
                     <label for="businessCert" class="upload-label">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="12" y1="18" x2="12" y2="12"/>
-                        <line x1="9" y1="15" x2="15" y2="15"/>
-                      </svg>
+                      <app-icon name="file-text" [size]="24" />
                       <span>Business Registration</span>
                     </label>
                     <input type="file" id="businessCert" accept=".pdf,.jpg,.png" class="upload-input" />
@@ -456,12 +434,7 @@
 
                   <div class="upload-item">
                     <label for="gstCert" class="upload-label">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                        <line x1="12" y1="18" x2="12" y2="12"/>
-                        <line x1="9" y1="15" x2="15" y2="15"/>
-                      </svg>
+                      <app-icon name="file-text" [size]="24" />
                       <span>GST Certificate</span>
                     </label>
                     <input type="file" id="gstCert" accept=".pdf,.jpg,.png" class="upload-input" />
@@ -600,10 +573,7 @@
 
               <div class="button-row">
                 <button type="button" class="btn-outline" (click)="prevStep()">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"/>
-                    <polyline points="12 19 5 12 12 5"/>
-                  </svg>
+                  <app-icon name="arrow-left" [size]="18" />
                   Back
                 </button>
                 <button type="submit" class="btn-primary" [disabled]="isSubmitting()">
@@ -621,9 +591,9 @@
 
         <!-- Back to Home Link -->
         <div class="back-link">
-          <a routerLink="/">← Back to Home</a>
+          <a routerLink="/"><app-icon name="arrow-left" [size]="16" /> Back to Home</a>
           <span class="divider">|</span>
-          <a routerLink="/service-login">Already registered? Login</a>
+          <a routerLink="/login" [queryParams]="{ portal: 'services' }">Already registered? Login</a>
         </div>
       </div>
     </div>
@@ -640,10 +610,7 @@
       aria-labelledby="vendor-terms-title">
       <div class="modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
         <button class="modal-close" (click)="closeTerms()" aria-label="Close terms modal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
+          <app-icon name="x" [size]="24" />
         </button>
         <div class="modal-content">
           <h2 id="vendor-terms-title">Vendor Terms and Conditions</h2>

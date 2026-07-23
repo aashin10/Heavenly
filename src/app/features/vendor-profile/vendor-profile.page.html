@@ -1,0 +1,76 @@
+<div class="vendor-profile-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="container">
+      <div class="header-content">
+        <div>
+          <h1 class="page-title">Business Profile</h1>
+          <p class="page-subtitle">
+            Keep your business details current — a complete profile is required for verification
+            and helps you win tenders.
+          </p>
+        </div>
+        <div class="header-completion" aria-live="polite">
+          <span class="completion-value">{{ completionPercent() }}%</span>
+          <span class="completion-label">{{ completedCount() }} of {{ totalCount() }} sections complete</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div class="container">
+      @if (isPendingVerification()) {
+        <div class="pending-banner" role="status">
+          <app-icon name="clock" [size]="18" />
+          <span>
+            Your account is awaiting verification. Completing
+            <strong>Business Documents</strong> speeds up the review.
+          </span>
+        </div>
+      }
+
+      <div class="profile-layout">
+        <!-- Section navigation -->
+        <nav class="section-nav" aria-label="Profile sections">
+          @for (section of sections(); track section.id) {
+            <a
+              [routerLink]="section.route"
+              class="section-nav-item"
+              [class.active]="activeSection() === section.id"
+              [attr.aria-current]="activeSection() === section.id ? 'page' : null"
+            >
+              <span class="section-status" [class.complete]="section.isComplete">
+                <app-icon [name]="section.isComplete ? 'circle-check' : 'circle'" [size]="18" />
+              </span>
+              <span class="section-label">{{ section.label }}</span>
+            </a>
+          }
+        </nav>
+
+        <!-- Active section -->
+        <div class="section-content">
+          @if (vendor(); as v) {
+            @switch (activeSection()) {
+              @case ('basic') {
+                <app-profile-basic-info [vendor]="v" (saved)="onSectionSaved()" />
+              }
+              @case ('documents') {
+                <app-profile-documents [vendor]="v" (saved)="onSectionSaved()" />
+              }
+              @case ('services') {
+                <app-profile-services [vendor]="v" (saved)="onSectionSaved()" />
+              }
+              @case ('portfolio') {
+                <app-profile-portfolio [vendor]="v" (saved)="onSectionSaved()" />
+              }
+              @case ('bank') {
+                <app-profile-bank [vendor]="v" (saved)="onSectionSaved()" />
+              }
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

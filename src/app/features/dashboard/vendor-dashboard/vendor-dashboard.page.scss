@@ -153,7 +153,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-icon {
@@ -241,7 +241,7 @@
   background-color: var(--white);
   border-radius: 0.75rem;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .tenders-list {
@@ -259,7 +259,7 @@
 
   &:hover {
     border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-sm);
   }
 
   &.urgent {
@@ -268,9 +268,6 @@
 }
 
 .urgent-badge {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
   padding: 0.125rem 0.5rem;
   background-color: var(--red-500);
   color: var(--white);
@@ -366,7 +363,7 @@
   background-color: var(--white);
   border-radius: 0.75rem;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .bids-list {
@@ -445,7 +442,7 @@
   background-color: var(--white);
   border-radius: 0.75rem;
   padding: 1.25rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .profile-progress {
@@ -563,4 +560,18 @@
     font-size: 0.8rem;
     color: var(--gray-500);
   }
+}
+
+
+// Urgent + category chips share a row so the ribbon can't overlap (BG7).
+.tender-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: none;
+}
+
+.dashboard-header .logo {
+  color: var(--white);
+  display: inline-flex;
 }

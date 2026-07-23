@@ -5,15 +5,10 @@
       <div class="header-content">
         <div>
           <h1 class="page-title">Management Dashboard</h1>
-          <p class="page-subtitle">Review and approve service requests & job postings</p>
+          <p class="page-subtitle">Review and approve service requests, job postings &amp; vendors</p>
         </div>
-        <a href="/management/settings" class="settings-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-          <span>Settings</span>
-        </a>
+        <!-- Settings entry removed until the settings screen exists (UI_SETS Set 4);
+             it was a raw href to an unregistered /management/settings route. -->
       </div>
     </div>
   </header>
@@ -31,14 +26,23 @@
           Service Requests
           <span class="tab-badge">{{ srManagementService.stats().pendingReview }}</span>
         </button>
-        <button 
+        <button
           type="button"
-          class="main-tab" 
+          class="main-tab"
           [class.active]="activeTab === 'jobs'"
           (click)="setActiveTab('jobs')"
         >
           Job Postings
           <span class="tab-badge">{{ managementService.statistics().pending }}</span>
+        </button>
+        <button
+          type="button"
+          class="main-tab"
+          [class.active]="activeTab === 'vendors'"
+          (click)="setActiveTab('vendors')"
+        >
+          Vendors
+          <span class="tab-badge">{{ vendorAdminService.stats().pending }}</span>
         </button>
       </div>
 
@@ -52,10 +56,7 @@
               <p class="stat-value stat-value--yellow">{{ srManagementService.stats().pendingReview }}</p>
             </div>
             <div class="stat-icon stat-icon--yellow" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
+              <app-icon name="clock" [size]="40" />
             </div>
           </div>
 
@@ -65,10 +66,7 @@
               <p class="stat-value stat-value--primary">{{ srManagementService.stats().underReview }}</p>
             </div>
             <div class="stat-icon stat-icon--primary" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
-                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-              </svg>
+              <app-icon name="book-open" [size]="40" />
             </div>
           </div>
 
@@ -78,10 +76,7 @@
               <p class="stat-value stat-value--green">{{ srManagementService.stats().approved }}</p>
             </div>
             <div class="stat-icon stat-icon--green" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
+              <app-icon name="circle-check" [size]="40" />
             </div>
           </div>
 
@@ -91,9 +86,7 @@
               <p class="stat-value stat-value--purple">{{ srManagementService.stats().liveTenders }}</p>
             </div>
             <div class="stat-icon stat-icon--purple" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
-              </svg>
+              <app-icon name="shield" [size]="40" />
             </div>
           </div>
         </section>
@@ -125,13 +118,7 @@
           @if (srManagementService.filteredRequests().length === 0) {
             <div class="empty-state">
               <div class="empty-icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" y1="13" x2="8" y2="13"/>
-                  <line x1="16" y1="17" x2="8" y2="17"/>
-                  <polyline points="10 9 9 9 8 9"/>
-                </svg>
+                <app-icon name="file-text" [size]="48" />
               </div>
               <p class="empty-message">No service requests found in this category.</p>
             </div>
@@ -186,13 +173,19 @@
                       <td>
                         <div class="flags">
                           @if (request.urgency === 'urgent' || request.urgency === 'high') {
-                            <span class="flag flag--urgent" title="High Priority">🔴</span>
+                            <span class="flag flag--urgent" title="High Priority" aria-label="High Priority">
+                              <app-icon name="flame" [size]="16" />
+                            </span>
                           }
                           @if (request.hasWarnings) {
-                            <span class="flag flag--warning" title="Needs Attention">⚠️</span>
+                            <span class="flag flag--warning" title="Needs Attention" aria-label="Needs Attention">
+                              <app-icon name="triangle-alert" [size]="16" />
+                            </span>
                           }
                           @if (request.budgetMax && request.budgetMax > 100000) {
-                            <span class="flag flag--budget" title="High Budget">💰</span>
+                            <span class="flag flag--budget" title="High Budget" aria-label="High Budget">
+                              <app-icon name="banknote" [size]="16" />
+                            </span>
                           }
                         </div>
                       </td>
@@ -267,10 +260,7 @@
               <p class="stat-value stat-value--primary">{{ managementService.statistics().total }}</p>
             </div>
             <div class="stat-icon stat-icon--primary" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-              </svg>
+              <app-icon name="briefcase" [size]="40" />
             </div>
           </div>
 
@@ -280,10 +270,7 @@
               <p class="stat-value stat-value--yellow">{{ managementService.statistics().pending }}</p>
             </div>
             <div class="stat-icon stat-icon--yellow" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
+              <app-icon name="clock" [size]="40" />
             </div>
           </div>
 
@@ -293,10 +280,7 @@
               <p class="stat-value stat-value--green">{{ managementService.statistics().approved }}</p>
             </div>
             <div class="stat-icon stat-icon--green" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
+              <app-icon name="circle-check" [size]="40" />
             </div>
           </div>
 
@@ -306,11 +290,7 @@
               <p class="stat-value stat-value--red">{{ managementService.statistics().rejected }}</p>
             </div>
             <div class="stat-icon stat-icon--red" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
-              </svg>
+              <app-icon name="circle-x" [size]="40" />
             </div>
           </div>
         </section>
@@ -356,10 +336,7 @@
           @if (managementService.filteredJobs().length === 0) {
             <div class="empty-state">
               <div class="empty-icon" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect width="20" height="14" x="2" y="7" rx="2" ry="2"/>
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
+                <app-icon name="briefcase" [size]="48" />
               </div>
               <p class="empty-message">No jobs found in this category.</p>
             </div>
@@ -407,10 +384,7 @@
                         (click)="approveJob(job.id)"
                         [attr.aria-label]="'Approve job posting: ' + job.title"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                          <polyline points="22 4 12 14.01 9 11.01"/>
-                        </svg>
+                        <app-icon name="circle-check" [size]="18" />
                         <span>Approve</span>
                       </button>
                       <button 
@@ -418,11 +392,7 @@
                         (click)="rejectJob(job.id)"
                         [attr.aria-label]="'Reject job posting: ' + job.title"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                          <circle cx="12" cy="12" r="10"/>
-                          <line x1="15" y1="9" x2="9" y2="15"/>
-                          <line x1="9" y1="9" x2="15" y2="15"/>
-                        </svg>
+                        <app-icon name="circle-x" [size]="18" />
                         <span>Reject</span>
                       </button>
                     </div>
@@ -432,6 +402,11 @@
             </div>
           }
         </section>
+      }
+
+      <!-- Vendors Tab -->
+      @if (activeTab === 'vendors') {
+        <app-vendor-queue />
       }
     </div>
   </main>

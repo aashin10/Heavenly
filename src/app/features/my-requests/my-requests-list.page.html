@@ -1,0 +1,153 @@
+<div class="my-requests-page">
+  <header class="page-header">
+    <div class="container">
+      <div class="header-content">
+        <div>
+          <h1 class="page-title">My Requests</h1>
+          <p class="page-subtitle">Track your service requests and pick up where you left off on drafts.</p>
+        </div>
+        <a routerLink="/services" class="btn-primary new-request-btn">
+          <app-icon name="plus" [size]="18" />
+          New Request
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <div class="container">
+      <!-- Tabs -->
+      <div class="tabs" role="tablist" aria-label="Requests and drafts">
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          [class.active]="activeTab() === 'requests'"
+          [attr.aria-selected]="activeTab() === 'requests'"
+          (click)="setTab('requests')"
+        >
+          Requests
+          <span class="tab-count">{{ requests().length }}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          class="tab"
+          [class.active]="activeTab() === 'drafts'"
+          [attr.aria-selected]="activeTab() === 'drafts'"
+          (click)="setTab('drafts')"
+        >
+          Drafts
+          @if (drafts().length > 0) {
+            <span class="tab-count">{{ drafts().length }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- Requests tab -->
+      @if (activeTab() === 'requests') {
+        @if (changesNeededCount() > 0) {
+          <div class="action-banner" role="status">
+            <app-icon name="circle-alert" [size]="18" />
+            <span>
+              {{ changesNeededCount() }}
+              {{ changesNeededCount() === 1 ? 'request needs' : 'requests need' }}
+              your changes before they can proceed.
+            </span>
+          </div>
+        }
+
+        <div class="filter-pills" role="group" aria-label="Filter by status">
+          @for (filter of filters; track filter.id) {
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="activeFilter() === filter.id"
+              (click)="setFilter(filter.id)"
+            >
+              {{ filter.label }}
+            </button>
+          }
+        </div>
+
+        <div class="request-list">
+          @for (request of filteredRequests(); track request.id) {
+            <a [routerLink]="['/my-requests', request.id]" class="request-card">
+              <div class="request-main">
+                <div class="request-heading">
+                  <span class="request-number">{{ request.requestNumber || request.id }}</span>
+                  <app-status-badge [status]="request.status" />
+                </div>
+                <h3 class="request-title">{{ request.serviceName }}</h3>
+                <div class="request-meta">
+                  <span class="meta-item">
+                    <app-icon name="clipboard" [size]="14" />
+                    {{ categoryLabel(request.category) }}
+                  </span>
+                  @if (request.submittedAt) {
+                    <span class="meta-item">
+                      <app-icon name="calendar" [size]="14" />
+                      Submitted {{ request.submittedAt | appDate }}
+                    </span>
+                  }
+                </div>
+              </div>
+              <app-icon name="chevron-right" [size]="20" class="request-chevron" />
+            </a>
+          } @empty {
+            <app-empty-state
+              icon="file-text"
+              title="No requests here"
+              message="Requests matching this filter will appear here.">
+              <a routerLink="/services" class="btn-primary">Browse services</a>
+            </app-empty-state>
+          }
+        </div>
+      }
+
+      <!-- Drafts tab -->
+      @if (activeTab() === 'drafts') {
+        <div class="draft-list">
+          @for (draft of drafts(); track draft.id) {
+            <div class="draft-card" (click)="continueDraft(draft)">
+              <div class="draft-header">
+                <h3 class="draft-title">{{ draft.serviceName }}</h3>
+                <button
+                  type="button"
+                  class="draft-discard"
+                  (click)="discardDraft(draft, $event)"
+                  [attr.aria-label]="'Discard draft for ' + draft.serviceName"
+                >
+                  <app-icon name="x" [size]="16" />
+                </button>
+              </div>
+              <span class="draft-category">{{ categoryLabel(draft.category) }}</span>
+              <div class="draft-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="draftProgress(draft)"></div>
+                </div>
+                <span class="progress-label">{{ draftProgress(draft) }}% complete</span>
+              </div>
+              <div class="draft-meta">
+                <span class="draft-modified">Last edited {{ draft.lastSaved | appDate }}</span>
+                <span class="draft-expires" [class.expiring-soon]="isDraftExpiringSoon(draft)">
+                  {{ draftExpiryLabel(draft) }}
+                </span>
+              </div>
+              <span class="continue-hint">
+                Continue editing <app-icon name="arrow-right" [size]="14" />
+              </span>
+            </div>
+          } @empty {
+            <app-empty-state
+              icon="save"
+              title="No saved drafts"
+              message="Drafts you start will appear here for up to 7 days.">
+              <a routerLink="/services" class="btn-primary">Start a request</a>
+            </app-empty-state>
+          }
+        </div>
+      }
+    </div>
+  </main>
+</div>

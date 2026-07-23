@@ -5,11 +5,12 @@ import { DashboardService } from '../../dashboard.service';
 import { JobFormData } from '../../dashboard.model';
 import { JobCardComponent } from '../../widgets/job-card/job-card.component';
 import { JobPostingFormComponent } from '../../widgets/job-posting-form/job-posting-form.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-employer-dashboard',
   standalone: true,
-  imports: [JobCardComponent, JobPostingFormComponent],
+  imports: [JobCardComponent, JobPostingFormComponent, IconComponent],
   templateUrl: './employer.page.html',
   styleUrl: './employer.page.scss'
 })

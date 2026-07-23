@@ -3,11 +3,13 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LiveTender, EvaluationBid } from '../../evaluation.model';
 import { EvaluationService } from '../../evaluation.service';
+import { IconComponent } from '../../../../../shared/components/icon/icon.component';
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-commercial-evaluation-tab',
   standalone: true,
-  imports: [CommonModule, RouterModule, DecimalPipe],
+  imports: [CommonModule, RouterModule, DecimalPipe, IconComponent, EmptyStateComponent],
   template: `
     <div class="commercial-evaluation-tab">
       <!-- Tab Header -->
@@ -18,18 +20,17 @@ import { EvaluationService } from '../../evaluation.service';
         </div>
         <div class="header-actions">
           <button class="btn-calculate" (click)="calculateValueScores()">
-            <span class="icon">📊</span>
+            <span class="icon"><app-icon name="bar-chart-3" [size]="18" /></span>
             Calculate Value Scores
           </button>
         </div>
       </div>
       
       @if (qualifiedBids().length === 0) {
-        <div class="empty-state">
-          <div class="empty-icon">🔒</div>
-          <h3>No Bids Available</h3>
-          <p>Complete technical evaluation first. Only vendors who pass technical review will have their commercial proposals unsealed.</p>
-        </div>
+        <app-empty-state
+          icon="lock"
+          title="No Bids Available"
+          message="Complete technical evaluation first. Only vendors who pass technical review will have their commercial proposals unsealed." />
       } @else {
         <!-- Comparison Table -->
         <div class="comparison-table-container">
@@ -105,12 +106,12 @@ import { EvaluationService } from '../../evaluation.service';
                     <div class="action-buttons">
                       @if (!bid.shortlisted) {
                         <button class="btn-shortlist" (click)="addToShortlist(bid)">
-                          <span class="icon">⭐</span>
+                          <span class="icon"><app-icon name="star" [size]="18" /></span>
                           Shortlist
                         </button>
                       } @else {
                         <button class="btn-remove-shortlist" (click)="removeFromShortlist(bid)">
-                          <span class="icon">✖</span>
+                          <span class="icon"><app-icon name="x" [size]="18" /></span>
                           Remove
                         </button>
                       }

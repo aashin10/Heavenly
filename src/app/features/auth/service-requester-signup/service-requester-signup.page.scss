@@ -38,8 +38,8 @@
 }
 
 .brand-logo {
-  height: 5rem;
   margin-bottom: 2rem;
+  color: var(--white);
 }
 
 .brand-title {
@@ -71,14 +71,17 @@
 }
 
 .benefit-icon {
-  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--white);
 }
 
 // Form Section
 .form-section {
   background-color: var(--white);
   border-radius: 1rem;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-xl);
   padding: 1.5rem;
   max-height: 90vh;
   overflow-y: auto;
@@ -89,7 +92,9 @@
 }
 
 .mobile-logo {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  color: var(--navy-800);
   margin-bottom: 1.5rem;
 
   @media (min-width: 1024px) {
@@ -141,7 +146,7 @@
 
 .step-label {
   font-size: 0.75rem;
-  color: var(--gray-500);
+  color: var(--gray-600);
   white-space: nowrap;
 
   .step.active & {
@@ -242,13 +247,20 @@
   &.selected {
     border-color: var(--primary-color);
     background-color: var(--blue-50);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
   }
 }
 
 .type-icon {
-  font-size: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
   margin-bottom: 0.75rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--navy-50);
+  color: var(--navy-700);
 }
 
 .type-title {
@@ -260,7 +272,7 @@
 
 .type-description {
   font-size: 0.75rem;
-  color: var(--gray-500);
+  color: var(--gray-600);
 }
 
 // Form Styles
@@ -282,11 +294,11 @@
 }
 
 .required {
-  color: var(--red-500);
+  color: var(--danger-fg);
 }
 
 .optional {
-  color: var(--gray-400);
+  color: var(--gray-600);
   font-weight: normal;
   font-size: 0.75rem;
 }

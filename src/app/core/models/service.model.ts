@@ -35,6 +35,8 @@ export interface ServiceCategoryInfo {
   badge: string;
   formTime: string;
   indicator: string;
+  /** Lucide icon name shown alongside the indicator label. */
+  indicatorIcon: string;
   description: string;
 }
 
@@ -44,7 +46,8 @@ export const SERVICE_CATEGORIES: Record<ServiceCategory, ServiceCategoryInfo> = 
     label: 'Quick Services',
     badge: 'Fast & Easy',
     formTime: '5-10 min form',
-    indicator: '⚡ Quick Request',
+    indicator: 'Quick Request',
+    indicatorIcon: 'zap',
     description: 'Simple service requests with quick turnaround'
   },
   mid_complexity: {
@@ -52,7 +55,8 @@ export const SERVICE_CATEGORIES: Record<ServiceCategory, ServiceCategoryInfo> = 
     label: 'Home & Office Services',
     badge: 'Mid-Complexity',
     formTime: '10-15 min form',
-    indicator: '📋 Guided Form',
+    indicator: 'Guided Form',
+    indicatorIcon: 'clipboard-list',
     description: 'Standard service requests with detailed requirements'
   },
   technical: {
@@ -60,7 +64,8 @@ export const SERVICE_CATEGORIES: Record<ServiceCategory, ServiceCategoryInfo> = 
     label: 'Industrial & Technical Services',
     badge: 'Engineering Services',
     formTime: 'Detailed specs required',
-    indicator: '📐 Technical Details Needed',
+    indicator: 'Technical Details Needed',
+    indicatorIcon: 'ruler',
     description: 'Complex technical services requiring specifications'
   }
 };
@@ -87,7 +92,7 @@ export const SERVICES: ServiceType[] = [
     id: 'ac-servicing',
     name: 'AC Servicing',
     description: 'Professional AC servicing and maintenance',
-    icon: '❄️',
+    icon: 'air-vent',
     category: 'quick_service',
     isPopular: true
   },
@@ -95,7 +100,7 @@ export const SERVICES: ServiceType[] = [
     id: 'appliance-servicing',
     name: 'Appliance Servicing & Repair',
     description: 'Repair and maintenance for home appliances',
-    icon: '🔧',
+    icon: 'wrench',
     category: 'quick_service',
     isPopular: true
   },
@@ -103,7 +108,7 @@ export const SERVICES: ServiceType[] = [
     id: 'tools-accessories',
     name: 'Tools & Accessories Supply',
     description: 'Quality tools and accessories for various needs',
-    icon: '🛠️',
+    icon: 'hammer',
     category: 'quick_service'
   },
 
@@ -112,7 +117,7 @@ export const SERVICES: ServiceType[] = [
     id: 'interior-finishing',
     name: 'Interior Finishing',
     description: 'Complete interior finishing solutions',
-    icon: '🏠',
+    icon: 'house',
     category: 'mid_complexity',
     isPopular: true
   },
@@ -120,35 +125,35 @@ export const SERVICES: ServiceType[] = [
     id: 'paint-polish',
     name: 'Paint & Polish',
     description: 'Professional painting and polishing services',
-    icon: '🎨',
+    icon: 'paintbrush',
     category: 'mid_complexity'
   },
   {
     id: 'office-furniture',
     name: 'Office Furniture Supply',
     description: 'Quality office furniture solutions',
-    icon: '🪑',
+    icon: 'armchair',
     category: 'mid_complexity'
   },
   {
     id: 'puff-panel-furniture',
     name: 'Puff Panel Furniture',
     description: 'Custom puff panel furniture manufacturing',
-    icon: '🛋️',
+    icon: 'armchair',
     category: 'mid_complexity'
   },
   {
     id: 'boundary-wall',
     name: 'Boundary Wall',
     description: 'Boundary wall construction and repair',
-    icon: '🧱',
+    icon: 'brick-wall',
     category: 'mid_complexity'
   },
   {
     id: 'signage-works',
     name: 'Signage Works',
     description: 'Custom signage design and installation',
-    icon: '🪧',
+    icon: 'signpost',
     category: 'mid_complexity'
   },
 
@@ -157,7 +162,7 @@ export const SERVICES: ServiceType[] = [
     id: 'transformer-rewinding',
     name: 'Transformer Rewinding',
     description: 'Expert transformer rewinding and repair',
-    icon: '⚡',
+    icon: 'cable',
     category: 'technical',
     aiAssisted: true
   },
@@ -165,7 +170,7 @@ export const SERVICES: ServiceType[] = [
     id: 'structure-brickwork',
     name: 'Structure & Brickwork',
     description: 'Structural construction and brickwork',
-    icon: '🏗️',
+    icon: 'building-2',
     category: 'technical',
     aiAssisted: true
   },
@@ -173,7 +178,7 @@ export const SERVICES: ServiceType[] = [
     id: 'electrical-materials',
     name: 'Electrical Materials Supply',
     description: 'Quality electrical materials and components',
-    icon: '💡',
+    icon: 'lightbulb',
     category: 'technical',
     isPopular: true
   },
@@ -181,7 +186,7 @@ export const SERVICES: ServiceType[] = [
     id: 'fabrication',
     name: 'Fabrication (MS/SS/Aluminium)',
     description: 'Metal fabrication services for various materials',
-    icon: '⚙️',
+    icon: 'factory',
     category: 'technical',
     aiAssisted: true
   },
@@ -189,7 +194,7 @@ export const SERVICES: ServiceType[] = [
     id: 'cctv-fire',
     name: 'CCTV & Fire Systems',
     description: 'Security and fire safety system installation',
-    icon: '📹',
+    icon: 'cctv',
     category: 'technical',
     isPopular: true
   }
@@ -408,6 +413,15 @@ export interface VendorBankDetails {
   bankName: string;
 }
 
+/** A past-work entry on the vendor's profile (feeds profile completion). */
+export interface PortfolioEntry {
+  id: string;
+  title: string;
+  description: string;
+  year: number;
+  clientName?: string;
+}
+
 /** Vendor profile */
 export interface Vendor {
   id: string;
@@ -437,11 +451,27 @@ export interface Vendor {
   verificationStatus: VendorStatus;
   documentsUploaded: VendorDocuments;
   bankDetails: VendorBankDetails;
+
+  // Past work shown to admins during evaluation
+  portfolio?: PortfolioEntry[];
   
   // Timestamps
   createdAt: Date;
   verifiedAt?: Date;
   isEmailVerified: boolean;
+
+  // Verification audit (set by admin review — see F8)
+  rejectionReason?: string;
+  reviewedBy?: string;
+  verificationEvents?: VendorVerificationEvent[];
+}
+
+/** One entry in a vendor's verification history — powers the review timeline. */
+export interface VendorVerificationEvent {
+  status: VendorStatus;
+  at: Date;
+  actor?: string;
+  note?: string;
 }
 
 // ============================================

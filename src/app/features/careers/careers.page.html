@@ -1,0 +1,83 @@
+<!-- Hero -->
+<section class="hero-section">
+  <div class="container hero-container">
+    <h1 class="hero-title">Build your career with Heavenly Corporation</h1>
+    <p class="hero-subtitle">
+      We connect skilled professionals with employers across IT, hospitality, HR and the skilled
+      trades — and we stay with you through interview, placement and beyond.
+    </p>
+    <div class="hero-actions">
+      <a routerLink="/login" class="btn-primary">Browse open roles</a>
+      <a routerLink="/contact" class="btn-secondary">Send us your CV</a>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="steps-section">
+  <div class="container">
+    <h2 class="section-title">How hiring works</h2>
+    <p class="section-subtitle">
+      A clear, four-step process — no guesswork about where your application stands.
+    </p>
+    <div class="steps-grid">
+      @for (step of steps; track step.step) {
+        <div class="step-card">
+          <div class="step-head">
+            <span class="step-icon"><app-icon [name]="step.icon" [size]="22" /></span>
+            <span class="step-number">{{ step.step }}</span>
+          </div>
+          <h3 class="step-title">{{ step.title }}</h3>
+          <p class="step-description">{{ step.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Domains -->
+<section class="domains-section">
+  <div class="container">
+    <h2 class="section-title">Where we hire</h2>
+    <p class="section-subtitle">Roles we regularly recruit for across our client base.</p>
+    <div class="domains-grid">
+      @for (domain of domains; track domain.name) {
+        <div class="domain-card">
+          <span class="domain-icon"><app-icon [name]="domain.icon" [size]="24" /></span>
+          <div>
+            <h3 class="domain-name">{{ domain.name }}</h3>
+            <p class="domain-roles">{{ domain.roles }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Benefits -->
+<section class="benefits-section">
+  <div class="container benefits-inner">
+    <div class="benefits-content">
+      <h2 class="section-title-left">Why work with us</h2>
+      <ul class="benefits-list">
+        @for (benefit of benefits; track benefit) {
+          <li>
+            <app-icon name="check-circle" [size]="18" />
+            <span>{{ benefit }}</span>
+          </li>
+        }
+      </ul>
+    </div>
+    <div class="benefits-cta">
+      <h3>Ready to get started?</h3>
+      <p>
+        Create your account to browse current openings, or send us your CV and we’ll reach out when a
+        matching role opens up.
+      </p>
+      <div class="benefits-actions">
+        <a routerLink="/login" [queryParams]="{ mode: 'signup', role: 'applicant' }" class="btn-primary">Create an account</a>
+        <a routerLink="/contact" class="btn-outline">Contact our team</a>
+      </div>
+    </div>
+  </div>
+</section>

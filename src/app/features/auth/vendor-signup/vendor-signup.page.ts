@@ -14,6 +14,8 @@ import {
 } from '../../../core/models/service.model';
 import { INDIAN_STATES, MAJOR_CITIES, getGroupedServices } from '../../../shared/utils/service-category.util';
 import { BUSINESS_TYPES, VendorStepInfo } from './vendor-signup.model';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { LogoComponent } from '../../../shared/components/logo/logo.component';
 
 const MIN_PASSWORD_LENGTH = 8;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,7 +27,7 @@ const IFSC_PATTERN = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 @Component({
   selector: 'app-vendor-signup-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, IconComponent, LogoComponent],
   templateUrl: './vendor-signup.page.html',
   styleUrl: './vendor-signup.page.scss'
 })

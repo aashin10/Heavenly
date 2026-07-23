@@ -3,16 +3,14 @@
   
   <!-- Header -->
   <div class="page-header">
-    <button class="btn-back" (click)="goBack()">← Back to My Bids</button>
+    <button class="btn-back" (click)="goBack()"><app-icon name="arrow-left" [size]="16" /> Back to My Bids</button>
     
     <div class="header-content">
       <div class="header-info">
         <span class="bid-id">{{ bid.bidId }}</span>
         <h1>{{ bid.tenderTitle }}</h1>
       </div>
-      <span class="status-badge" [ngClass]="getStatusBadgeClass(bid.status)">
-        {{ getStatusLabel(bid.status) }}
-      </span>
+      <app-status-badge [status]="bid.status" [label]="getStatusLabel(bid.status)" />
     </div>
   </div>
   
@@ -24,7 +22,7 @@
       <!-- Status Alert -->
       @if (bid.status === 'awarded') {
         <div class="status-alert success">
-          <span class="alert-icon">🏆</span>
+          <span class="alert-icon"><app-icon name="trophy" [size]="16" /></span>
           <div class="alert-content">
             <h3>Congratulations! Your bid has been awarded</h3>
             <p>Please contact the procurement team for next steps.</p>
@@ -34,7 +32,7 @@
       
       @if (bid.status === 'shortlisted') {
         <div class="status-alert info">
-          <span class="alert-icon">✨</span>
+          <span class="alert-icon"><app-icon name="sparkles" [size]="16" /></span>
           <div class="alert-content">
             <h3>Your technical proposal has been shortlisted</h3>
             <p>Your commercial proposal is now under evaluation.</p>
@@ -44,7 +42,7 @@
       
       @if (bid.status === 'rejected') {
         <div class="status-alert error">
-          <span class="alert-icon">ℹ️</span>
+          <span class="alert-icon"><app-icon name="info" [size]="16" /></span>
           <div class="alert-content">
             <h3>Your bid was not selected</h3>
             @if (bid.rejectionReason) {
@@ -58,7 +56,7 @@
       
       <!-- Technical Proposal -->
       <section class="detail-section">
-        <h2>📋 Technical Proposal</h2>
+        <h2><app-icon name="clipboard-list" [size]="16" /> Technical Proposal</h2>
         
         <div class="detail-grid">
           <div class="detail-item full">
@@ -128,8 +126,8 @@
       <!-- Commercial Proposal -->
       <section class="detail-section">
         <div class="section-header">
-          <h2>💰 Commercial Proposal</h2>
-          <span class="sealed-badge">🔒 Sealed</span>
+          <h2><app-icon name="indian-rupee" [size]="16" /> Commercial Proposal</h2>
+          <span class="sealed-badge"><app-icon name="lock" [size]="16" /> Sealed</span>
         </div>
         
         <div class="price-summary">
@@ -214,7 +212,7 @@
                  [class.pending]="!step.active && !step.completed">
               <div class="timeline-marker">
                 @if (step.completed) {
-                  <span>✓</span>
+                  <span><app-icon name="check" [size]="16" /></span>
                 } @else if (step.active) {
                   <span class="pulse"></span>
                 }
@@ -244,7 +242,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">Tender Closes</span>
-            <span class="info-value">{{ bid.tenderClosingDate | date:'dd MMM yyyy' }}</span>
+            <span class="info-value">{{ bid.tenderClosingDate | appDate }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Tender ID</span>

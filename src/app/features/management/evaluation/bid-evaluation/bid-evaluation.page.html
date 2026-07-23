@@ -11,7 +11,7 @@
     <div class="page-header">
       <div class="header-nav">
         <a routerLink="/management/evaluation" class="back-link">
-          <span class="back-icon">←</span>
+          <span class="back-icon"><app-icon name="arrow-left" [size]="18" /></span>
           Back to Dashboard
         </a>
       </div>
@@ -22,15 +22,15 @@
           <h1>{{ t.title }}</h1>
           <div class="tender-meta">
             <span class="meta-item">
-              <span class="icon">📁</span>
-              {{ t.category }}
+              <span class="icon"><app-icon name="folder" [size]="18" /></span>
+              {{ categoryLabel(t.category) }}
             </span>
             <span class="meta-item">
-              <span class="icon">💰</span>
+              <span class="icon"><app-icon name="indian-rupee" [size]="18" /></span>
               {{ formatCurrency(t.budgetEstimate) }}
             </span>
             <span class="meta-item">
-              <span class="icon">📅</span>
+              <span class="icon"><app-icon name="calendar" [size]="18" /></span>
               Bid Window End: {{ formatDate(t.bidWindowEnd) }}
             </span>
           </div>
@@ -93,7 +93,7 @@
           [class.disabled]="isTabDisabled(tab.id)"
           [disabled]="isTabDisabled(tab.id)"
           (click)="setActiveTab(tab.id)">
-          <span class="tab-icon">{{ tab.icon }}</span>
+          <span class="tab-icon"><app-icon [name]="tab.icon" [size]="16" /></span>
           <span class="tab-label">{{ tab.label }}</span>
           @if (getTabCount(tab.id) > 0) {
             <span class="tab-badge">{{ getTabCount(tab.id) }}</span>
@@ -138,7 +138,7 @@
     } @else {
     <!-- Tender Not Found -->
     <div class="not-found">
-      <div class="not-found-icon">🔍</div>
+      <div class="not-found-icon"><app-icon name="search" [size]="32" /></div>
       <h2>Tender Not Found</h2>
       <p>The requested tender could not be found or has been removed.</p>
       <a routerLink="/management/evaluation" class="btn-back">

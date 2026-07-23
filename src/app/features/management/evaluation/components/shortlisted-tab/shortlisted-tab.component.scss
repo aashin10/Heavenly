@@ -34,15 +34,15 @@
     transition: all 0.3s ease;
     
     &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-md);
     }
     
     &.rank-1 {
-      border-color: #fbbf24;
-      background: linear-gradient(to bottom, #fffbeb 0%, white 100px);
+      border-color: var(--warning-solid);
+      background: linear-gradient(to bottom, var(--warning-bg) 0%, white 100px);
       
       .rank-badge {
-        background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+        background: linear-gradient(135deg, var(--warning-fg) 0%, var(--warning-fg) 100%);
         color: white;
       }
     }
@@ -107,8 +107,8 @@
         gap: 6px;
         padding: 8px 16px;
         background: white;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
+        color: var(--danger-fg);
+        border: 1px solid var(--danger-solid);
         border-radius: 8px;
         font-size: 13px;
         font-weight: 500;
@@ -116,7 +116,7 @@
         transition: all 0.2s ease;
         
         &:hover {
-          background: #fee2e2;
+          background: var(--danger-bg);
         }
       }
     }
@@ -158,16 +158,16 @@
         font-weight: 700;
         color: var(--gray-900);
         
-        &.high { color: #059669; }
-        &.medium { color: #d97706; }
-        &.low { color: #dc2626; }
+        &.high { color: var(--success-solid); }
+        &.medium { color: var(--warning-solid); }
+        &.low { color: var(--danger-solid); }
         &.price { color: var(--primary-color); }
         
         &.negotiated {
           color: var(--gray-400);
           
           &.has-value {
-            color: #059669;
+            color: var(--success-solid);
           }
         }
       }
@@ -362,7 +362,7 @@
         border-top: 1px dashed var(--gray-200);
         font-size: 13px;
         font-weight: 600;
-        color: #059669;
+        color: var(--success-solid);
       }
     }
   }
@@ -416,7 +416,7 @@
       align-items: center;
       gap: 8px;
       padding: 12px 24px;
-      background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+      background: linear-gradient(135deg, var(--warning-fg) 0%, var(--warning-fg) 100%);
       color: white;
       border: none;
       border-radius: 10px;

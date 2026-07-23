@@ -10,7 +10,7 @@
     <div class="page-header">
       <div class="header-nav">
         <a [routerLink]="['/management/evaluation', tender()?.id]" class="back-link">
-          <span class="back-icon">←</span>
+          <span class="back-icon"><app-icon name="arrow-left" [size]="18" /></span>
           Back to Evaluation
         </a>
       </div>
@@ -37,7 +37,7 @@
         <!-- Company Profile Section -->
         <section class="proposal-section">
           <h2>
-            <span class="section-icon">🏢</span>
+            <span class="section-icon"><app-icon name="building-2" [size]="18" /></span>
             Company Profile
           </h2>
           <div class="profile-grid">
@@ -70,7 +70,7 @@
         <!-- Technical Approach Section -->
         <section class="proposal-section">
           <h2>
-            <span class="section-icon">📋</span>
+            <span class="section-icon"><app-icon name="clipboard-list" [size]="18" /></span>
             Technical Approach
           </h2>
           <div class="approach-content">
@@ -91,7 +91,7 @@
         <!-- Past Projects Section -->
         <section class="proposal-section">
           <h2>
-            <span class="section-icon">📂</span>
+            <span class="section-icon"><app-icon name="folder-open" [size]="18" /></span>
             Similar Work References ({{ b.similarWorkReferences.length }})
           </h2>
           <div class="references-list">
@@ -110,7 +110,7 @@
         @if (b.deviations && b.deviations.length > 0) {
           <section class="proposal-section">
             <h2>
-              <span class="section-icon">⚠️</span>
+              <span class="section-icon"><app-icon name="triangle-alert" [size]="18" /></span>
               Deviations ({{ b.deviations.length }})
             </h2>
             <div class="deviations-list">
@@ -124,13 +124,13 @@
         <!-- Documents Section -->
         <section class="proposal-section">
           <h2>
-            <span class="section-icon">📎</span>
+            <span class="section-icon"><app-icon name="paperclip" [size]="18" /></span>
             Attached Documents
           </h2>
           <div class="documents-list">
             @for (doc of b.documents; track $index) {
               <div class="document-item">
-                <span class="doc-icon">📄</span>
+                <span class="doc-icon"><app-icon name="file-text" [size]="18" /></span>
                 <div class="doc-info">
                   <span class="doc-name">{{ doc.name }}</span>
                   <span class="doc-type">{{ doc.type }}</span>
@@ -240,14 +240,14 @@
                 <label class="radio-option approve">
                   <input type="radio" formControlName="recommendation" value="approve" />
                   <span class="radio-label">
-                    <span class="icon">✅</span>
+                    <span class="icon"><app-icon name="circle-check" [size]="18" /></span>
                     Approve for Commercial Evaluation
                   </span>
                 </label>
                 <label class="radio-option reject">
                   <input type="radio" formControlName="recommendation" value="reject" />
                   <span class="radio-label">
-                    <span class="icon">❌</span>
+                    <span class="icon"><app-icon name="circle-x" [size]="18" /></span>
                     Reject Proposal
                   </span>
                 </label>
@@ -274,7 +274,7 @@
     </div>
     } @else {
       <div class="not-found">
-        <div class="not-found-icon">🔍</div>
+        <div class="not-found-icon"><app-icon name="search" [size]="32" /></div>
         <h2>Bid Not Found</h2>
         <p>The requested bid could not be found.</p>
         <a routerLink="/management/evaluation" class="btn-back">Back to Dashboard</a>

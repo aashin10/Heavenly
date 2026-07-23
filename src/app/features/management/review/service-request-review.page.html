@@ -3,9 +3,7 @@
     <!-- Header -->
     <header class="review-header">
       <button type="button" class="btn-back" (click)="goBack()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
+        <app-icon name="chevron-left" [size]="20" />
         Back to Dashboard
       </button>
       <div class="header-info">
@@ -24,30 +22,30 @@
           <h3 class="card-title">Requester Information</h3>
           <div class="info-list">
             <div class="info-item">
-              <span class="icon">👤</span>
+              <span class="icon"><app-icon name="user" [size]="16" /></span>
               <span>{{ request.requesterName }}</span>
             </div>
             <div class="info-item">
-              <span class="icon">📧</span>
+              <span class="icon"><app-icon name="mail" [size]="16" /></span>
               <span>{{ request.requesterEmail }}</span>
             </div>
             <div class="info-item">
-              <span class="icon">📱</span>
+              <span class="icon"><app-icon name="phone" [size]="16" /></span>
               <span>{{ request.requesterPhone }}</span>
             </div>
             <div class="info-item">
-              <span class="icon">🏢</span>
+              <span class="icon"><app-icon name="building-2" [size]="16" /></span>
               <span class="requester-badge" [class]="'badge-' + request.requesterType">
                 {{ request.requesterType | titlecase }}
               </span>
             </div>
             <div class="info-item">
-              <span class="icon">📍</span>
+              <span class="icon"><app-icon name="map-pin" [size]="16" /></span>
               <span>{{ request.location }}</span>
             </div>
           </div>
           <button type="button" class="btn-link" (click)="viewOriginalForm()">
-            View Original Form →
+            View Original Form <app-icon name="arrow-right" [size]="16" />
           </button>
         </div>
 
@@ -100,13 +98,13 @@
             @if (request.preferredStartDate) {
               <div class="detail-row">
                 <span class="detail-label">Preferred Start</span>
-                <span class="detail-value">{{ request.preferredStartDate | date:'mediumDate' }}</span>
+                <span class="detail-value">{{ request.preferredStartDate | appDate }}</span>
               </div>
             }
             @if (request.preferredEndDate) {
               <div class="detail-row">
                 <span class="detail-label">Preferred End</span>
-                <span class="detail-value">{{ request.preferredEndDate | date:'mediumDate' }}</span>
+                <span class="detail-value">{{ request.preferredEndDate | appDate }}</span>
               </div>
             }
             <div class="detail-row">
@@ -123,7 +121,7 @@
             } @else {
               @for (file of request.attachments; track file.id) {
                 <div class="file-item">
-                  <div class="file-icon">📎</div>
+                  <div class="file-icon"><app-icon name="paperclip" [size]="16" /></div>
                   <div class="file-info">
                     <span class="file-name">{{ file.fileName }}</span>
                     <span class="file-size">{{ formatFileSize(file.fileSize) }}</span>
@@ -138,17 +136,17 @@
         <!-- Flags & Warnings -->
         @if (request.hasWarnings) {
           <div class="warnings-card">
-            <h3 class="card-title warning-title">⚠️ Flags & Warnings</h3>
+            <h3 class="card-title warning-title"><app-icon name="triangle-alert" [size]="16" /> Flags & Warnings</h3>
             <div class="warning-list">
               @for (warning of request.warnings; track warning.type) {
                 <div class="warning-item" [class]="'warning--' + warning.severity">
                   <span class="warning-icon">
                     @switch (warning.type) {
-                      @case ('low_clarity') { ⚠️ }
-                      @case ('tight_budget') { 💰 }
-                      @case ('tight_timeline') { ⏰ }
-                      @case ('missing_documents') { 📄 }
-                      @default { ⚠️ }
+                      @case ('low_clarity') { <app-icon name="triangle-alert" [size]="16" /> }
+                      @case ('tight_budget') { <app-icon name="indian-rupee" [size]="16" /> }
+                      @case ('tight_timeline') { <app-icon name="clock" [size]="16" /> }
+                      @case ('missing_documents') { <app-icon name="file-text" [size]="16" /> }
+                      @default { <app-icon name="triangle-alert" [size]="16" /> }
                     }
                   </span>
                   <div>
@@ -189,7 +187,7 @@
           <!-- AI Clarity Score -->
           <div class="ai-score-card">
             <div class="score-header">
-              <h3>✨ AI Clarity Assessment</h3>
+              <h3><app-icon name="sparkles" [size]="16" /> AI Clarity Assessment</h3>
               <span class="score-value">{{ draft.clarityScore }}%</span>
             </div>
             <div class="score-meter">
@@ -212,7 +210,7 @@
           <!-- AI Draft Section -->
           <div class="ai-draft-section">
             <div class="section-header">
-              <h2>✨ AI Pre-Processing Results</h2>
+              <h2><app-icon name="sparkles" [size]="16" /> AI Pre-Processing Results</h2>
               <span class="badge badge-info">Auto-generated draft</span>
             </div>
 
@@ -364,7 +362,7 @@
 
       <button type="button" class="btn btn-primary btn-lg" (click)="approveRequest()"
         [disabled]="reviewForm.invalid">
-        Approve & Continue →
+        Approve &amp; Continue <app-icon name="arrow-right" [size]="16" />
       </button>
     </div>
 
@@ -469,7 +467,7 @@
       <div class="modal-overlay">
         <div class="modal-container success-modal" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
           <div class="modal-body text-center">
-            <div class="success-icon">✅</div>
+            <div class="success-icon"><app-icon name="circle-check" [size]="32" /></div>
             <h2>Request Approved!</h2>
             <p>Request {{ request.requestNumber }} has been approved successfully.</p>
 
@@ -484,7 +482,7 @@
               Publish Later
             </button>
             <button type="button" class="btn btn-primary btn-lg" (click)="publishNow()">
-              Publish Now →
+              Publish Now <app-icon name="arrow-right" [size]="16" />
             </button>
           </div>
         </div>
