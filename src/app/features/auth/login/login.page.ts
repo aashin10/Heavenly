@@ -159,11 +159,11 @@ export class LoginPageComponent {
     return !phone || PHONE_PATTERN.test(phone);
   }
 
-  handleLoginSubmit(): void {
+  async handleLoginSubmit(): Promise<void> {
     this.error.set('');
-    
+
     const data = this.loginData();
-    
+
     // Validate email format
     if (!this.isValidEmail(data.email)) {
       this.error.set('Please enter a valid email address');
@@ -171,7 +171,7 @@ export class LoginPageComponent {
     }
 
     this.isSubmitting.set(true);
-    const success = this.authService.login(data.email, data.password);
+    const success = await this.authService.loginAsync(data.email, data.password);
 
     if (success) {
       this.router.navigate(['/dashboard']);
@@ -179,7 +179,7 @@ export class LoginPageComponent {
       // Generic error message to prevent user enumeration
       this.error.set('Invalid credentials. Please check your email and password.');
     }
-    
+
     this.isSubmitting.set(false);
   }
 
@@ -221,7 +221,7 @@ export class LoginPageComponent {
     this.isSubmitting.set(false);
   }
 
-  handleSignupSubmit(): void {
+  async handleSignupSubmit(): Promise<void> {
     this.error.set('');
     const data = this.signupData();
 
@@ -260,7 +260,7 @@ export class LoginPageComponent {
 
     this.isSubmitting.set(true);
 
-    const success = this.authService.signup({
+    const success = await this.authService.signupAsync({
       name: data.name,
       email: data.email,
       password: data.password,

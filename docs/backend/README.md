@@ -13,6 +13,7 @@ These documents specify the API the **existing Angular frontend** needs, targeti
 | [02-API-VENDOR-DASHBOARD.md](02-API-VENDOR-DASHBOARD.md) | Vendor dashboard: stats, opportunities, bids, profile completion |
 | **[03-EXISTING-BACKEND-REVIEW.md](03-EXISTING-BACKEND-REVIEW.md)** | **What already exists, blocking issues, and corrections to 01/02** |
 | [04-API-SERVICE-REQUESTS.md](04-API-SERVICE-REQUESTS.md) | Service request drafts, submission, formData schemas — canonical `ServiceRequest` |
+| [05-INTEGRATION-RUNBOOK.md](05-INTEGRATION-RUNBOOK.md) | **Connecting the app to the API** — jobs-auth vertical slice, build/run steps |
 
 ---
 

@@ -1,7 +1,12 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { User } from '../models/user.model';
+import { firstValueFrom } from 'rxjs';
+import { User, UserType } from '../models/user.model';
 import { ToastService } from './toast.service';
+import { environment } from '../../../environments/environment';
+import { AuthApiService } from '../api/auth-api.service';
+import { TokenStore } from '../api/token-store.service';
+import { AuthResponse } from '../api/auth-api.models';
 
 const USERS_KEY = 'heavenly_users';
 const CURRENT_USER_KEY = 'heavenly_current_user';
@@ -14,6 +19,8 @@ const SESSION_TIMEOUT_MS = 3600000; // 1 hour
 export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly toastService = inject(ToastService);
+  private readonly authApi = inject(AuthApiService);
+  private readonly tokenStore = inject(TokenStore);
   private readonly userSignal = signal<User | null>(null);
   
   readonly user = this.userSignal.asReadonly();
@@ -107,7 +114,85 @@ export class AuthService {
     return false;
   }
 
+  /**
+   * Login used by the UI. Delegates to the real API when `useRealApi` is on,
+   * otherwise runs the synchronous localStorage mock (wrapped in a resolved
+   * promise so callers have one async shape either way). Returns whether login
+   * succeeded; the caller shows the generic error on `false`.
+   */
+  async loginAsync(email: string, password: string): Promise<boolean> {
+    if (!environment.useRealApi) {
+      return this.login(email, password);
+    }
+
+    try {
+      const res = await firstValueFrom(this.authApi.login({ email, password }));
+      this.applyAuthResponse(res);
+      this.toastService.success(`Welcome back, ${res.name}!`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Signup used by the UI — real API when enabled, else the mock. */
+  async signupAsync(
+    userData: Omit<User, 'id' | 'createdAt'> & { password: string }
+  ): Promise<boolean> {
+    if (!environment.useRealApi) {
+      return this.signup(userData);
+    }
+
+    try {
+      // Current API register returns { userId } only; log in afterwards to get
+      // a session. Once register returns tokens, collapse this to one call.
+      await firstValueFrom(
+        this.authApi.register({
+          fullName: userData.name,
+          email: userData.email,
+          phone: userData.phone ?? '',
+          location: userData.location,
+          password: userData.password,
+          companyName: userData.company,
+          userType: this.toApiUserType(userData.userType),
+        })
+      );
+      return await this.loginAsync(userData.email, userData.password);
+    } catch {
+      return false;
+    }
+  }
+
+  /** Stores tokens + maps an AuthResponse into the session user signal. */
+  private applyAuthResponse(res: AuthResponse): void {
+    this.tokenStore.set(res.accessToken, res.refreshToken);
+    const user: User = {
+      id: res.userId,
+      email: res.email,
+      name: res.name,
+      userType: res.userType.toLowerCase() as UserType,
+      company: res.company ?? undefined,
+      acceptedTerms: true,
+      createdAt: new Date().toISOString(),
+    };
+    this.userSignal.set(user);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      localStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString());
+    }
+  }
+
+  /** Domain enum ('employer') → the PascalCase name the current API expects. */
+  private toApiUserType(userType: UserType): string {
+    return userType.charAt(0).toUpperCase() + userType.slice(1);
+  }
+
   logout(): void {
+    // Best-effort server-side invalidation when running against the real API.
+    if (environment.useRealApi && this.tokenStore.accessToken) {
+      firstValueFrom(this.authApi.logout()).catch(() => undefined);
+    }
+    this.tokenStore.clear();
     this.userSignal.set(null);
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(CURRENT_USER_KEY);
