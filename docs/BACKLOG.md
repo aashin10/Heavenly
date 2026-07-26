@@ -19,7 +19,7 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
 | Services portal | **Frontend only.** Every screen runs on `localStorage`; no backend entities exist at all |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **None.** No test project in either repo — all verification to date has been manual |
+| Tests | **17 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -30,15 +30,17 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 **Verified live:** migrated + new users return `roles`; a single account holding `['employer','service_requester']` proves multi-role works; duplicate role rejected by the constraint; no regressions across the auth suite or the AutoMapper endpoints.
 → branch `feature/account-roles`
 
-### 🟠 B2. Services-portal domain ⬅️ **next**
+### 🟠 B2. Services-portal domain ⬅️ **next** (now on a test safety net)
 Now unblocked by B1. The big greenfield: `Vendor` (+verification, documents, bank), `ServiceRequester`, `ServiceRequest` (+drafts, events), `Tender`, `Bid`, `Award`. Depends on B1.
 → [02](backend/02-API-VENDOR-DASHBOARD.md) · [04](backend/04-API-SERVICE-REQUESTS.md)
 
 ### 🟠 B3. Password reset endpoints
 `PasswordResetToken` entity exists and is migrated, but **no endpoints use it** — a user who forgets their password has no recovery path. Needs request + confirm, single-use, expiring.
 
-### 🟠 B4. No test project
-Every verification so far has been manual `curl` + browser. At minimum: integration tests over the auth endpoints (register → login → me → refresh → logout, plus the 401 paths) using `WebApplicationFactory` + Testcontainers or the existing Docker Postgres.
+### ✅ B4. Integration test suite — **DONE 2026-07-26**
+17 xUnit tests over the auth surface via `WebApplicationFactory` + Testcontainers (throwaway `postgres:16` per run, real migrations applied — so migrations are tested too). Covers register/login/me/refresh/logout, roles, wire-format casing, refresh-rotation replay, and every 401 path.
+**Found a real bug:** JWT validation params were read *eagerly* off `builder.Configuration` while signing resolved `IOptions` *lazily* — they could diverge ("The signature key was not found"). Both now resolve from the same DI options.
+Still to add: unit tests for handlers, and a frontend suite.
 
 ### 🟡 B5. `/register` should return tokens
 Currently returns `{ userId }` only, so the frontend does register-then-login (two round trips). Returning an `AuthResponse` collapses it to one. Frontend already handles both.
@@ -106,6 +108,14 @@ Deferred deliberately — screens already show spinner + text, so this is refine
 
 ---
 
+## Database — current
+
+**Supabase (temporary), Seoul session pooler.** Cloud SQL / Firebase are on hold. Migrations applied and the full auth lifecycle verified against it. Connection is in user-secrets (`ConnectionStrings:DefaultConnection`), with the local Docker string retained as `ConnectionStrings:LocalDocker` to switch back offline. Session pooler port 5432 — **not** transaction pooler 6543, which lacks the session state EF migrations need.
+
+⚠️ **Rotate the Supabase DB password** — it was shared in a chat session that is archived to the private `heavenly-session-archive` repo. Supabase dashboard → Settings → Database → Reset password, then re-run the `dotnet user-secrets set` command.
+
+---
+
 ## Architecture notes
 
 **Firebase vs GCP is not a choice** (verified 2026-07-26). Every Firebase project *is* a GCP project — `heavenly-corp` already has one. And **Firebase Data Connect is Cloud SQL for PostgreSQL**: listing Data Connect services enabled `sqladmin.googleapis.com`, the Cloud SQL Admin API. So the Cloud SQL decision and "use my Firebase project" are the same choice.
@@ -118,6 +128,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-26** — **B4 done:** 17 integration tests (Testcontainers); exposed + fixed a JWT key-divergence bug. **Supabase** wired as the temporary dev DB, migrations applied, auth lifecycle verified.
 - **2026-07-26** — **AutoMapper removed** (explicit EF projections, byte-identical output). Firebase/Cloud SQL investigated: `heavenly-corp` chosen, provisioning script prepared but deliberately not run (billable).
 - **2026-07-26** — **B1 done:** account roles foundation (`user_roles` + extended `UserType`, roles on all auth responses). Multi-role verified.
 - **2026-07-26** — Cleared all package CVEs (AutoMapper 16, Swashbuckle 10.2.3, Cryptography.Xml 10.0.10), runtime-verified. Merged to `main`, created `develop`. Backlog created. Started B1.
