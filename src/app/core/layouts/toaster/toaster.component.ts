@@ -1,9 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { ToastService } from '../../services/toast.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-toaster',
   standalone: true,
+  imports: [IconComponent],
   template: `
     <div class="toaster-container" aria-live="polite" aria-atomic="true">
       @for (toast of toastService.toasts(); track toast.id) {
@@ -15,8 +17,16 @@ import { ToastService } from '../../services/toast.service';
           [class.toast-info]="toast.type === 'info'"
           [class.toast-warning]="toast.type === 'warning'"
         >
+          <app-icon [name]="iconFor(toast.type)" [size]="18" />
           <span class="toast-message">{{ toast.message }}</span>
-          <button class="toast-close" (click)="toastService.removeToast(toast.id)" aria-label="Close notification">×</button>
+          <button
+            class="toast-close"
+            type="button"
+            (click)="toastService.removeToast(toast.id)"
+            aria-label="Close notification"
+          >
+            <app-icon name="x" [size]="16" />
+          </button>
         </div>
       }
     </div>
@@ -26,7 +36,7 @@ import { ToastService } from '../../services/toast.service';
       position: fixed;
       top: 1rem;
       right: 1rem;
-      z-index: 9999;
+      z-index: var(--z-toast);
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
@@ -38,8 +48,9 @@ import { ToastService } from '../../services/toast.service';
       align-items: center;
       justify-content: space-between;
       padding: 1rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      gap: 0.625rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
       animation: slideIn 0.3s ease-out;
     }
 
@@ -55,23 +66,23 @@ import { ToastService } from '../../services/toast.service';
     }
 
     .toast-success {
-      background-color: #10b981;
-      color: white;
+      background-color: var(--success-solid);
+      color: var(--white);
     }
 
     .toast-error {
-      background-color: #ef4444;
-      color: white;
+      background-color: var(--danger-solid);
+      color: var(--white);
     }
 
     .toast-info {
-      background-color: #3b82f6;
-      color: white;
+      background-color: var(--info-solid);
+      color: var(--white);
     }
 
     .toast-warning {
-      background-color: #f59e0b;
-      color: white;
+      background-color: var(--warning-solid);
+      color: var(--white);
     }
 
     .toast-message {
@@ -96,5 +107,15 @@ import { ToastService } from '../../services/toast.service';
   `]
 })
 export class ToasterComponent {
+  /** Semantic icon per toast type. */
+  iconFor(type: string): string {
+    switch (type) {
+      case 'success': return 'circle-check';
+      case 'error': return 'circle-x';
+      case 'warning': return 'triangle-alert';
+      default: return 'info';
+    }
+  }
+
   protected readonly toastService = inject(ToastService);
 }

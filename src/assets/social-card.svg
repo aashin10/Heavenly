@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img"
+     aria-label="Heavenly Corporation — manpower, industrial and technical services">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#003664"/>
+      <stop offset="100%" stop-color="#004a8f"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- brand mark: rounded square + H + accent arc -->
+  <g transform="translate(80,70)">
+    <rect x="1" y="1" width="86" height="86" rx="20" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.9"/>
+    <path d="M26 24v42M62 24v42M26 45h36" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+    <path d="M14 54c16-18 44-18 60 0" stroke="#c8102e" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <text x="192" y="112" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="44" font-weight="700" fill="#ffffff">Heavenly</text>
+  <text x="192" y="146" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="19" font-weight="600" letter-spacing="7" fill="#b9d2e8">CORPORATION</text>
+
+  <text x="80" y="292" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="64" font-weight="700" fill="#ffffff">Manpower, industrial &amp;</text>
+  <text x="80" y="372" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="64" font-weight="700" fill="#ffffff">technical services</text>
+
+  <rect x="80" y="404" width="96" height="6" rx="3" fill="#c8102e"/>
+
+  <text x="80" y="466" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="27" fill="#dbe8f4">Skilled manpower · Transformer rewinding · Verified vendors</text>
+
+  <text x="80" y="556" font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="23" fill="#b9d2e8">heavenlycorporation.com · New Delhi</text>
+</svg>

@@ -4,11 +4,15 @@ import { VendorTenderService } from '../vendor.service';
 import { Bid, BidStatus } from '../vendor.model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-my-bids-page',
   standalone: true,
-  imports: [CommonModule, TimeAgoPipe],
+  imports: [CommonModule, TimeAgoPipe, IconComponent, EmptyStateComponent, AppDatePipe, StatusBadgeComponent],
   templateUrl: './my-bids.page.html',
   styleUrl: './my-bids.page.scss'
 })
@@ -91,18 +95,6 @@ export class MyBidsPageComponent implements OnInit {
     this.router.navigate(['/vendor/tenders', tenderId]);
   }
 
-  getStatusBadgeClass(status: BidStatus): string {
-    const classes: Record<BidStatus, string> = {
-      draft: 'badge-gray',
-      submitted: 'badge-blue',
-      under_review: 'badge-purple',
-      shortlisted: 'badge-yellow',
-      awarded: 'badge-green',
-      rejected: 'badge-red',
-      withdrawn: 'badge-gray'
-    };
-    return classes[status] || 'badge-gray';
-  }
 
   getStatusLabel(status: BidStatus): string {
     const labels: Record<BidStatus, string> = {

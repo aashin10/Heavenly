@@ -3,11 +3,15 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LiveTender, EvaluationBid, TechnicalStatus } from '../../evaluation.model';
 import { EvaluationService } from '../../evaluation.service';
+import { IconComponent } from '../../../../../shared/components/icon/icon.component';
+import { EmptyStateComponent } from '../../../../../shared/components/empty-state/empty-state.component';
+import { StatusBadgeComponent } from '../../../../../shared/components/status-badge/status-badge.component';
+import { formatAppDateTime } from '../../../../../shared/utils/date-format.util';
 
 @Component({
   selector: 'app-technical-evaluation-tab',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, IconComponent, EmptyStateComponent, StatusBadgeComponent],
   template: `
     <div class="technical-evaluation-tab">
       <!-- Tab Header -->
@@ -75,9 +79,9 @@ import { EvaluationService } from '../../evaluation.service';
                     <span class="bid-id">{{ bid.bidId }}</span>
                   </div>
                 </div>
-                <div class="status-badge" [class]="'badge-' + bid.technicalStatus">
-                  {{ getStatusLabel(bid.technicalStatus) }}
-                </div>
+                <app-status-badge
+                  [status]="bid.technicalStatus"
+                  [label]="getStatusLabel(bid.technicalStatus)" />
               </div>
               
               <div class="bid-body">
@@ -141,17 +145,14 @@ import { EvaluationService } from '../../evaluation.service';
           }
         </div>
       } @else {
-        <div class="empty-state">
-          <div class="empty-icon">📋</div>
-          <h3>No Bids Found</h3>
-          <p>
-            @if (filterStatus() !== 'all') {
+        <app-empty-state
+          icon="clipboard-list"
+          title="No Bids Found"
+          message="@if (filterStatus() !== 'all') {
               No bids match the selected filter. Try selecting a different status.
             } @else {
               This tender has not received any bids yet.
-            }
-          </p>
-        </div>
+            }" />
       }
     </div>
   `,
@@ -194,12 +195,6 @@ export class TechnicalEvaluationTabComponent {
   }
   
   formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatAppDateTime(date);
   }
 }

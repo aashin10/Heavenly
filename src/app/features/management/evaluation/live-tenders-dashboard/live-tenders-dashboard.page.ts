@@ -5,6 +5,10 @@ import { FormsModule } from '@angular/forms';
 import { EvaluationService } from '../evaluation.service';
 import { LiveTender, TenderStats, EvaluationPhase } from '../evaluation.model';
 import { EvaluationStatusBadgeComponent } from '../../../../shared/components/evaluation-status-badge/evaluation-status-badge.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
+import { getCategoryShortLabel } from '../../../../shared/utils/service-category.util';
+import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
+import { formatAppDate } from '../../../../shared/utils/date-format.util';
 
 @Component({
   selector: 'app-live-tenders-dashboard',
@@ -13,7 +17,9 @@ import { EvaluationStatusBadgeComponent } from '../../../../shared/components/ev
     CommonModule,
     RouterModule,
     FormsModule,
-    EvaluationStatusBadgeComponent
+    EvaluationStatusBadgeComponent,
+    IconComponent,
+    EmptyStateComponent
   ],
   templateUrl: './live-tenders-dashboard.page.html',
   styleUrls: ['./live-tenders-dashboard.page.scss']
@@ -137,15 +143,15 @@ export class LiveTendersDashboardPage implements OnInit {
   
   getPhaseIcon(phase: EvaluationPhase): string {
     const icons: Record<EvaluationPhase, string> = {
-      'accepting_bids': '📥',
-      'bid_closed': '🔒',
-      'technical_review': '🔍',
-      'commercial_review': '💰',
-      'shortlisted': '⭐',
-      'awarded': '✅',
-      'cancelled': '❌'
+      'accepting_bids': 'inbox',
+      'bid_closed': 'lock',
+      'technical_review': 'search',
+      'commercial_review': 'indian-rupee',
+      'shortlisted': 'star',
+      'awarded': 'circle-check',
+      'cancelled': 'circle-x'
     };
-    return icons[phase] || '📋';
+    return icons[phase] || 'clipboard-list';
   }
   
   getDeadlineStatus(deadline: string): 'expired' | 'urgent' | 'normal' {
@@ -158,6 +164,10 @@ export class LiveTendersDashboardPage implements OnInit {
     return 'normal';
   }
   
+  categoryLabel(category: string): string {
+    return getCategoryShortLabel(category);
+  }
+
   getDaysRemaining(deadline: string): number {
     const now = new Date();
     const deadlineDate = new Date(deadline);
@@ -173,11 +183,7 @@ export class LiveTendersDashboardPage implements OnInit {
   }
   
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return formatAppDate(date);
   }
   
   refreshData(): void {

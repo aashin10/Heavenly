@@ -92,18 +92,18 @@
         }
         
         &.lowest-price {
-          background: #f0fdf4;
+          background: var(--success-bg);
           
           &:hover {
-            background: #dcfce7;
+            background: var(--success-bg);
           }
         }
         
         &.shortlisted {
-          background: #fef3c7;
+          background: var(--warning-bg);
           
           &:hover {
-            background: #fde68a;
+            background: var(--warning-bg);
           }
         }
         
@@ -161,7 +161,7 @@
       
       .lowest-badge {
         padding: 4px 10px;
-        background: #047857;
+        background: var(--success-fg);
         color: white;
         font-size: 11px;
         font-weight: 700;
@@ -183,8 +183,8 @@
       display: inline-block;
       margin-top: 4px;
       padding: 2px 8px;
-      background: #fee2e2;
-      color: #991b1b;
+      background: var(--danger-bg);
+      color: var(--danger-fg);
       font-size: 11px;
       font-weight: 600;
       border-radius: 4px;
@@ -233,8 +233,8 @@
       display: inline-block;
       margin-top: 4px;
       padding: 2px 8px;
-      background: #dbeafe;
-      color: #1d4ed8;
+      background: var(--info-bg);
+      color: var(--info-fg);
       font-size: 11px;
       font-weight: 500;
       border-radius: 4px;
@@ -264,18 +264,18 @@
       margin: 0 auto;
       
       &.score-high {
-        background: #d1fae5;
-        color: #065f46;
+        background: var(--success-bg);
+        color: var(--success-fg);
       }
       
       &.score-medium {
-        background: #fef3c7;
-        color: #92400e;
+        background: var(--warning-bg);
+        color: var(--warning-fg);
       }
       
       &.score-low {
-        background: #fee2e2;
-        color: #991b1b;
+        background: var(--danger-bg);
+        color: var(--danger-fg);
       }
     }
     
@@ -287,21 +287,21 @@
       border-radius: 10px;
       
       &.score-high {
-        background: #d1fae5;
+        background: var(--success-bg);
         
-        .score-number { color: #065f46; }
+        .score-number { color: var(--success-fg); }
       }
       
       &.score-medium {
-        background: #fef3c7;
+        background: var(--warning-bg);
         
-        .score-number { color: #92400e; }
+        .score-number { color: var(--warning-fg); }
       }
       
       &.score-low {
-        background: #fee2e2;
+        background: var(--danger-bg);
         
-        .score-number { color: #991b1b; }
+        .score-number { color: var(--danger-fg); }
       }
       
       .score-number {
@@ -336,9 +336,9 @@
       justify-content: center;
       gap: 6px;
       padding: 8px 14px;
-      background: #fef3c7;
-      color: #92400e;
-      border: 1px solid #fbbf24;
+      background: var(--warning-bg);
+      color: var(--warning-fg);
+      border: 1px solid var(--warning-solid);
       border-radius: 8px;
       font-size: 12px;
       font-weight: 600;
@@ -346,7 +346,7 @@
       transition: all 0.2s ease;
       
       &:hover {
-        background: #fde68a;
+        background: var(--warning-bg);
       }
     }
     
@@ -356,9 +356,9 @@
       justify-content: center;
       gap: 6px;
       padding: 8px 14px;
-      background: #fee2e2;
-      color: #991b1b;
-      border: 1px solid #fca5a5;
+      background: var(--danger-bg);
+      color: var(--danger-fg);
+      border: 1px solid var(--danger-solid);
       border-radius: 8px;
       font-size: 12px;
       font-weight: 600;
@@ -366,7 +366,7 @@
       transition: all 0.2s ease;
       
       &:hover {
-        background: #fecaca;
+        background: var(--danger-bg);
       }
     }
     

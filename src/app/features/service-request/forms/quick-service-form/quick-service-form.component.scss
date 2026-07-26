@@ -36,12 +36,12 @@
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--gray-900, #111827);
+  color: var(--gray-900, var(--gray-900));
 }
 
 .step-description {
   margin: 0 0 1.5rem 0;
-  color: var(--gray-600, #4b5563);
+  color: var(--gray-600, var(--gray-600));
   font-size: 0.875rem;
 }
 
@@ -49,7 +49,7 @@
   margin: 1.5rem 0 0.75rem 0;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-800, #1f2937);
+  color: var(--gray-800, var(--gray-800));
 }
 
 // Form Groups
@@ -61,11 +61,11 @@
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--gray-700, #374151);
+    color: var(--gray-700, var(--gray-700));
 
     &.required::after {
       content: ' *';
-      color: var(--error-color, #ef4444);
+      color: var(--error-color, var(--danger-solid));
     }
   }
 
@@ -77,25 +77,25 @@
   textarea {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 1px solid var(--gray-300, #d1d5db);
+    border: 1px solid var(--gray-300, var(--gray-300));
     border-radius: 8px;
     font-size: 1rem;
-    color: var(--gray-900, #111827);
+    color: var(--gray-900, var(--gray-900));
     background: white;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &::placeholder {
-      color: var(--gray-400, #9ca3af);
+      color: var(--gray-400, var(--gray-400));
     }
 
     &:focus {
       outline: none;
-      border-color: var(--primary-color, #003664);
-      box-shadow: 0 0 0 3px rgba(0, 54, 100, 0.1);
+      border-color: var(--primary-color, var(--navy-800));
+      box-shadow: var(--ring-brand);
     }
 
     &.error {
-      border-color: var(--error-color, #ef4444);
+      border-color: var(--error-color, var(--danger-solid));
     }
   }
 
@@ -124,7 +124,7 @@
   display: block;
   margin-top: 0.375rem;
   font-size: 0.75rem;
-  color: var(--error-color, #ef4444);
+  color: var(--error-color, var(--danger-solid));
 }
 
 .textarea-footer {
@@ -134,7 +134,7 @@
 
   .char-count {
     font-size: 0.75rem;
-    color: var(--gray-500, #6b7280);
+    color: var(--gray-500, var(--gray-500));
   }
 }
 
@@ -173,12 +173,14 @@
   }
 }
 
-.type-card {
+// Scoped under the grid so it outranks `.form-group label { display: block }`,
+// which otherwise stops the card from becoming a flex column.
+.service-type-cards .type-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 1rem 0.5rem;
-  border: 2px solid var(--gray-200, #e5e7eb);
+  border: 2px solid var(--gray-200, var(--gray-200));
   border-radius: 12px;
   cursor: pointer;
   text-align: center;
@@ -189,8 +191,11 @@
   }
 
   .type-icon {
-    font-size: 1.75rem;
-    margin-bottom: 0.375rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy-700);
+    margin-bottom: 0.5rem;
   }
 
   .type-name {
@@ -200,11 +205,11 @@
   }
 
   &:hover {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
   }
 
   &.selected {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
     background: rgba(0, 54, 100, 0.05);
   }
 }
@@ -218,7 +223,7 @@
 
 .equipment-card {
   padding: 1rem;
-  background: var(--gray-50, #f9fafb);
+  background: var(--gray-50, var(--gray-50));
   border-radius: 10px;
   border: 1px solid var(--gray-200);
 
@@ -238,14 +243,14 @@
       padding: 0.25rem 0.75rem;
       font-size: 0.75rem;
       background: transparent;
-      border: 1px solid var(--error-color, #ef4444);
-      color: var(--error-color, #ef4444);
+      border: 1px solid var(--error-color, var(--danger-solid));
+      color: var(--error-color, var(--danger-solid));
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s ease;
 
       &:hover {
-        background: var(--red-600, #dc2626);
+        background: var(--red-600, var(--danger-solid));
         color: white;
       }
     }
@@ -258,17 +263,17 @@
   justify-content: center;
   width: 100%;
   padding: 0.875rem;
-  border: 2px dashed var(--gray-300, #d1d5db);
+  border: 2px dashed var(--gray-300, var(--gray-300));
   border-radius: 10px;
   background: transparent;
-  color: var(--primary-color, #003664);
+  color: var(--primary-color, var(--navy-800));
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
     background: rgba(0, 54, 100, 0.03);
   }
 }
@@ -285,7 +290,7 @@
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  border: 2px solid var(--gray-200, #e5e7eb);
+  border: 2px solid var(--gray-200, var(--gray-200));
   border-radius: 8px;
   cursor: pointer;
   text-align: center;
@@ -302,11 +307,11 @@
   }
 
   &:hover {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
   }
 
   &.selected {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
     background: rgba(0, 54, 100, 0.05);
     
     .budget-amount {
@@ -326,7 +331,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--gray-300, #d1d5db);
+  border: 1px solid var(--gray-300, var(--gray-300));
   border-radius: 20px;
   cursor: pointer;
   font-size: 0.875rem;
@@ -338,11 +343,11 @@
   }
 
   &:hover {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
   }
 
   &.selected {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
     background: var(--primary-color);
     color: white;
   }
@@ -364,7 +369,7 @@
   flex-direction: column;
   align-items: center;
   padding: 1rem 0.5rem;
-  border: 2px solid var(--gray-200, #e5e7eb);
+  border: 2px solid var(--gray-200, var(--gray-200));
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -385,11 +390,11 @@
   }
 
   &:hover {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
   }
 
   &.selected {
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
     background: rgba(0, 54, 100, 0.05);
   }
 }
@@ -402,7 +407,7 @@
   padding: 0.5rem 0;
 
   &.error {
-    color: var(--error-color, #ef4444);
+    color: var(--error-color, var(--danger-solid));
   }
 
   input[type="checkbox"] {
@@ -411,16 +416,16 @@
     margin: 0;
     margin-right: 0.75rem;
     flex-shrink: 0;
-    accent-color: var(--primary-color, #003664);
+    accent-color: var(--primary-color, var(--navy-800));
   }
 
   span {
     font-size: 0.875rem;
-    color: var(--gray-700, #374151);
+    color: var(--gray-700, var(--gray-700));
     line-height: 1.4;
 
     a {
-      color: var(--primary-color, #003664);
+      color: var(--primary-color, var(--navy-800));
       text-decoration: underline;
     }
   }
@@ -430,7 +435,7 @@
 .form-group.terms {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--gray-200, #e5e7eb);
+  border-top: 1px solid var(--gray-200, var(--gray-200));
 }
 
 // Form Actions
@@ -440,7 +445,7 @@
   align-items: center;
   margin-top: 2rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--gray-200, #e5e7eb);
+  border-top: 1px solid var(--gray-200, var(--gray-200));
 
   .right-actions {
     display: flex;
@@ -476,20 +481,20 @@
   }
 
   &.btn-primary {
-    background: var(--primary-color, #003664);
+    background: var(--primary-color, var(--navy-800));
     color: white;
 
     &:hover {
-      background: var(--primary-light, #004a8f);
+      background: var(--primary-light, var(--navy-700));
     }
 
     &.btn-submit {
       padding: 0.875rem 2rem;
       font-size: 1rem;
-      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      background: linear-gradient(135deg, var(--success-solid) 0%, var(--success-solid) 100%);
 
       &:hover {
-        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        background: linear-gradient(135deg, var(--success-solid) 0%, var(--success-fg) 100%);
       }
     }
   }

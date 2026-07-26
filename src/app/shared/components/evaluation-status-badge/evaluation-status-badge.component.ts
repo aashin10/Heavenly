@@ -1,14 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LiveTender, EvaluationPhase } from '../../../features/management/evaluation/evaluation.model';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-evaluation-status-badge',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <span class="evaluation-status-badge" [ngClass]="'status-' + getStatus()">
-      <span class="status-icon">{{ getStatusIcon() }}</span>
+      <app-icon class="status-icon" [name]="getStatusIcon()" [size]="14" />
       {{ getStatusLabel() }}
     </span>
   `,
@@ -26,7 +27,8 @@ import { LiveTender, EvaluationPhase } from '../../../features/management/evalua
     }
     
     .status-icon {
-      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
     }
     
     .status-accepting_bids {
@@ -90,14 +92,14 @@ export class EvaluationStatusBadgeComponent {
   getStatusIcon(): string {
     const status = this.getStatus();
     const icons: Record<string, string> = {
-      'accepting_bids': '📥',
-      'bid_closed': '🔒',
-      'technical_review': '🔍',
-      'commercial_review': '💰',
-      'shortlisted': '⭐',
-      'awarded': '✅',
-      'cancelled': '❌'
+      'accepting_bids': 'inbox',
+      'bid_closed': 'lock',
+      'technical_review': 'search',
+      'commercial_review': 'indian-rupee',
+      'shortlisted': 'star',
+      'awarded': 'award',
+      'cancelled': 'circle-x'
     };
-    return icons[status] || '📋';
+    return icons[status] || 'clipboard-list';
   }
 }

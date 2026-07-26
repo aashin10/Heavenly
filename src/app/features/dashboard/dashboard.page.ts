@@ -2,13 +2,14 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { AuthService } from '../../core/services/auth.service';
 import { EmployerPageComponent } from './pages/employer/employer.page';
 import { JobSeekerPageComponent } from './pages/job-seeker/job-seeker.page';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 type DashboardTab = 'employer' | 'jobseeker';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [EmployerPageComponent, JobSeekerPageComponent],
+  imports: [EmployerPageComponent, JobSeekerPageComponent, IconComponent],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss'
 })

@@ -13,6 +13,8 @@ import {
   RequesterSignupStep3LargeOrg
 } from '../../../core/models/service.model';
 import { REQUESTER_ACCOUNT_TYPES, StepInfo } from './service-requester-signup.model';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { LogoComponent } from '../../../shared/components/logo/logo.component';
 
 const MIN_PASSWORD_LENGTH = 8;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,7 +23,7 @@ const PHONE_PATTERN = /^[\d\s\-+()]{10,}$/;
 @Component({
   selector: 'app-service-requester-signup-page',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, IconComponent, LogoComponent],
   templateUrl: './service-requester-signup.page.html',
   styleUrl: './service-requester-signup.page.scss'
 })

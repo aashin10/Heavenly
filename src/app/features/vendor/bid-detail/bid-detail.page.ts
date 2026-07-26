@@ -4,11 +4,15 @@ import { VendorTenderService } from '../vendor.service';
 import { Bid, PublishedTender } from '../vendor.model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { formatAppDateTime } from '../../../shared/utils/date-format.util';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-bid-detail-page',
   standalone: true,
-  imports: [CommonModule, TimeAgoPipe],
+  imports: [CommonModule, TimeAgoPipe, IconComponent, AppDatePipe, StatusBadgeComponent],
   templateUrl: './bid-detail.page.html',
   styleUrl: './bid-detail.page.scss'
 })
@@ -49,18 +53,6 @@ export class BidDetailPageComponent implements OnInit {
     }
   }
 
-  getStatusBadgeClass(status: string): string {
-    const classes: Record<string, string> = {
-      draft: 'badge-gray',
-      submitted: 'badge-blue',
-      under_review: 'badge-purple',
-      shortlisted: 'badge-yellow',
-      awarded: 'badge-green',
-      rejected: 'badge-red'
-    };
-    return classes[status] || 'badge-gray';
-  }
-
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       draft: 'Draft',
@@ -82,13 +74,7 @@ export class BidDetailPageComponent implements OnInit {
   }
 
   formatDate(date: string): string {
-    return new Date(date).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatAppDateTime(date);
   }
 
   getStatusTimeline(): { label: string; date: string; active: boolean; completed: boolean }[] {

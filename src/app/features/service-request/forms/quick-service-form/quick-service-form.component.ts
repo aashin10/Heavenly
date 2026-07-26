@@ -7,6 +7,7 @@ import { FormStepperComponent } from '../../../../shared/components/form-stepper
 import { FormProgressComponent } from '../../../../shared/components/form-progress/form-progress.component';
 import { AutoSaveIndicatorComponent } from '../../../../shared/components/auto-save-indicator/auto-save-indicator.component';
 import { FileUploadComponent } from '../../../../shared/components/file-upload/file-upload.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 const STEP_LABELS = [
   'Service Type',
@@ -24,7 +25,8 @@ const STEP_LABELS = [
     FormStepperComponent,
     FormProgressComponent,
     AutoSaveIndicatorComponent,
-    FileUploadComponent
+    FileUploadComponent,
+    IconComponent
   ],
   templateUrl: './quick-service-form.component.html',
   styleUrl: './quick-service-form.component.scss'

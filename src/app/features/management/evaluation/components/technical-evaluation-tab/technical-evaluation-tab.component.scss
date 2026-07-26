@@ -38,21 +38,21 @@
         border-radius: 12px;
         
         &.pending {
-          background: #fef3c7;
+          background: var(--warning-bg);
           
-          .stat-value { color: #92400e; }
+          .stat-value { color: var(--warning-fg); }
         }
         
         &.approved {
-          background: #d1fae5;
+          background: var(--success-bg);
           
-          .stat-value { color: #065f46; }
+          .stat-value { color: var(--success-fg); }
         }
         
         &.rejected {
-          background: #fee2e2;
+          background: var(--danger-bg);
           
-          .stat-value { color: #991b1b; }
+          .stat-value { color: var(--danger-fg); }
         }
         
         .stat-value {
@@ -120,23 +120,23 @@
     transition: all 0.3s ease;
     
     &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-md);
     }
     
     &.status-pending {
-      border-left: 4px solid #f59e0b;
+      border-left: 4px solid var(--warning-solid);
     }
     
     &.status-under_review {
-      border-left: 4px solid #3b82f6;
+      border-left: 4px solid var(--info-solid);
     }
     
     &.status-approved {
-      border-left: 4px solid #10b981;
+      border-left: 4px solid var(--success-solid);
     }
     
     &.status-rejected {
-      border-left: 4px solid #ef4444;
+      border-left: 4px solid var(--danger-solid);
     }
   }
   
@@ -182,34 +182,6 @@
       }
     }
     
-    .status-badge {
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      
-      &.badge-pending {
-        background: #fef3c7;
-        color: #92400e;
-      }
-      
-      &.badge-under_review {
-        background: #dbeafe;
-        color: #1d4ed8;
-      }
-      
-      &.badge-approved {
-        background: #d1fae5;
-        color: #065f46;
-      }
-      
-      &.badge-rejected {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-    }
   }
   
   .bid-body {
@@ -267,17 +239,17 @@
         justify-content: center;
         
         &.high {
-          background: linear-gradient(135deg, #047857 0%, #064e3b 100%);
+          background: linear-gradient(135deg, var(--success-fg) 0%, var(--success-fg) 100%);
           color: white;
         }
         
         &.medium {
-          background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+          background: linear-gradient(135deg, var(--warning-fg) 0%, var(--warning-fg) 100%);
           color: white;
         }
         
         &.low {
-          background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+          background: linear-gradient(135deg, var(--danger-solid) 0%, var(--danger-fg) 100%);
           color: white;
         }
         
@@ -302,21 +274,21 @@
     
     .rejection-reason {
       padding: 14px 16px;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: var(--danger-bg);
+      border: 1px solid var(--danger-bg);
       border-radius: 10px;
       
       .reason-label {
         font-size: 12px;
         font-weight: 600;
-        color: #991b1b;
+        color: var(--danger-fg);
         display: block;
         margin-bottom: 4px;
       }
       
       .reason-text {
         font-size: 14px;
-        color: #7f1d1d;
+        color: var(--danger-fg);
       }
     }
   }

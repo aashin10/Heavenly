@@ -41,10 +41,10 @@
 
   &.btn-primary {
     background: var(--primary-color);
-    color: #fff;
+    color: var(--white);
 
     &:hover {
-      background: var(--primary-dark, #002647);
+      background: var(--primary-dark, var(--navy-900));
     }
   }
 
@@ -67,7 +67,7 @@
   margin-bottom: 32px;
 
   .stat-card {
-    background: #fff;
+    background: var(--white);
     border: 1px solid var(--gray-200);
     border-radius: 12px;
     padding: 20px;
@@ -78,12 +78,12 @@
     &:hover {
       border-color: var(--gray-300);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow-md);
     }
 
     &.active {
       border-color: var(--primary-color);
-      background: #f0f7ff;
+      background: var(--navy-50);
     }
 
     &.success .stat-value {
@@ -112,7 +112,7 @@
   flex-direction: column;
   gap: 16px;
   margin-bottom: 24px;
-  background: #fff;
+  background: var(--white);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid var(--gray-200);
@@ -140,7 +140,7 @@
       &:focus {
         outline: none;
         border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(0, 54, 100, 0.1);
+        box-shadow: var(--ring-brand);
       }
     }
   }
@@ -153,7 +153,7 @@
     .filter-tab {
       padding: 8px 16px;
       border: 1px solid var(--gray-200);
-      background: #fff;
+      background: var(--white);
       border-radius: 20px;
       font-size: 13px;
       color: var(--gray-600);
@@ -166,7 +166,7 @@
 
       &.active {
         background: var(--primary-color);
-        color: #fff;
+        color: var(--white);
         border-color: var(--primary-color);
       }
 
@@ -186,7 +186,7 @@
 }
 
 .bid-card {
-  background: #fff;
+  background: var(--white);
   border: 1px solid var(--gray-200);
   border-radius: 12px;
   padding: 20px;
@@ -195,7 +195,7 @@
 
   &:hover {
     border-color: var(--gray-300);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md);
 
     .view-details {
       color: var(--primary-color);
@@ -264,28 +264,28 @@
     border-radius: 0 0 12px 12px;
 
     &.success {
-      background: #ecfdf5;
-      border-top: 1px solid #a7f3d0;
+      background: var(--success-bg);
+      border-top: 1px solid var(--success-bg);
 
       .award-badge {
         font-size: 14px;
         font-weight: 500;
-        color: #065f46;
+        color: var(--success-fg);
       }
 
       .shortlist-notice {
         font-size: 14px;
-        color: #047857;
+        color: var(--success-fg);
       }
     }
 
     &.rejected {
-      background: #fef2f2;
-      border-top: 1px solid #fecaca;
+      background: var(--danger-bg);
+      border-top: 1px solid var(--danger-bg);
 
       .rejection-notice {
         font-size: 14px;
-        color: #991b1b;
+        color: var(--danger-fg);
       }
     }
   }
@@ -321,52 +321,11 @@
   }
 }
 
-// Status Badges
-.status-badge {
-  display: inline-flex;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.badge-gray {
-  background: var(--gray-100);
-  color: var(--gray-600);
-}
-
-.badge-blue {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.badge-purple {
-  background: #ede9fe;
-  color: #6d28d9;
-}
-
-.badge-yellow {
-  background: #fef3c7;
-  color: #92400e;
-}
-
-.badge-green {
-  background: #d1fae5;
-  color: #065f46;
-}
-
-.badge-red {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
 // Empty State
 .empty-state {
   text-align: center;
   padding: 60px 40px;
-  background: #fff;
+  background: var(--white);
   border-radius: 12px;
   border: 1px solid var(--gray-200);
 

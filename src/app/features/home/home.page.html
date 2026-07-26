@@ -4,23 +4,94 @@
     <div class="hero-grid">
       <div class="hero-content">
         <h1 class="hero-title">
-          Your Trusted Partner in Manpower Solutions
+          Manpower, industrial &amp; technical services — under one roof
         </h1>
         <p class="hero-subtitle">
-          Connecting talented professionals with exceptional opportunities across diverse industries
+          Heavenly Corporation supplies skilled manpower, delivers transformer rewinding contracts,
+          and connects you with verified vendors for technical services across India.
         </p>
         <div class="hero-buttons">
-          <a routerLink="/login" class="btn-primary">
-            Get Started
+          <a routerLink="/services" class="btn-primary">
+            Request a Service
           </a>
-          <a routerLink="/about" class="btn-secondary">
-            Learn More
+          <a routerLink="/contact" class="btn-secondary">
+            Hire Manpower
           </a>
         </div>
       </div>
-      <div class="hero-image">
-        <img src="assets/logo.png" alt="Heavenly Corporation" />
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-panel">
+          <div class="hero-panel__item">
+            <app-icon name="users" [size]="26" />
+            <span>Manpower Supply</span>
+          </div>
+          <div class="hero-panel__item">
+            <app-icon name="cable" [size]="26" />
+            <span>Transformer Rewinding</span>
+          </div>
+          <div class="hero-panel__item">
+            <app-icon name="wrench" [size]="26" />
+            <span>Technical Services</span>
+          </div>
+          <div class="hero-panel__item">
+            <app-icon name="shield-check" [size]="26" />
+            <span>Verified Vendors</span>
+          </div>
+        </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- Audience Paths -->
+<section class="paths-section">
+  <div class="container">
+    <div class="paths-grid">
+      @for (path of audiencePaths; track path.title) {
+        <a [routerLink]="path.link" [queryParams]="path.queryParams ?? null" class="path-card">
+          <span class="path-icon"><app-icon [name]="path.icon" [size]="24" /></span>
+          <h3 class="path-title">{{ path.title }}</h3>
+          <p class="path-description">{{ path.description }}</p>
+          <span class="path-cta">
+            {{ path.cta }}
+            <app-icon name="arrow-right" [size]="16" />
+          </span>
+        </a>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Business Streams -->
+<section class="streams-section">
+  <div class="container">
+    <h2 class="section-title">What We Do</h2>
+    <p class="section-subtitle">
+      Three core streams today — and a growing platform built to take on more.
+    </p>
+    <div class="streams-grid">
+      @for (stream of businessStreams; track stream.title) {
+        <div class="stream-card">
+          <span class="stream-icon"><app-icon [name]="stream.icon" [size]="26" /></span>
+          <h3 class="stream-title">{{ stream.title }}</h3>
+          <p class="stream-description">{{ stream.description }}</p>
+          <a [routerLink]="stream.link" [fragment]="stream.fragment" class="stream-link">
+            Learn more
+            <app-icon name="arrow-right" [size]="16" />
+          </a>
+        </div>
+      }
+    </div>
+    <div class="trust-strip">
+      @for (point of trustPoints; track point.label) {
+        <div class="trust-item">
+          <app-icon [name]="point.icon" [size]="22" />
+          <div class="trust-text">
+            <span class="trust-label">{{ point.label }}</span>
+            <span class="trust-sublabel">{{ point.sublabel }}</span>
+          </div>
+        </div>
+      }
     </div>
   </div>
 </section>
@@ -37,21 +108,19 @@
     <div class="services-icons-grid">
       @for (service of serviceIcons; track service.id) {
         <a [routerLink]="['/services']" [fragment]="service.id" class="service-icon-card">
-          <div class="service-icon-emoji">{{ service.icon }}</div>
+          <span class="service-icon"><app-icon [name]="service.icon" [size]="32" /></span>
           <div class="service-icon-name">{{ service.name }}</div>
         </a>
       }
     </div>
     <div class="services-cta">
       <a routerLink="/services" class="btn-primary btn-large">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
+        <app-icon name="search" [size]="20" />
         Explore Services
       </a>
       <a routerLink="/vendor-signup" class="btn-subtle">
-        For Vendors: Register Here →
+        For Vendors: Register Here
+        <app-icon name="arrow-right" [size]="16" />
       </a>
     </div>
   </div>
@@ -67,7 +136,7 @@
     <div class="domains-grid">
       @for (domain of domains; track domain.name) {
         <div class="domain-card">
-          <div class="domain-icon">{{ domain.icon }}</div>
+          <span class="domain-icon"><app-icon [name]="domain.icon" [size]="32" /></span>
           <div class="domain-name">{{ domain.name }}</div>
         </div>
       }
@@ -86,46 +155,7 @@
       @for (feature of features; track feature.title) {
         <div class="feature-card">
           <div class="feature-icon">
-            @switch (feature.icon) {
-              @case ('briefcase') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                </svg>
-              }
-              @case ('users') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              }
-              @case ('search') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-              }
-              @case ('trending-up') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
-                  <polyline points="17 6 23 6 23 12"/>
-                </svg>
-              }
-              @case ('shield') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-              }
-              @case ('globe') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="2" y1="12" x2="22" y2="12"/>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                </svg>
-              }
-            }
+            <app-icon [name]="feature.icon" [size]="28" />
           </div>
           <h3 class="feature-title">{{ feature.title }}</h3>
           <p class="feature-description">{{ feature.description }}</p>

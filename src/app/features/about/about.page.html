@@ -3,7 +3,7 @@
   <div class="container hero-container">
     <h1 class="hero-title">About Heavenly Corporation</h1>
     <p class="hero-subtitle">
-      Your partner in connecting exceptional talent with outstanding opportunities
+      One partner for manpower supply, transformer rewinding, and technical services
     </p>
   </div>
 </section>
@@ -15,13 +15,19 @@
       <div class="overview-content">
         <h2 class="section-title-left">Who We Are</h2>
         <p class="overview-text">
-          Heavenly Corporation is a leading manpower solutions provider dedicated to connecting skilled professionals with top employers across various industries. With years of expertise in the recruitment industry, we understand the unique challenges faced by both job seekers and employers.
+          Heavenly Corporation is a multi-service company built on one simple promise — where experience
+          and expertise blend seamlessly with dedication and timelines. We operate across three core
+          streams and are structured to take on more as we grow.
         </p>
         <p class="overview-text">
-          Our comprehensive approach to manpower supply ensures that we deliver qualified candidates who not only meet the technical requirements but also align with the organizational culture and values of our client companies.
+          On the manpower side, we source, interview and supply skilled professionals across IT,
+          hospitality, HR, masonry, plumbing and servicing roles. On the projects side, we take on
+          transformer rewinding contracts and technical services — delivering them through a vetted
+          network of specialists and verified vendors.
         </p>
         <p class="overview-text">
-          We specialize in multiple domains including IT, Hospitality, HR, Masonry, Plumbing, and Servicing Staff, providing tailored solutions that meet the specific needs of each industry sector.
+          Whether you are hiring staff, awarding a contract, or requesting a one-off service, you work
+          with a single accountable partner focused on quality and agreed timelines.
         </p>
       </div>
       <div class="stats-container">
@@ -38,6 +44,23 @@
   </div>
 </section>
 
+<!-- What We Do -->
+<section class="streams-section">
+  <div class="container">
+    <h2 class="section-title">What We Do</h2>
+    <p class="section-subtitle">Three streams, one accountable partner.</p>
+    <div class="streams-grid">
+      @for (stream of streams; track stream.title) {
+        <div class="stream-card">
+          <span class="stream-icon"><app-icon [name]="stream.icon" [size]="26" /></span>
+          <h3 class="stream-title">{{ stream.title }}</h3>
+          <p class="stream-description">{{ stream.description }}</p>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
 <!-- Values Section -->
 <section class="values-section">
   <div class="container">
@@ -46,40 +69,37 @@
       @for (value of values; track value.title) {
         <div class="value-card">
           <div class="value-icon">
-            @switch (value.icon) {
-              @case ('target') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <circle cx="12" cy="12" r="6"/>
-                  <circle cx="12" cy="12" r="2"/>
-                </svg>
-              }
-              @case ('eye') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-              }
-              @case ('award') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="8" r="7"/>
-                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
-                </svg>
-              }
-              @case ('users') {
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-              }
-            }
+            <app-icon [name]="value.icon" [size]="28" />
           </div>
           <h3 class="value-title">{{ value.title }}</h3>
           <p class="value-description">{{ value.description }}</p>
         </div>
       }
+    </div>
+  </div>
+</section>
+
+<!-- Leadership -->
+<section class="leadership-section">
+  <div class="container leadership-inner">
+    <img
+      src="assets/sajani-thomas.jpeg"
+      alt="Sajani Thomas, Proprietor of Heavenly Corporation"
+      class="leader-photo"
+      width="350"
+      height="429"
+      loading="lazy"
+    />
+    <div class="leader-content">
+      <h2 class="section-title-left">Leadership</h2>
+      <p class="leader-name">Sajani Thomas</p>
+      <p class="leader-role">Proprietor</p>
+      <p class="leader-text">
+        Heavenly Corporation is owner-led, with direct oversight of client requirements, vendor
+        quality and delivery timelines across all three service streams. That means a single point
+        of accountability from the first conversation through to completion.
+      </p>
+      <a routerLink="/contact" class="btn-outline btn-outline--primary">Get in touch</a>
     </div>
   </div>
 </section>

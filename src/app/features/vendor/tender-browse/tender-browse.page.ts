@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { VendorTenderService } from '../vendor.service';
 import { PublishedTender, TenderFilters, FilterOptions } from '../vendor.model';
 import { TenderCardComponent } from '../../../shared/components/tender-card/tender-card.component';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-tender-browse-page',
   standalone: true,
-  imports: [FormsModule, TenderCardComponent],
+  imports: [FormsModule, TenderCardComponent, IconComponent, EmptyStateComponent],
   templateUrl: './tender-browse.page.html',
   styleUrl: './tender-browse.page.scss'
 })

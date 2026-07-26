@@ -1,0 +1,127 @@
+<div class="request-detail-page">
+  @if (request(); as req) {
+    <header class="page-header">
+      <div class="container">
+        <a routerLink="/my-requests" class="back-link">
+          <app-icon name="arrow-left" [size]="16" /> My Requests
+        </a>
+        <div class="header-main">
+          <div>
+            <span class="request-number">{{ req.requestNumber || req.id }}</span>
+            <h1 class="page-title">{{ req.serviceName }}</h1>
+            <span class="request-category">{{ categoryLabel(req.category) }}</span>
+          </div>
+          <app-status-badge [status]="req.status" [showIcon]="true" />
+        </div>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="container">
+        <!-- One-time submission confirmation -->
+        @if (justSubmitted()) {
+          <div class="submitted-banner" role="status">
+            <div class="submitted-head">
+              <app-icon name="circle-check" [size]="20" />
+              <h2>Request submitted</h2>
+              <button type="button" class="submitted-dismiss" (click)="dismissSubmittedBanner()"
+                      aria-label="Dismiss">
+                <app-icon name="x" [size]="16" />
+              </button>
+            </div>
+            <p>
+              Your request <strong>{{ req.requestNumber || req.id }}</strong> is with our team for
+              review. We'll turn it into a tender for vendors to bid on — you'll see status updates
+              here and by email.
+            </p>
+          </div>
+        }
+
+        <!-- Changes required banner -->
+        @if (canResubmit()) {
+          <div class="changes-banner">
+            <div class="changes-head">
+              <app-icon name="circle-alert" [size]="20" />
+              <h2>Changes requested</h2>
+            </div>
+            @if (req.reviewNote) {
+              <p class="changes-note">{{ req.reviewNote }}</p>
+            } @else {
+              <p class="changes-note">Our team has asked for some changes before this request can proceed.</p>
+            }
+            <button type="button" class="btn-primary" (click)="editAndResubmit()">
+              <app-icon name="pencil" [size]="16" /> Edit &amp; Resubmit
+            </button>
+          </div>
+        }
+
+        <div class="detail-grid">
+          <!-- Submitted details -->
+          <section class="detail-main">
+            <h2 class="section-heading">Request Details</h2>
+            @for (section of sections(); track section.stepNumber) {
+              <div class="detail-section">
+                <h3 class="detail-section-title">{{ section.title }}</h3>
+                <dl class="field-list">
+                  @for (field of section.fields; track field.label) {
+                    <div class="field-row">
+                      <dt>{{ field.label }}</dt>
+                      <dd>
+                        @if (field.type === 'list') {
+                          <ul class="field-list-values">
+                            @for (item of field.value.split(', '); track item) {
+                              <li>{{ item }}</li>
+                            }
+                          </ul>
+                        } @else {
+                          {{ field.value }}
+                        }
+                      </dd>
+                    </div>
+                  }
+                </dl>
+              </div>
+            } @empty {
+              <p class="empty-detail">No details were captured for this request.</p>
+            }
+          </section>
+
+          <!-- Timeline -->
+          <aside class="detail-side">
+            <h2 class="section-heading">Status Timeline</h2>
+            <ol class="timeline">
+              @for (event of timeline(); track $index; let last = $last) {
+                <li class="timeline-item" [class.current]="last">
+                  <span class="timeline-dot"></span>
+                  <div class="timeline-body">
+                    <span class="timeline-status">{{ eventLabel(event.status) }}</span>
+                    <span class="timeline-date">{{ event.at | appDateTime }}</span>
+                    @if (event.note) {
+                      <span class="timeline-note">{{ event.note }}</span>
+                    }
+                  </div>
+                </li>
+              }
+            </ol>
+          </aside>
+        </div>
+
+        <!-- Actions -->
+        @if (canCancel()) {
+          <div class="detail-actions">
+            <button type="button" class="btn-danger" (click)="cancel()">
+              Cancel Request
+            </button>
+          </div>
+        }
+      </div>
+    </main>
+  } @else if (notFound()) {
+    <div class="container not-found-block">
+      <app-icon name="circle-alert" [size]="40" />
+      <h1>Request not found</h1>
+      <p>This request doesn't exist or is no longer available.</p>
+      <a routerLink="/my-requests" class="btn-primary">Back to My Requests</a>
+    </div>
+  }
+</div>

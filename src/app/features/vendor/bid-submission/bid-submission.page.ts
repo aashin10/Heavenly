@@ -4,11 +4,12 @@ import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule } fr
 import { VendorTenderService } from '../vendor.service';
 import { PublishedTender, BidFormData, WorkReference, PriceItem } from '../vendor.model';
 import { ToastService } from '../../../core/services/toast.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-bid-submission-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, IconComponent],
   templateUrl: './bid-submission.page.html',
   styleUrl: './bid-submission.page.scss'
 })

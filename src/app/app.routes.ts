@@ -1,10 +1,11 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { guestGuard } from './core/guards/guest.guard';
-import { 
-  serviceRequesterGuard, 
+import {
+  serviceRequesterGuard,
+  vendorGuard,
   vendorVerifiedGuard,
-  serviceGuestGuard 
+  serviceGuestGuard
 } from './core/guards/service-auth.guard';
 
 export const routes: Routes = [
@@ -19,6 +20,10 @@ export const routes: Routes = [
   {
     path: 'contact',
     loadChildren: () => import('./features/contact/contact.routes').then(m => m.CONTACT_ROUTES)
+  },
+  {
+    path: 'careers',
+    loadChildren: () => import('./features/careers/careers.routes').then(m => m.CAREERS_ROUTES)
   },
   {
     path: 'login',
@@ -63,9 +68,26 @@ export const routes: Routes = [
     canActivate: [serviceRequesterGuard]
   },
   {
+    path: 'service-requester-profile',
+    loadChildren: () => import('./features/service-requester-profile/service-requester-profile.routes').then(m => m.SERVICE_REQUESTER_PROFILE_ROUTES),
+    canActivate: [serviceRequesterGuard]
+  },
+  {
+    path: 'my-requests',
+    loadChildren: () => import('./features/my-requests/my-requests.routes').then(m => m.MY_REQUESTS_ROUTES),
+    canActivate: [serviceRequesterGuard]
+  },
+  {
     path: 'vendor-dashboard',
     loadChildren: () => import('./features/dashboard/vendor-dashboard/vendor-dashboard.routes').then(m => m.VENDOR_DASHBOARD_ROUTES),
     canActivate: [vendorVerifiedGuard]
+  },
+  {
+    // vendorGuard, deliberately not vendorVerifiedGuard: a *pending* vendor
+    // completing this profile is how they get verified.
+    path: 'vendor-profile',
+    loadChildren: () => import('./features/vendor-profile/vendor-profile.routes').then(m => m.VENDOR_PROFILE_ROUTES),
+    canActivate: [vendorGuard]
   },
   // Vendor tender and bid routes
   {
@@ -78,7 +100,10 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/verification-pending/verification-pending.routes').then(m => m.VERIFICATION_PENDING_ROUTES)
   },
   {
+    // Real 404 — the old silent redirect to '' let fourteen dead links ship
+    // undetected (docs/UI_ISSUES.md §1). A missing page must fail loudly.
     path: '**',
-    redirectTo: ''
+    loadComponent: () => import('./features/not-found/not-found.page').then(m => m.NotFoundPageComponent),
+    title: 'Page Not Found'
   }
 ];

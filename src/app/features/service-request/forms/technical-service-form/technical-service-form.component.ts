@@ -7,6 +7,7 @@ import { FormStepperComponent } from '../../../../shared/components/form-stepper
 import { FormProgressComponent } from '../../../../shared/components/form-progress/form-progress.component';
 import { AutoSaveIndicatorComponent } from '../../../../shared/components/auto-save-indicator/auto-save-indicator.component';
 import { FileUploadComponent } from '../../../../shared/components/file-upload/file-upload.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { 
   EQUIPMENT_TYPES, 
   VOLTAGE_REQUIREMENTS, 
@@ -31,7 +32,8 @@ interface CustomField {
     FormStepperComponent,
     FormProgressComponent,
     AutoSaveIndicatorComponent,
-    FileUploadComponent
+    FileUploadComponent,
+    IconComponent
   ],
   templateUrl: './technical-service-form.component.html',
   styleUrl: './technical-service-form.component.scss'

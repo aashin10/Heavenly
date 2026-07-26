@@ -5,7 +5,7 @@
     
     .success-banner {
       padding: 40px;
-      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      background: linear-gradient(135deg, var(--success-bg) 0%, var(--success-bg) 100%);
       border-radius: 16px;
       margin-bottom: 32px;
       
@@ -17,13 +17,13 @@
       h2 {
         font-size: 24px;
         font-weight: 700;
-        color: #065f46;
+        color: var(--success-fg);
         margin: 0 0 8px 0;
       }
       
       p {
         font-size: 16px;
-        color: #047857;
+        color: var(--success-fg);
         margin: 0;
       }
     }
@@ -159,7 +159,7 @@
   
   // Winner Summary
   .winner-summary {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    background: linear-gradient(135deg, var(--warning-bg) 0%, var(--warning-bg) 100%);
     border-radius: 16px;
     padding: 24px;
     margin-bottom: 24px;
@@ -176,14 +176,14 @@
         border-radius: 20px;
         font-size: 13px;
         font-weight: 600;
-        color: #92400e;
+        color: var(--warning-fg);
       }
       
       .btn-change {
         padding: 6px 12px;
         background: transparent;
-        color: #92400e;
-        border: 1px solid #f59e0b;
+        color: var(--warning-fg);
+        border: 1px solid var(--warning-solid);
         border-radius: 6px;
         font-size: 12px;
         cursor: pointer;
@@ -316,7 +316,7 @@
         &:focus {
           outline: none;
           border-color: var(--primary-color);
-          box-shadow: 0 0 0 3px rgba(0, 54, 100, 0.1);
+          box-shadow: var(--ring-brand);
         }
         
         &::placeholder {
@@ -391,7 +391,7 @@
       align-items: center;
       gap: 8px;
       padding: 14px 28px;
-      background: linear-gradient(135deg, #b45309 0%, #92400e 100%);
+      background: linear-gradient(135deg, var(--warning-fg) 0%, var(--warning-fg) 100%);
       color: white;
       border: none;
       border-radius: 10px;

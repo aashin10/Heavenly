@@ -1,7 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ContactFormData, SubjectOption } from './contact.model';
 import { ToastService } from '../../core/services/toast.service';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 const INITIAL_FORM_DATA: ContactFormData = {
   name: '',
@@ -14,15 +16,21 @@ const INITIAL_FORM_DATA: ContactFormData = {
 @Component({
   selector: 'app-contact-page',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent],
   templateUrl: './contact.page.html',
   styleUrl: './contact.page.scss'
 })
 export class ContactPageComponent {
   private readonly toastService = inject(ToastService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   formData = signal<ContactFormData>({ ...INITIAL_FORM_DATA });
   isSubmitting = signal<boolean>(false);
+
+  /** Google Maps embed pinned to the office's exact coordinates (no API key required). */
+  readonly mapUrl: SafeResourceUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
+    'https://www.google.com/maps?q=28.6581170,77.1182416&output=embed'
+  );
 
   readonly subjectOptions: SubjectOption[] = [
     { value: '', label: 'Select a subject' },

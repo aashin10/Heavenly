@@ -3,12 +3,10 @@
   
   <!-- Header -->
   <div class="detail-header">
-    <button class="btn-back" (click)="goBack()">← Back to Browse</button>
+    <button class="btn-back" (click)="goBack()"><app-icon name="arrow-left" [size]="16" /> Back to Browse</button>
     <div class="header-info">
       <div class="tender-id">Tender #{{ tender.tenderId }}</div>
-      <span class="status-badge" [class.closing-soon]="isClosingSoon()" [class.closed]="isBidWindowClosed()">
-        {{ getStatusLabel() }}
-      </span>
+      <app-status-badge [status]="bidWindowStatus()" />
     </div>
   </div>
   
@@ -18,7 +16,8 @@
       <span>Posted {{ tender.publishedAt | timeAgo }}</span>
       <span class="separator">•</span>
       <span class="deadline" [class.urgent]="isClosingSoon()">
-        ⏰ Closes {{ tender.bidWindowEnd | timeRemaining }}
+        <app-icon name="clock" [size]="16" />
+        @if (isBidWindowClosed()) { Bidding closed } @else { Closes {{ tender.bidWindowEnd | timeRemaining }} }
       </span>
     </div>
   </div>
@@ -41,15 +40,15 @@
           </div>
           <div class="summary-item">
             <span class="label">Location</span>
-            <span class="value">📍 {{ tender.location }}</span>
+            <span class="value"><app-icon name="map-pin" [size]="16" /> {{ tender.location }}</span>
           </div>
           <div class="summary-item">
             <span class="label">Budget</span>
-            <span class="value">💰 {{ getBudgetDisplay() }}</span>
+            <span class="value"><app-icon name="indian-rupee" [size]="16" /> {{ getBudgetDisplay() }}</span>
           </div>
           <div class="summary-item">
             <span class="label">Timeline</span>
-            <span class="value">📅 {{ tender.expectedTimeline }}</span>
+            <span class="value"><app-icon name="calendar" [size]="16" /> {{ tender.expectedTimeline }}</span>
           </div>
         </div>
       </div>
@@ -62,21 +61,21 @@
             <span class="dot"></span>
             <div class="timeline-content">
               <span class="date-label">Published</span>
-              <span class="date-value">{{ tender.publishedAt | date:'mediumDate' }}</span>
+              <span class="date-value">{{ tender.publishedAt | appDate }}</span>
             </div>
           </div>
           <div class="timeline-item completed">
             <span class="dot"></span>
             <div class="timeline-content">
               <span class="date-label">Bid Opens</span>
-              <span class="date-value">{{ tender.bidWindowStart | date:'mediumDate' }}</span>
+              <span class="date-value">{{ tender.bidWindowStart | appDate }}</span>
             </div>
           </div>
           <div class="timeline-item" [class.active]="!isBidWindowClosed()">
             <span class="dot"></span>
             <div class="timeline-content">
               <span class="date-label">Bid Closes</span>
-              <span class="date-value">{{ tender.bidWindowEnd | date:'medium' }}</span>
+              <span class="date-value">{{ tender.bidWindowEnd | appDateTime }}</span>
             </div>
           </div>
         </div>
@@ -93,7 +92,7 @@
         
         @if (eligibility().eligible) {
           <div class="eligibility-status success">
-            <div class="status-icon">✓</div>
+            <div class="status-icon"><app-icon name="check" [size]="16" /></div>
             <div>
               <p><strong>You are eligible</strong></p>
               <p class="subtext">to bid on this tender</p>
@@ -101,7 +100,7 @@
           </div>
         } @else {
           <div class="eligibility-status warning">
-            <div class="status-icon">⚠️</div>
+            <div class="status-icon"><app-icon name="triangle-alert" [size]="16" /></div>
             <div>
               <p><strong>You may not be eligible</strong></p>
               <button class="btn-link" (click)="showEligibilityModal.set(true)">
@@ -127,13 +126,12 @@
             (click)="viewMyBid()">
             View Your Bid
           </button>
-          <div class="bid-submitted-notice">
-            ✓ Bid submitted on {{ bidStatus().bidId }}
-          </div>
+          <div class="bid-submitted-notice"><app-icon name="check" [size]="16" /> Bid submitted on {{ bidStatus().bidId }}</div>
         }
         
         <button class="btn btn-secondary btn-block" (click)="saveForLater()">
-          {{ isSaved() ? '★ Saved' : '☆ Save for Later' }}
+          <app-icon name="star" [size]="16" [class.icon-filled]="isSaved()" />
+          {{ isSaved() ? 'Saved' : 'Save for Later' }}
         </button>
         
         <button class="btn-link-subtle" (click)="markNotInterested()">
@@ -148,7 +146,7 @@
       
       <!-- Scope of Work -->
       <section class="detail-section">
-        <h2 class="section-title">📋 Scope of Work</h2>
+        <h2 class="section-title"><app-icon name="clipboard-list" [size]="16" /> Scope of Work</h2>
         <div class="section-content">
           <p class="scope-text">{{ tender.scopeSummary }}</p>
           
@@ -163,7 +161,7 @@
       
       <!-- Technical Requirements -->
       <section class="detail-section">
-        <h2 class="section-title">🔧 Technical Requirements</h2>
+        <h2 class="section-title"><app-icon name="wrench" [size]="16" /> Technical Requirements</h2>
         <div class="section-content">
           <ul class="requirements-list">
             @for (req of tender.technicalRequirements; track req) {
@@ -175,7 +173,7 @@
       
       <!-- Commercial Terms -->
       <section class="detail-section">
-        <h2 class="section-title">💰 Commercial Terms</h2>
+        <h2 class="section-title"><app-icon name="indian-rupee" [size]="16" /> Commercial Terms</h2>
         <div class="section-content">
           <div class="terms-grid">
             <div class="term-item">
@@ -192,14 +190,14 @@
       
       <!-- Documents & Attachments -->
       <section class="detail-section">
-        <h2 class="section-title">📎 Documents & Attachments</h2>
+        <h2 class="section-title"><app-icon name="paperclip" [size]="16" /> Documents & Attachments</h2>
         <div class="section-content">
           @if (tender.attachments && tender.attachments.length > 0) {
             <div class="attachments-list">
               @for (file of tender.attachments; track file.id) {
                 <div class="attachment-item">
                   <div class="file-info">
-                    <span class="file-icon">📄</span>
+                    <span class="file-icon"><app-icon name="file-text" [size]="16" /></span>
                     <span class="file-name">{{ file.name }}</span>
                     <span class="file-size">({{ file.size | fileSize }})</span>
                   </div>
@@ -218,7 +216,7 @@
       <!-- Pre-Bid Clarifications -->
       <section class="detail-section">
         <div class="section-header-with-action">
-          <h2 class="section-title">❓ Pre-Bid Clarifications</h2>
+          <h2 class="section-title"><app-icon name="circle-help" [size]="16" /> Pre-Bid Clarifications</h2>
           <button class="btn btn-outline btn-sm" (click)="openClarificationModal()">
             Ask a Question
           </button>
@@ -252,7 +250,7 @@
                     </div>
                   } @else {
                     <div class="answer pending">
-                      <span class="pending-label">⏳ Awaiting response from management</span>
+                      <span class="pending-label"><app-icon name="clock" [size]="14" /> Awaiting response from management</span>
                     </div>
                   }
                 </div>
@@ -294,13 +292,11 @@
             rows="6" 
             class="form-textarea"
             placeholder="Enter your question clearly..."></textarea>
-          <p class="field-hint">
-            💡 Tip: Be specific and clear in your question for a better response
-          </p>
+          <p class="field-hint"><app-icon name="lightbulb" [size]="16" /> Tip: Be specific and clear in your question for a better response</p>
         </div>
         
         <div class="info-box">
-          <span class="icon">ℹ️</span>
+          <span class="icon"><app-icon name="info" [size]="16" /></span>
           <div>
             <p><strong>Please note:</strong></p>
             <ul>
@@ -339,7 +335,7 @@
       
       <div class="modal-body">
         <div class="eligibility-warning">
-          <span class="warning-icon">⚠️</span>
+          <span class="warning-icon"><app-icon name="triangle-alert" [size]="16" /></span>
           <p>You may not meet all eligibility requirements for this tender.</p>
         </div>
         

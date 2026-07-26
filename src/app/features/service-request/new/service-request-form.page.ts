@@ -8,6 +8,7 @@ import { FORM_CONFIGS, ServiceFormConfig, DraftRestoreModalState } from '../serv
 import { TechnicalServiceFormComponent } from '../forms/technical-service-form/technical-service-form.component';
 import { MidComplexityFormComponent } from '../forms/mid-complexity-form/mid-complexity-form.component';
 import { QuickServiceFormComponent } from '../forms/quick-service-form/quick-service-form.component';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-service-request-form-page',
@@ -16,7 +17,8 @@ import { QuickServiceFormComponent } from '../forms/quick-service-form/quick-ser
     RouterLink,
     TechnicalServiceFormComponent,
     MidComplexityFormComponent,
-    QuickServiceFormComponent
+    QuickServiceFormComponent,
+    IconComponent
   ],
   templateUrl: './service-request-form.page.html',
   styleUrl: './service-request-form.page.scss'

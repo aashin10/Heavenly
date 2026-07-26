@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { EvaluationService } from '../evaluation.service';
 import { LiveTender, EvaluationBid } from '../evaluation.model';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-commercial-bid-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, IconComponent],
   template: `
     <div class="commercial-bid-detail-page">
       @if (loading()) {
@@ -21,7 +22,7 @@ import { LiveTender, EvaluationBid } from '../evaluation.model';
         <div class="page-header">
           <div class="header-nav">
             <a [routerLink]="['/management/evaluation', tender()?.id]" class="back-link">
-              <span class="back-icon">←</span>
+              <span class="back-icon"><app-icon name="arrow-left" [size]="18" /></span>
               Back to Evaluation
             </a>
           </div>
@@ -39,7 +40,7 @@ import { LiveTender, EvaluationBid } from '../evaluation.model';
           <!-- Pricing Summary -->
           <section class="detail-section">
             <h2>
-              <span class="section-icon">💰</span>
+              <span class="section-icon"><app-icon name="indian-rupee" [size]="18" /></span>
               Pricing Summary
             </h2>
             <div class="total-amount">
@@ -72,7 +73,7 @@ import { LiveTender, EvaluationBid } from '../evaluation.model';
           <!-- Payment Terms -->
           <section class="detail-section">
             <h2>
-              <span class="section-icon">📋</span>
+              <span class="section-icon"><app-icon name="clipboard-list" [size]="18" /></span>
               Payment Terms
             </h2>
             <div class="terms-grid">
@@ -90,7 +91,7 @@ import { LiveTender, EvaluationBid } from '../evaluation.model';
           <!-- Warranty & AMC -->
           <section class="detail-section">
             <h2>
-              <span class="section-icon">🛡️</span>
+              <span class="section-icon"><app-icon name="shield" [size]="18" /></span>
               Warranty & AMC
             </h2>
             <div class="terms-grid">
@@ -113,7 +114,7 @@ import { LiveTender, EvaluationBid } from '../evaluation.model';
           @if (lowestBid() && lowestBid()!.id !== b.id) {
             <section class="detail-section comparison-section">
               <h2>
-                <span class="section-icon">📊</span>
+                <span class="section-icon"><app-icon name="bar-chart-3" [size]="18" /></span>
                 Comparison with L1
               </h2>
               <div class="comparison-grid">
@@ -138,19 +139,19 @@ import { LiveTender, EvaluationBid } from '../evaluation.model';
         <div class="page-actions">
           @if (!b.shortlisted) {
             <button class="btn-shortlist" (click)="addToShortlist()">
-              <span class="icon">⭐</span>
+              <span class="icon"><app-icon name="star" [size]="18" /></span>
               Add to Shortlist
             </button>
           } @else {
             <button class="btn-remove-shortlist" (click)="removeFromShortlist()">
-              <span class="icon">✖</span>
+              <span class="icon"><app-icon name="x" [size]="18" /></span>
               Remove from Shortlist
             </button>
           }
         </div>
         } @else {
         <div class="not-found">
-          <div class="not-found-icon">🔍</div>
+          <div class="not-found-icon"><app-icon name="search" [size]="32" /></div>
           <h2>Bid Not Found</h2>
           <p>The requested bid could not be found.</p>
           <a routerLink="/management/evaluation" class="btn-back">Back to Dashboard</a>

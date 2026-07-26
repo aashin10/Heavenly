@@ -1,22 +1,24 @@
 import { Component, Input, forwardRef, OnInit } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-star-rating',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   template: `
     <div class="star-rating" [class.disabled]="disabled" [class.readonly]="readonly">
       @for (star of stars; track star) {
-        <span 
+        <span
           class="star"
-          [class.filled]="star <= rating"
+          [class.filled]="star <= (hoverRating || rating)"
+          [class.icon-filled]="star <= (hoverRating || rating)"
           [class.hover]="star <= hoverRating && !readonly"
           (click)="!readonly && !disabled && setRating(star)"
           (mouseenter)="!readonly && !disabled && (hoverRating = star)"
           (mouseleave)="hoverRating = 0">
-          {{ star <= (hoverRating || rating) ? '★' : '☆' }}
+          <app-icon name="star" [size]="22" />
         </span>
       }
       @if (showValue) {
@@ -32,16 +34,16 @@ import { CommonModule } from '@angular/common';
     }
     
     .star {
-      font-size: 24px;
+      display: inline-flex;
       cursor: pointer;
-      color: #d1d5db;
-      transition: all 0.15s ease;
+      color: var(--gray-300);
+      transition: transform 0.15s ease, color 0.15s ease;
       user-select: none;
     }
-    
-    .star.filled,
-    .star.hover {
-      color: #f59e0b;
+
+    /* Filled stars are solid; empty stars stay as outlines. */
+    .star.filled {
+      color: var(--warning-solid);
     }
     
     .star:hover {

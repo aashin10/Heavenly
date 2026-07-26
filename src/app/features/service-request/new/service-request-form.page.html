@@ -20,7 +20,7 @@
     <!-- Page Header -->
     <header class="page-header">
       <div class="header-content">
-        <span class="service-icon">{{ service()?.icon || '📋' }}</span>
+        <span class="service-icon"><app-icon [name]="service()?.icon || 'clipboard-list'" [size]="24" /></span>
         <div class="header-text">
           <h1>{{ service()?.name }}</h1>
           <p class="category-badge" [class]="category()">
@@ -74,7 +74,7 @@
   @if (restoreModal().isOpen) {
         <button type="button" class="modal-backdrop" (click)="onStartFresh()" (keydown.escape)="onStartFresh()" (keydown.enter)="onStartFresh()">
       <dialog open class="modal-content" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" aria-modal="true">
-        <div class="modal-icon">📄</div>
+        <div class="modal-icon"><app-icon name="file-text" [size]="32" /></div>
         <h2>Continue where you left off?</h2>
         <p class="modal-description">
           You have an incomplete request for this service.

@@ -23,7 +23,7 @@ import { WhatToExpectInfo, getWhatToExpect } from '../../../../shared/utils/serv
         >
           <!-- Header -->
           <div class="modal-header">
-            <div class="service-icon">{{ service?.icon || '📋' }}</div>
+            <div class="service-icon"><app-icon [name]="service?.icon || 'clipboard-list'" [size]="28" /></div>
             <h2 id="modal-title" class="modal-title">You selected: {{ service?.name }}</h2>
             <button 
               type="button" 
@@ -57,7 +57,7 @@ import { WhatToExpectInfo, getWhatToExpect } from '../../../../shared/utils/serv
             <!-- What You'll Need -->
             <div class="info-section">
               <h3 class="section-title">
-                <span class="section-icon">📋</span>
+                <span class="section-icon"><app-icon name="clipboard-list" [size]="16" /></span>
                 You'll need:
               </h3>
               <ul class="requirements-list">
@@ -70,7 +70,7 @@ import { WhatToExpectInfo, getWhatToExpect } from '../../../../shared/utils/serv
             <!-- What Happens Next -->
             <div class="info-section">
               <h3 class="section-title">
-                <span class="section-icon">✅</span>
+                <span class="section-icon"><app-icon name="circle-check" [size]="16" /></span>
                 What happens next:
               </h3>
               <ul class="next-steps-list">
@@ -111,7 +111,7 @@ import { WhatToExpectInfo, getWhatToExpect } from '../../../../shared/utils/serv
               class="btn btn-primary" 
               (click)="close(true)"
             >
-              Let's Begin →
+              Let's Begin <app-icon name="arrow-right" [size]="16" />
             </button>
           </div>
         </div>

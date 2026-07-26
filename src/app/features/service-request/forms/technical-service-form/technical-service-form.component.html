@@ -367,9 +367,7 @@
             @for (req of getTechnicalRequirements().controls; track $index) {
               <div class="list-item">
                 <input type="text" [formControl]="$any(req)" placeholder="Enter technical requirement">
-                <button type="button" class="btn-icon remove" (click)="removeTechnicalRequirement($index)" aria-label="Remove requirement">
-                  ✕
-                </button>
+                <button type="button" class="btn-icon remove" (click)="removeTechnicalRequirement($index)" aria-label="Remove requirement"><app-icon name="x" [size]="16" /></button>
               </div>
             }
             <button type="button" class="btn-add" (click)="addTechnicalRequirement()">
@@ -460,9 +458,7 @@
               <div class="list-item custom-field">
                 <input type="text" [formControl]="$any(field).controls.name" placeholder="Field name">
                 <input type="text" [formControl]="$any(field).controls.value" placeholder="Value">
-                <button type="button" class="btn-icon remove" (click)="removeCustomField($index)" aria-label="Remove field">
-                  ✕
-                </button>
+                <button type="button" class="btn-icon remove" (click)="removeCustomField($index)" aria-label="Remove field"><app-icon name="x" [size]="16" /></button>
               </div>
             }
             <button type="button" class="btn-add" (click)="addCustomField()">
@@ -770,12 +766,12 @@
       <div class="right-actions">
         @if (canGoBack()) {
           <button type="button" class="btn btn-secondary" (click)="previousStep()">
-            ← Back
+            <app-icon name="arrow-left" [size]="16" /> Back
           </button>
         }
         @if (canGoNext()) {
           <button type="button" class="btn btn-primary" (click)="nextStep()">
-            Next →
+            Next <app-icon name="arrow-right" [size]="16" />
           </button>
         }
         @if (isLastStep()) {

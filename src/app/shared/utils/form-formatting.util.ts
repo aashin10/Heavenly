@@ -1,5 +1,7 @@
 import { ServiceRequestDraft } from '../../core/services/draft.service';
+import { ServiceCategory } from '../../core/models/service.model';
 import { FORM_CONFIGS } from '../../features/service-request/service-request.model';
+import { formatAppDate } from './date-format.util';
 
 export interface PreviewField {
   label: string;
@@ -14,20 +16,34 @@ export interface PreviewSection {
 }
 
 export function formatFormData(draft: ServiceRequestDraft): PreviewSection[] {
-  const formData = draft.formData as Record<string, Record<string, unknown>>;
-  const config = FORM_CONFIGS[draft.category];
+  return formatCategoryFormData(draft.category, draft.formData, draft.totalSteps);
+}
+
+/**
+ * Same read-back as {@link formatFormData}, but from the category + form data
+ * directly — used by the request-detail screen, which renders a submitted
+ * request (a `ServiceRequestSubmission`, which has no `totalSteps`).
+ */
+export function formatCategoryFormData(
+  category: ServiceCategory,
+  rawFormData: Record<string, unknown>,
+  totalSteps?: number
+): PreviewSection[] {
+  const formData = rawFormData as Record<string, Record<string, unknown>>;
+  const config = FORM_CONFIGS[category];
+  const steps = totalSteps ?? config.totalSteps;
   const sections: PreviewSection[] = [];
 
   // Process each step
-  for (let i = 1; i <= draft.totalSteps; i++) {
+  for (let i = 1; i <= steps; i++) {
     const stepData = formData[`step${i}`];
     if (!stepData) continue;
 
     const fields: PreviewField[] = [];
-    
+
     for (const [key, value] of Object.entries(stepData)) {
       if (shouldSkipField(key, value)) continue;
-      
+
       fields.push({
         label: formatLabel(key),
         value: formatValue(key, value),
@@ -116,16 +132,9 @@ function formatObjectValue(value: object): string {
 }
 
 function formatDateValue(value: string): string {
-  try {
-    const date = new Date(value);
-    return date.toLocaleDateString('en-IN', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
-    });
-  } catch {
-    return value;
-  }
+  // Fall back to the raw value rather than an em-dash: this renders form data
+  // back to the user, where showing what they typed beats showing nothing.
+  return formatAppDate(value, value);
 }
 
 function getFieldType(_key: string, value: unknown): 'text' | 'list' | 'file' {

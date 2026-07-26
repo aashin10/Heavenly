@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { humanizeEnum } from '../../shared/utils/humanize.util';
 import {
   PublishedTender,
   Bid,
@@ -480,9 +481,7 @@ export class VendorTenderService {
   }
 
   private formatServiceType(type: string): string {
-    return type.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+    return humanizeEnum(type);
   }
 
   // ==================== MOCK DATA ====================

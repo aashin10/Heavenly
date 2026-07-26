@@ -1,20 +1,23 @@
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { DatePipe, CurrencyPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { ServiceAuthService } from '../../../core/services/service-auth.service';
 import { Vendor } from '../../../core/models/service.model';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { deadlineLabel, isUrgent } from '../../../shared/utils/deadline.util';
+import { computeProfileSections } from '../../../shared/utils/vendor-profile-completion.util';
+import { LogoComponent } from '../../../shared/components/logo/logo.component';
 import {
   TenderOpportunity,
   VendorBid,
   VendorDashboardStats,
-  ProfileSection,
-  PROFILE_SECTIONS,
 } from './vendor-dashboard.model';
 
 @Component({
   selector: 'app-vendor-dashboard-page',
   standalone: true,
-  imports: [RouterLink, DatePipe, CurrencyPipe],
+  imports: [RouterLink, CurrencyPipe, IconComponent, LogoComponent, AppDatePipe],
   templateUrl: './vendor-dashboard.page.html',
   styleUrl: './vendor-dashboard.page.scss',
 })
@@ -31,7 +34,6 @@ export class VendorDashboardPageComponent implements OnInit {
     myBids: 0,
     wonBids: 0,
     activeProjects: 0,
-    profileCompletion: 0,
   });
 
   // Tender opportunities
@@ -40,8 +42,9 @@ export class VendorDashboardPageComponent implements OnInit {
   // My bids
   myBids = signal<VendorBid[]>([]);
 
-  // Profile sections
-  profileSections = signal<ProfileSection[]>(PROFILE_SECTIONS);
+  // Profile sections — derived from the vendor record via the shared rules,
+  // so this checklist, the ring and /vendor-profile can never disagree.
+  profileSections = computed(() => computeProfileSections(this.currentUser()));
 
   // Computed values
   greeting = computed(() => {
@@ -67,6 +70,15 @@ export class VendorDashboardPageComponent implements OnInit {
 
   totalSections = computed(() => {
     return this.profileSections().length;
+  });
+
+  /**
+   * Derived from the checklist so the ring and the "X of Y sections complete"
+   * caption can never disagree (they previously read 75% vs 2 of 5).
+   */
+  profileCompletion = computed(() => {
+    const total = this.totalSections();
+    return total === 0 ? 0 : Math.round((this.completedSections() / total) * 100);
   });
 
   ngOnInit(): void {
@@ -98,7 +110,6 @@ export class VendorDashboardPageComponent implements OnInit {
       myBids: 8,
       wonBids: 3,
       activeProjects: 2,
-      profileCompletion: 75,
       rating: 4.5,
     });
 
@@ -108,7 +119,7 @@ export class VendorDashboardPageComponent implements OnInit {
         id: '1',
         title: 'Commercial Building Deep Cleaning',
         category: 'quick_service',
-        location: 'Muscat',
+        location: 'New Delhi',
         budget: { min: 500, max: 1500 },
         deadline: new Date('2024-01-25'),
         bidCount: 8,
@@ -119,7 +130,7 @@ export class VendorDashboardPageComponent implements OnInit {
         id: '2',
         title: 'Office Electrical Maintenance',
         category: 'mid_complexity',
-        location: 'Sohar',
+        location: 'Gurugram',
         budget: { min: 300, max: 800 },
         deadline: new Date('2024-01-28'),
         bidCount: 5,
@@ -129,7 +140,7 @@ export class VendorDashboardPageComponent implements OnInit {
         id: '3',
         title: 'Industrial HVAC Installation',
         category: 'technical',
-        location: 'Salalah',
+        location: 'Noida',
         deadline: new Date('2024-02-01'),
         bidCount: 3,
         postedAt: new Date('2024-01-16'),
@@ -167,34 +178,6 @@ export class VendorDashboardPageComponent implements OnInit {
       },
     ]);
 
-    // Update profile sections based on user data
-    const user = this.currentUser();
-    if (user) {
-      this.profileSections.update((sections) =>
-        sections.map((section) => ({
-          ...section,
-          isComplete: this.checkSectionComplete(section.id, user),
-        }))
-      );
-    }
-  }
-
-  private checkSectionComplete(sectionId: string, user: Vendor): boolean {
-    // Mock logic - in real app would check actual user data
-    switch (sectionId) {
-      case 'basic':
-        return !!(user.businessName && user.email);
-      case 'documents':
-        return false; // Placeholder
-      case 'services':
-        return user.serviceCapabilities && user.serviceCapabilities.length > 0;
-      case 'portfolio':
-        return false; // Placeholder
-      case 'bank':
-        return false; // Placeholder
-      default:
-        return false;
-    }
   }
 
   getCategoryLabel(category: string): string {
@@ -226,18 +209,17 @@ export class VendorDashboardPageComponent implements OnInit {
     return classes[status] || '';
   }
 
-  getDaysRemaining(deadline: Date): number {
-    const now = new Date();
-    const diff = deadline.getTime() - now.getTime();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  /** Human label for a tender deadline; never renders a negative count. */
+  getDeadlineLabel(deadline: Date): string {
+    return deadlineLabel(deadline);
+  }
+
+  isDeadlineUrgent(deadline: Date): boolean {
+    return isUrgent(deadline);
   }
 
   navigateTo(route: string): void {
     this.router.navigate([route]);
   }
 
-  logout(): void {
-    this.serviceAuthService.logout();
-    this.router.navigate(['/login']);
-  }
 }

@@ -68,25 +68,25 @@
           <div class="radio-cards">
             <label class="radio-card" [class.selected]="getControl(1, 'urgencyLevel')?.value === 'not_urgent'">
               <input type="radio" formControlName="urgencyLevel" value="not_urgent">
-              <span class="card-icon">📅</span>
+              <span class="card-icon"><app-icon name="calendar" [size]="16" /></span>
               <span class="card-title">Not Urgent</span>
               <span class="card-description">Within 2 weeks</span>
             </label>
             <label class="radio-card" [class.selected]="getControl(1, 'urgencyLevel')?.value === 'soon'">
               <input type="radio" formControlName="urgencyLevel" value="soon">
-              <span class="card-icon">⏰</span>
+              <span class="card-icon"><app-icon name="clock" [size]="20" /></span>
               <span class="card-title">Soon</span>
               <span class="card-description">Within a week</span>
             </label>
             <label class="radio-card" [class.selected]="getControl(1, 'urgencyLevel')?.value === 'urgent'">
               <input type="radio" formControlName="urgencyLevel" value="urgent">
-              <span class="card-icon">🔥</span>
+              <span class="card-icon"><app-icon name="flame" [size]="16" /></span>
               <span class="card-title">Urgent</span>
               <span class="card-description">Within 2-3 days</span>
             </label>
             <label class="radio-card" [class.selected]="getControl(1, 'urgencyLevel')?.value === 'emergency'">
               <input type="radio" formControlName="urgencyLevel" value="emergency">
-              <span class="card-icon">🚨</span>
+              <span class="card-icon"><app-icon name="siren" [size]="20" /></span>
               <span class="card-title">Emergency</span>
               <span class="card-description">Today/Tomorrow</span>
             </label>
@@ -183,9 +183,7 @@
               <div class="list-item two-inputs">
                 <input type="text" [formControl]="$any(area).controls.name" placeholder="Area name (e.g., Balcony)">
                 <input type="text" [formControl]="$any(area).controls.area" placeholder="Size (e.g., 50 sqft)">
-                <button type="button" class="btn-icon remove" (click)="removeAdditionalArea($index)" aria-label="Remove area">
-                  ✕
-                </button>
+                <button type="button" class="btn-icon remove" (click)="removeAdditionalArea($index)" aria-label="Remove area"><app-icon name="x" [size]="16" /></button>
               </div>
             }
             <button type="button" class="btn-add" (click)="addAdditionalArea()">
@@ -347,9 +345,7 @@
               <div class="list-item two-inputs">
                 <input type="text" [formControl]="$any(product).controls.name" placeholder="Product name/model">
                 <input type="text" [formControl]="$any(product).controls.quantity" placeholder="Quantity">
-                <button type="button" class="btn-icon remove" (click)="removeSpecificProduct($index)" aria-label="Remove product">
-                  ✕
-                </button>
+                <button type="button" class="btn-icon remove" (click)="removeSpecificProduct($index)" aria-label="Remove product"><app-icon name="x" [size]="16" /></button>
               </div>
             }
             <button type="button" class="btn-add" (click)="addSpecificProduct()">
@@ -639,12 +635,12 @@
       <div class="right-actions">
         @if (canGoBack()) {
           <button type="button" class="btn btn-secondary" (click)="previousStep()">
-            ← Back
+            <app-icon name="arrow-left" [size]="16" /> Back
           </button>
         }
         @if (canGoNext()) {
           <button type="button" class="btn btn-primary" (click)="nextStep()">
-            Next →
+            Next <app-icon name="arrow-right" [size]="16" />
           </button>
         }
         @if (isLastStep()) {

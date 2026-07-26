@@ -16,11 +16,12 @@ import {
 } from '../../shared/utils/service-category.util';
 import { ServiceAuthService } from '../../core/services/service-auth.service';
 import { ServiceFilterType, AuthModalState } from './services.model';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-services-page',
   standalone: true,
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink, FormsModule, IconComponent],
   templateUrl: './services.page.html',
   styleUrl: './services.page.scss'
 })
@@ -115,7 +116,7 @@ export class ServicesPageComponent {
 
   goToLogin(): void {
     this.closeAuthModal();
-    this.router.navigate(['/service-login']);
+    this.router.navigate(['/login'], { queryParams: { portal: 'services' } });
   }
 
   goToSignup(): void {
@@ -152,5 +153,9 @@ export class ServicesPageComponent {
 
   getCategoryIndicator(category: ServiceCategory): string {
     return this.categories[category].indicator;
+  }
+
+  getCategoryIndicatorIcon(category: ServiceCategory): string {
+    return this.categories[category].indicatorIcon;
   }
 }

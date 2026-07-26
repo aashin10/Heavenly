@@ -22,9 +22,12 @@
             "tsConfig": "tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              "src/robots.txt",
+              "src/sitemap.xml"
             ],
             "styles": [
+              "@fontsource-variable/inter/index.css",
               "src/styles.css"
             ],
             "scripts": [],
@@ -89,6 +92,7 @@
               "src/assets"
             ],
             "styles": [
+              "@fontsource-variable/inter/index.css",
               "src/styles.css"
             ],
             "scripts": []

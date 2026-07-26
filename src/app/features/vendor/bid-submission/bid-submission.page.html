@@ -3,14 +3,14 @@
   
   <!-- Header -->
   <div class="submission-header">
-    <button class="btn-back" (click)="confirmExit()">← Exit</button>
+    <button class="btn-back" (click)="confirmExit()"><app-icon name="arrow-left" [size]="16" /> Exit</button>
     <div class="header-info">
       <h1>Submit Bid</h1>
       <p class="tender-ref">For: {{ tender.title }}</p>
     </div>
     <div class="auto-save-indicator" [class.saved]="lastSavedTime()">
       @if (lastSavedTime()) {
-        <span class="save-icon">✓</span>
+        <span class="save-icon"><app-icon name="check" [size]="16" /></span>
         <span>Draft saved</span>
       }
     </div>
@@ -30,7 +30,7 @@
         [attr.aria-current]="currentStep() === i + 1 ? 'step' : null">
         <span class="step-number">
           @if (currentStep() > i + 1) {
-            <span class="check" aria-hidden="true">✓</span>
+            <span class="check" aria-hidden="true"><app-icon name="check" [size]="16" /></span>
           } @else {
             {{ i + 1 }}
           }
@@ -57,7 +57,7 @@
           <div class="checklist-items">
             @for (criterion of tender.eligibilityCriteria; track criterion) {
               <div class="checklist-item">
-                <span class="check-icon">✓</span>
+                <span class="check-icon"><app-icon name="check" [size]="16" /></span>
                 <span>{{ criterion }}</span>
               </div>
             }
@@ -77,7 +77,7 @@
           </div>
           
           <div class="warning-box">
-            <span class="warning-icon">⚠️</span>
+            <span class="warning-icon"><app-icon name="triangle-alert" [size]="16" /></span>
             <p>
               Submitting a bid without meeting eligibility criteria may result in 
               disqualification and could affect your future bidding eligibility.
@@ -93,7 +93,7 @@
         <h2 class="step-title">Technical Proposal</h2>
         
         <div class="important-notice">
-          ⚠️ <strong>Important:</strong> Do NOT include any pricing information in this section. 
+          <app-icon name="triangle-alert" [size]="16" /> <strong>Important:</strong> Do NOT include any pricing information in this section. 
           Pricing details will be submitted separately in the next step.
         </div>
         
@@ -254,7 +254,7 @@
         <h2 class="step-title">Commercial Proposal</h2>
         
         <div class="important-notice sealed">
-          🔒 <strong>Sealed Commercial Proposal:</strong> Your commercial details will remain 
+          <app-icon name="lock" [size]="16" /> <strong>Sealed Commercial Proposal:</strong> Your commercial details will remain 
           sealed until the technical evaluation is complete. They will not be visible to the 
           requester or management during technical evaluation.
         </div>
@@ -405,7 +405,7 @@
         <!-- Technical Proposal Summary -->
         <div class="review-section">
           <div class="review-section-header">
-            <h3>📋 Technical Proposal</h3>
+            <h3><app-icon name="clipboard-list" [size]="16" /> Technical Proposal</h3>
             <button type="button" class="btn-edit" (click)="goToStep(2)">Edit</button>
           </div>
           
@@ -434,7 +434,7 @@
         <!-- Commercial Proposal Summary -->
         <div class="review-section">
           <div class="review-section-header">
-            <h3>💰 Commercial Proposal 🔒</h3>
+            <h3><app-icon name="indian-rupee" [size]="16" /> Commercial Proposal <app-icon name="lock" [size]="14" /></h3>
             <button type="button" class="btn-edit" (click)="goToStep(3)">Edit</button>
           </div>
           
@@ -461,7 +461,7 @@
         <!-- Final Confirmation -->
         <div class="final-confirmation">
           <div class="warning-box">
-            <h4>⚠️ Before You Submit</h4>
+            <h4><app-icon name="triangle-alert" [size]="16" /> Before You Submit</h4>
             <ul>
               <li>Ensure all information is accurate and complete</li>
               <li>Once submitted, you cannot modify your bid</li>
@@ -486,9 +486,7 @@
   <!-- Navigation Buttons -->
   <div class="form-actions">
     @if (currentStep() > 1) {
-      <button type="button" class="btn btn-secondary" (click)="previousStep()">
-        ← Back
-      </button>
+      <button type="button" class="btn btn-secondary" (click)="previousStep()"><app-icon name="arrow-left" [size]="16" /> Back</button>
     } @else {
       <div></div>
     }
@@ -499,7 +497,7 @@
     
     @if (currentStep() < totalSteps) {
       <button type="button" class="btn btn-primary" (click)="nextStep()">
-        Next →
+        Next <app-icon name="arrow-right" [size]="16" />
       </button>
     } @else {
       <button 
@@ -518,7 +516,7 @@
   <div class="modal-overlay">
     <div class="modal-dialog success-modal">
       <div class="success-icon">
-        <span>✓</span>
+        <span><app-icon name="check" [size]="16" /></span>
       </div>
       
       <h2>Bid Submitted Successfully!</h2>

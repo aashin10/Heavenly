@@ -1,0 +1,204 @@
+// Statistics grid — matches the management page's stat cards.
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-subtle);
+  margin-bottom: var(--space-1);
+}
+
+.stat-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  line-height: 1;
+
+  &--yellow { color: var(--warning-solid); }
+  &--green { color: var(--success-solid); }
+  &--red { color: var(--danger-solid); }
+  &--primary { color: var(--navy-700); }
+}
+
+.stat-icon {
+  flex: none;
+
+  &--yellow { color: var(--warning-bg); }
+  &--green { color: var(--success-bg); }
+  &--red { color: var(--danger-bg); }
+
+  // Tint the glyph itself a stronger shade over its soft wash
+  app-icon { color: currentColor; }
+}
+
+.stat-icon--yellow { color: color-mix(in srgb, var(--warning-solid) 30%, transparent); }
+.stat-icon--green { color: color-mix(in srgb, var(--success-solid) 30%, transparent); }
+.stat-icon--red { color: color-mix(in srgb, var(--danger-solid) 30%, transparent); }
+
+// Filter tabs
+.filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.filter-tab {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-strong);
+  border-radius: 9999px;
+  background-color: var(--surface);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--navy-200);
+    color: var(--text);
+  }
+
+  &.active {
+    background-color: var(--navy-800);
+    border-color: var(--navy-800);
+    color: var(--white);
+  }
+}
+
+// Section
+.section-header {
+  margin-bottom: var(--space-3);
+}
+
+.section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text);
+}
+
+// Table
+.vendors-table-wrapper {
+  overflow-x: auto;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.vendors-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 46rem;
+
+  th {
+    text-align: left;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-subtle);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+    background-color: var(--surface-muted);
+  }
+
+  td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-size: var(--text-sm);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tbody tr:hover {
+    background-color: var(--surface-muted);
+  }
+}
+
+.business-info,
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.business-name,
+.contact-name {
+  font-weight: var(--font-medium);
+  color: var(--text);
+}
+
+.business-city,
+.contact-phone {
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.service-count,
+.registered-date {
+  color: var(--text-muted);
+}
+
+.doc-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--success-bg);
+  color: var(--success-fg);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+
+  &--incomplete {
+    background-color: var(--warning-bg);
+    color: var(--warning-fg);
+  }
+}
+
+.actions-cell {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.review-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--navy-700);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--navy-800);
+    text-decoration: underline;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

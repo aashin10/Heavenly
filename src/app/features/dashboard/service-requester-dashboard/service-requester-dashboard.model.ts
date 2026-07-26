@@ -46,7 +46,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
   {
     id: 'new-request',
     label: 'New Request',
-    icon: 'document-add',
+    icon: 'file-plus',
     description: 'Create a new service request',
     route: '/services',
     color: 'primary',
@@ -56,15 +56,15 @@ export const QUICK_ACTIONS: QuickAction[] = [
     label: 'Active Tenders',
     icon: 'clipboard-list',
     description: 'View your active tender opportunities',
-    route: '/my-tenders',
+    route: '/my-requests?filter=live',
     color: 'success',
   },
   {
     id: 'drafts',
     label: 'Draft Requests',
-    icon: 'document-text',
+    icon: 'file-text',
     description: 'Continue working on saved drafts',
-    route: '/drafts',
+    route: '/my-requests?tab=drafts',
     color: 'warning',
   },
   {
@@ -72,7 +72,7 @@ export const QUICK_ACTIONS: QuickAction[] = [
     label: 'Request History',
     icon: 'clock',
     description: 'View past requests and their status',
-    route: '/request-history',
+    route: '/my-requests',
     color: 'neutral',
   },
 ];

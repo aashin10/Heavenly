@@ -1,6 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { VendorTenderService } from '../vendor.service';
 import { PublishedTender, TenderClarification, EligibilityResult, BidStatusResult } from '../vendor.model';
@@ -8,11 +8,14 @@ import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 import { TimeRemainingPipe } from '../../../shared/pipes/time-remaining.pipe';
 import { FileSizePipe } from '../../../shared/pipes/file-size.pipe';
 import { ToastService } from '../../../core/services/toast.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { AppDateTimePipe, AppDatePipe } from '../../../shared/pipes/app-date.pipe';
+import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-tender-detail-page',
   standalone: true,
-  imports: [RouterLink, DatePipe, FormsModule, TimeAgoPipe, TimeRemainingPipe, FileSizePipe],
+  imports: [RouterLink, FormsModule, TimeAgoPipe, TimeRemainingPipe, FileSizePipe, IconComponent, AppDateTimePipe, AppDatePipe, StatusBadgeComponent],
   templateUrl: './tender-detail.page.html',
   styleUrl: './tender-detail.page.scss'
 })
@@ -148,13 +151,12 @@ export class TenderDetailPageComponent implements OnInit {
     return 'Budget not specified';
   }
 
-  getStatusLabel(): string {
-    const tender = this.tender();
-    if (!tender) return '';
-    
-    if (this.isBidWindowClosed()) return 'Bidding Closed';
-    if (this.isClosingSoon()) return 'Closing Soon';
-    return 'Open for Bidding';
+  /** Bid-window state as a status key the shared badge knows how to render. */
+  bidWindowStatus(): string {
+    if (!this.tender()) return '';
+    if (this.isBidWindowClosed()) return 'bidding_closed';
+    if (this.isClosingSoon()) return 'closing_soon';
+    return 'open_for_bidding';
   }
 
   private getHoursUntilClose(dateStr: string): number {

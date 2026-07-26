@@ -1,6 +1,6 @@
 .tender-browse-container {
   min-height: 100vh;
-  background-color: var(--gray-50, #f8fafc);
+  background-color: var(--gray-50, var(--gray-50));
 }
 
 // Header
@@ -12,19 +12,19 @@
   gap: 1rem;
   padding: 1.5rem 2rem;
   background: white;
-  border-bottom: 1px solid var(--gray-200, #e2e8f0);
+  border-bottom: 1px solid var(--gray-200, var(--gray-200));
 
   .header-title {
     h1 {
       font-size: 1.5rem;
       font-weight: 600;
-      color: var(--gray-900, #0f172a);
+      color: var(--gray-900, var(--gray-900));
       margin: 0;
     }
 
     .subtitle {
       font-size: 0.875rem;
-      color: var(--gray-500, #64748b);
+      color: var(--gray-500, var(--gray-500));
       margin: 0.25rem 0 0;
     }
   }
@@ -50,7 +50,7 @@
 
   .search-input {
     padding: 0.625rem 1rem 0.625rem 2.5rem;
-    border: 1px solid var(--gray-300, #cbd5e1);
+    border: 1px solid var(--gray-300, var(--gray-300));
     border-radius: 8px;
     font-size: 0.875rem;
     width: 280px;
@@ -58,19 +58,19 @@
 
     &:focus {
       outline: none;
-      border-color: var(--primary-color, #003664);
-      box-shadow: 0 0 0 3px rgba(0, 54, 100, 0.1);
+      border-color: var(--primary-color, var(--navy-800));
+      box-shadow: var(--ring-brand);
     }
 
     &::placeholder {
-      color: var(--gray-400, #94a3b8);
+      color: var(--gray-400, var(--gray-400));
     }
   }
 }
 
 .sort-select {
   padding: 0.625rem 2rem 0.625rem 1rem;
-  border: 1px solid var(--gray-300, #cbd5e1);
+  border: 1px solid var(--gray-300, var(--gray-300));
   border-radius: 8px;
   font-size: 0.875rem;
   background: white;
@@ -82,7 +82,7 @@
 
   &:focus {
     outline: none;
-    border-color: var(--primary-color, #003664);
+    border-color: var(--primary-color, var(--navy-800));
   }
 }
 
@@ -92,14 +92,14 @@
   gap: 0.5rem;
   padding: 0.625rem 1rem;
   background: white;
-  border: 1px solid var(--gray-300, #cbd5e1);
+  border: 1px solid var(--gray-300, var(--gray-300));
   border-radius: 8px;
   font-size: 0.875rem;
   cursor: pointer;
   position: relative;
 
   .filter-badge {
-    color: var(--primary-color, #003664);
+    color: var(--primary-color, var(--navy-800));
     font-size: 0.625rem;
     position: absolute;
     top: 0.375rem;
@@ -121,7 +121,7 @@
 .filters-sidebar {
   background: white;
   border-radius: 12px;
-  border: 1px solid var(--gray-200, #e2e8f0);
+  border: 1px solid var(--gray-200, var(--gray-200));
   padding: 1.25rem;
   height: fit-content;
   position: sticky;
@@ -136,7 +136,7 @@
     h3 {
       font-size: 1rem;
       font-weight: 600;
-      color: var(--gray-900, #0f172a);
+      color: var(--gray-900, var(--gray-900));
       margin: 0;
     }
 
@@ -145,7 +145,7 @@
       background: none;
       border: none;
       font-size: 1.5rem;
-      color: var(--gray-500, #64748b);
+      color: var(--gray-500, var(--gray-500));
       cursor: pointer;
     }
   }
@@ -154,7 +154,7 @@
 .filter-section {
   margin-bottom: 1.5rem;
   padding-bottom: 1.25rem;
-  border-bottom: 1px solid var(--gray-100, #f1f5f9);
+  border-bottom: 1px solid var(--gray-100, var(--gray-100));
 
   &:last-of-type {
     border-bottom: none;
@@ -165,7 +165,7 @@
   .filter-title {
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--gray-700, #334155);
+    color: var(--gray-700, var(--gray-700));
     margin: 0 0 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.025em;
@@ -186,7 +186,7 @@
   gap: 0.5rem;
   cursor: pointer;
   font-size: 0.875rem;
-  color: var(--gray-700, #334155);
+  color: var(--gray-700, var(--gray-700));
 
   input {
     display: none;
@@ -195,7 +195,7 @@
   .checkmark {
     width: 18px;
     height: 18px;
-    border: 2px solid var(--gray-300, #cbd5e1);
+    border: 2px solid var(--gray-300, var(--gray-300));
     border-radius: 4px;
     position: relative;
     transition: all 0.2s;
@@ -218,7 +218,7 @@
   .radio-mark {
     width: 18px;
     height: 18px;
-    border: 2px solid var(--gray-300, #cbd5e1);
+    border: 2px solid var(--gray-300, var(--gray-300));
     border-radius: 50%;
     position: relative;
     transition: all 0.2s;
@@ -238,8 +238,8 @@
   }
 
   input:checked + .checkmark {
-    background: var(--primary-color, #003664);
-    border-color: var(--primary-color, #003664);
+    background: var(--primary-color, var(--navy-800));
+    border-color: var(--primary-color, var(--navy-800));
 
     &::after {
       opacity: 1;
@@ -247,8 +247,8 @@
   }
 
   input:checked + .radio-mark {
-    background: var(--primary-color, #003664);
-    border-color: var(--primary-color, #003664);
+    background: var(--primary-color, var(--navy-800));
+    border-color: var(--primary-color, var(--navy-800));
 
     &::after {
       opacity: 1;
@@ -258,7 +258,7 @@
   &:hover {
     .checkmark,
     .radio-mark {
-      border-color: var(--primary-color, #003664);
+      border-color: var(--primary-color, var(--navy-800));
     }
   }
 }
@@ -268,7 +268,7 @@
   padding: 0.625rem 1rem;
   background: none;
   border: none;
-  color: var(--primary-color, #003664);
+  color: var(--primary-color, var(--navy-800));
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -289,7 +289,7 @@
 
   p {
     font-size: 0.875rem;
-    color: var(--gray-500, #64748b);
+    color: var(--gray-500, var(--gray-500));
     margin: 0;
   }
 }
@@ -310,7 +310,7 @@
   text-align: center;
   background: white;
   border-radius: 12px;
-  border: 1px solid var(--gray-200, #e2e8f0);
+  border: 1px solid var(--gray-200, var(--gray-200));
 
   .empty-icon {
     font-size: 3rem;
@@ -320,19 +320,19 @@
   h3 {
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--gray-900, #0f172a);
+    color: var(--gray-900, var(--gray-900));
     margin: 0 0 0.5rem;
   }
 
   p {
     font-size: 0.875rem;
-    color: var(--gray-500, #64748b);
+    color: var(--gray-500, var(--gray-500));
     margin: 0 0 1.5rem;
   }
 
   .btn {
     padding: 0.625rem 1.5rem;
-    background: var(--primary-color, #003664);
+    background: var(--primary-color, var(--navy-800));
     color: white;
     border: none;
     border-radius: 8px;
@@ -341,7 +341,7 @@
     cursor: pointer;
 
     &:hover {
-      background: var(--primary-dark, #002a4f);
+      background: var(--primary-dark, var(--navy-900));
     }
   }
 }

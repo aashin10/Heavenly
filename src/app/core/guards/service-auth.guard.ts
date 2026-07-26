@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
 import { ServiceAuthService } from '../services/service-auth.service';
+import { ToastService } from '../services/toast.service';
 import { Vendor } from '../models/service.model';
 
 /**
@@ -86,16 +87,12 @@ export const vendorVerifiedGuard: CanActivateFn = () => {
     return false;
   }
 
-  // Check if vendor is verified
+  // Any non-verified vendor goes to the status-aware verification screen, which
+  // shows the right content (in progress / rejected + reason / suspended) rather
+  // than dumping rejected vendors at /login with no explanation.
   const vendor = serviceAuthService.getCurrentUser() as Vendor;
-  if (vendor?.verificationStatus === 'pending') {
+  if (vendor && vendor.verificationStatus !== 'verified') {
     router.navigate(['/verification-pending']);
-    return false;
-  }
-
-  if (vendor?.verificationStatus === 'rejected') {
-    // Could redirect to a rejection page or back to login
-    router.navigate(['/login']);
     return false;
   }
 
@@ -103,26 +100,21 @@ export const vendorVerifiedGuard: CanActivateFn = () => {
 };
 
 /**
- * Guard that allows only guests (non-authenticated service users)
+ * Guard for the signup pages (/vendor-signup, /service-requester-signup).
+ *
+ * These routes are only ever reached deliberately — e.g. a signed-in requester
+ * clicking "Become a Vendor" on the homepage. Bouncing them to their own
+ * dashboard (the old behaviour) made those CTAs silently do nothing, so an
+ * arrival while signed in is treated as "I want a different account": end the
+ * session and let them register.
  */
 export const serviceGuestGuard: CanActivateFn = () => {
   const serviceAuthService = inject(ServiceAuthService);
-  const router = inject(Router);
+  const toastService = inject(ToastService);
 
-  const session = serviceAuthService.getCurrentUserSession();
-
-  if (session) {
-    // Redirect to appropriate dashboard based on user type
-    if (session.userType === 'vendor') {
-      if (session.vendorStatus === 'pending') {
-        router.navigate(['/verification-pending']);
-      } else {
-        router.navigate(['/vendor-dashboard']);
-      }
-    } else {
-      router.navigate(['/service-requester-dashboard']);
-    }
-    return false;
+  if (serviceAuthService.getCurrentUserSession()) {
+    serviceAuthService.logout();
+    toastService.info('You have been signed out. Create an account or sign in again.');
   }
 
   return true;

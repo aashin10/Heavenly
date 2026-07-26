@@ -1,3 +1,5 @@
+import { formatAppDate } from './date-format.util';
+
 /**
  * Generates a unique identifier using a combination of timestamp and random characters.
  * More robust than Date.now().toString() as it prevents collisions in rapid succession.
@@ -46,10 +48,5 @@ export function formatDateSafe(dateString: string, fallback = 'N/A'): string {
     return fallback;
   }
   
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) {
-    return fallback;
-  }
-  
-  return date.toLocaleDateString();
+  return formatAppDate(dateString, fallback);
 }

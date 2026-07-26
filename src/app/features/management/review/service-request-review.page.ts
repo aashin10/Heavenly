@@ -1,23 +1,19 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe, TitleCasePipe } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import { ServiceRequestManagementService } from '../service-request-management.service';
 import { ServiceRequest, AIGeneratedDraft, ReviewFormData } from '../management.model';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { CollapsibleSectionComponent } from '../../../shared/components/collapsible-section/collapsible-section.component';
 import { ToastService } from '../../../core/services/toast.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 
 @Component({
   selector: 'app-service-request-review',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    DatePipe,
-    TitleCasePipe,
-    StatusBadgeComponent,
-    CollapsibleSectionComponent
-  ],
+  imports: [ReactiveFormsModule, TitleCasePipe, StatusBadgeComponent, CollapsibleSectionComponent, IconComponent, AppDatePipe],
   templateUrl: './service-request-review.page.html',
   styleUrl: './service-request-review.page.scss'
 })

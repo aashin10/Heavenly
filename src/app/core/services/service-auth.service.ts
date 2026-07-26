@@ -405,4 +405,24 @@ export class ServiceAuthService {
       });
     }
   }
+
+  /**
+   * A rejected vendor, having fixed their profile, puts themselves back in the
+   * admin queue. Records an audited event so the admin sees the resubmission
+   * in the review timeline (F8). No-op unless the vendor is currently rejected.
+   */
+  requestReverification(): boolean {
+    const vendor = this.vendorSignal();
+    if (!vendor || vendor.verificationStatus !== 'rejected') return false;
+
+    this.updateVendorProfile({
+      verificationStatus: 'pending',
+      rejectionReason: undefined,
+      verificationEvents: [
+        ...(vendor.verificationEvents ?? []),
+        { status: 'pending', at: new Date(), actor: vendor.businessName, note: 'Resubmitted for review' },
+      ],
+    });
+    return true;
+  }
 }

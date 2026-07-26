@@ -25,53 +25,18 @@ export interface VendorBid {
 }
 
 // Vendor dashboard stats
+// NOTE: profile completion is derived from the profile section checklist on the
+// dashboard component, not stored here — keeping it as a stat let the ring and
+// the "X of Y sections complete" caption drift apart.
 export interface VendorDashboardStats {
   openTenders: number;
   myBids: number;
   wonBids: number;
   activeProjects: number;
-  profileCompletion: number;
   rating?: number;
 }
 
-// Profile section for completion tracking
-export interface ProfileSection {
-  id: string;
-  label: string;
-  isComplete: boolean;
-  route: string;
-}
-
-// Profile sections for vendors
-export const PROFILE_SECTIONS: ProfileSection[] = [
-  {
-    id: 'basic',
-    label: 'Basic Information',
-    isComplete: false,
-    route: '/vendor-profile/basic',
-  },
-  {
-    id: 'documents',
-    label: 'Business Documents',
-    isComplete: false,
-    route: '/vendor-profile/documents',
-  },
-  {
-    id: 'services',
-    label: 'Services Offered',
-    isComplete: false,
-    route: '/vendor-profile/services',
-  },
-  {
-    id: 'portfolio',
-    label: 'Portfolio',
-    isComplete: false,
-    route: '/vendor-profile/portfolio',
-  },
-  {
-    id: 'bank',
-    label: 'Bank Details',
-    isComplete: false,
-    route: '/vendor-profile/bank',
-  },
-];
+// Profile-section state now lives in
+// shared/utils/vendor-profile-completion.util.ts, derived from the vendor
+// record — the old static PROFILE_SECTIONS list here was hard-coded
+// isComplete:false, so the dashboard ring could never move.

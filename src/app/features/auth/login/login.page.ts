@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ServiceAuthService } from '../../../core/services/service-auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -17,6 +17,8 @@ import {
   INITIAL_SERVICE_LOGIN_DATA
 } from './login.model';
 import { TermsModalComponent } from './terms-modal.component';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { LogoComponent } from '../../../shared/components/logo/logo.component';
 
 const MIN_PASSWORD_LENGTH = 6;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,7 +27,7 @@ const PHONE_PATTERN = /^[\d\s\-+()]{10,}$/;
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [FormsModule, RouterLink, TermsModalComponent],
+  imports: [FormsModule, RouterLink, TermsModalComponent, IconComponent, LogoComponent],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss'
 })
@@ -34,10 +36,14 @@ export class LoginPageComponent {
   private readonly serviceAuthService = inject(ServiceAuthService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   // Portal toggle - Jobs vs Services
   portalType = signal<PortalType>('jobs');
-  
+
+  /** Remember-me preference (UI only for now — wired when auth is unified). */
+  rememberMe = signal<boolean>(false);
+
   // Service user type toggle - Requester vs Vendor
   serviceUserType = signal<ServiceLoginUserType>('service_requester');
 
@@ -50,6 +56,32 @@ export class LoginPageComponent {
   loginData = signal<LoginFormData>({ ...INITIAL_LOGIN_DATA });
   signupData = signal<SignupFormData>({ ...INITIAL_SIGNUP_DATA });
   serviceLoginData = signal<ServiceLoginFormData>({ ...INITIAL_SERVICE_LOGIN_DATA });
+
+  constructor() {
+    // Allow deep-linking into a portal/role/mode, e.g. /login?portal=services
+    // from the services page, or /login?mode=signup&role=employer from the
+    // homepage "Hire Manpower" card.
+    const portal = this.route.snapshot.queryParamMap.get('portal');
+    if (portal === 'services' || portal === 'jobs') {
+      this.portalType.set(portal);
+    }
+    if (this.route.snapshot.queryParamMap.get('mode') === 'signup') {
+      this.isLogin.set(false);
+    }
+    const role = this.route.snapshot.queryParamMap.get('role');
+    if (role === 'vendor' || role === 'service_requester') {
+      this.portalType.set('services');
+      this.serviceUserType.set(role);
+      this.serviceLoginData.update(current => ({ ...current, serviceUserType: role }));
+    } else if (role === 'employer' || role === 'applicant') {
+      this.portalType.set('jobs');
+      this.signupData.update(current => ({ ...current, userType: role }));
+    }
+  }
+
+  handleRememberMeChange(event: Event): void {
+    this.rememberMe.set((event.target as HTMLInputElement).checked);
+  }
 
   setPortalType(type: PortalType): void {
     this.portalType.set(type);
@@ -127,11 +159,11 @@ export class LoginPageComponent {
     return !phone || PHONE_PATTERN.test(phone);
   }
 
-  handleLoginSubmit(): void {
+  async handleLoginSubmit(): Promise<void> {
     this.error.set('');
-    
+
     const data = this.loginData();
-    
+
     // Validate email format
     if (!this.isValidEmail(data.email)) {
       this.error.set('Please enter a valid email address');
@@ -139,7 +171,7 @@ export class LoginPageComponent {
     }
 
     this.isSubmitting.set(true);
-    const success = this.authService.login(data.email, data.password);
+    const success = await this.authService.loginAsync(data.email, data.password);
 
     if (success) {
       this.router.navigate(['/dashboard']);
@@ -147,7 +179,7 @@ export class LoginPageComponent {
       // Generic error message to prevent user enumeration
       this.error.set('Invalid credentials. Please check your email and password.');
     }
-    
+
     this.isSubmitting.set(false);
   }
 
@@ -189,7 +221,7 @@ export class LoginPageComponent {
     this.isSubmitting.set(false);
   }
 
-  handleSignupSubmit(): void {
+  async handleSignupSubmit(): Promise<void> {
     this.error.set('');
     const data = this.signupData();
 
@@ -228,7 +260,7 @@ export class LoginPageComponent {
 
     this.isSubmitting.set(true);
 
-    const success = this.authService.signup({
+    const success = await this.authService.signupAsync({
       name: data.name,
       email: data.email,
       password: data.password,

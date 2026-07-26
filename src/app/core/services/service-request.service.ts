@@ -13,8 +13,16 @@ export type RequestStatus =
   | 'closed'
   | 'cancelled';
 
+/** One entry in a request's status history — powers the detail-page timeline. */
+export interface RequestEvent {
+  status: RequestStatus;
+  at: Date;
+  note?: string;
+}
+
 export interface ServiceRequestSubmission {
   id?: string;
+  requestNumber?: string;
   serviceId: string;
   serviceName: string;
   category: ServiceCategory;
@@ -24,6 +32,9 @@ export interface ServiceRequestSubmission {
   submittedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  /** Admin's message when status is `changes_required`. */
+  reviewNote?: string;
+  events?: RequestEvent[];
 }
 
 export interface SubmissionResult {
@@ -116,6 +127,7 @@ export class ServiceRequestService {
 
       const request: ServiceRequestSubmission = {
         id: requestId,
+        requestNumber: requestId,
         serviceId,
         serviceName,
         category,
@@ -124,7 +136,8 @@ export class ServiceRequestService {
         requesterId,
         submittedAt: now,
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        events: [{ status: 'submitted', at: now }]
       };
 
       // Save to localStorage
@@ -193,10 +206,60 @@ export class ServiceRequestService {
     
     if (index === -1) return false;
 
+    const now = new Date();
     requests[index] = {
       ...requests[index],
       status,
-      updatedAt: new Date()
+      updatedAt: now,
+      events: [...(requests[index].events ?? []), { status, at: now }]
+    };
+
+    this.saveRequestsToStorage(requests);
+    return true;
+  }
+
+  /**
+   * Cancel a request the requester no longer needs. Allowed only while it is
+   * still in the requester's hands (`submitted` / `under_review`).
+   */
+  cancelRequest(requestId: string): boolean {
+    const request = this.getRequest(requestId);
+    if (!request || !this.canCancel(request.status)) return false;
+
+    const ok = this.updateRequestStatus(requestId, 'cancelled');
+    if (ok) this.toastService.info('Request cancelled.');
+    return ok;
+  }
+
+  /** A request can be cancelled only before Heavenly starts acting on it. */
+  canCancel(status: RequestStatus): boolean {
+    return status === 'submitted' || status === 'under_review';
+  }
+
+  /** A request can be re-edited only when the admin has asked for changes. */
+  canEditAndResubmit(status: RequestStatus): boolean {
+    return status === 'changes_required';
+  }
+
+  /**
+   * Replace a `changes_required` request's form data and resubmit it —
+   * the request keeps its identity and history rather than becoming a new one.
+   * Mirrors `POST /api/service-requests/{id}/resubmit`.
+   */
+  resubmitRequest(requestId: string, formData: Record<string, unknown>): boolean {
+    const requests = this.getAllRequests();
+    const index = requests.findIndex(r => r.id === requestId);
+    if (index === -1) return false;
+
+    const now = new Date();
+    requests[index] = {
+      ...requests[index],
+      formData,
+      status: 'submitted',
+      reviewNote: undefined,
+      updatedAt: now,
+      submittedAt: now,
+      events: [...(requests[index].events ?? []), { status: 'submitted', at: now, note: 'Resubmitted after changes' }]
     };
 
     this.saveRequestsToStorage(requests);

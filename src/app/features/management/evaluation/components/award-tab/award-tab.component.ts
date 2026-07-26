@@ -3,18 +3,19 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LiveTender, EvaluationBid, AwardData } from '../../evaluation.model';
 import { EvaluationService } from '../../evaluation.service';
+import { IconComponent } from '../../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-award-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports: [CommonModule, FormsModule, DecimalPipe, IconComponent],
   template: `
     <div class="award-tab">
       @if (tender.evaluationPhase === 'awarded' && awardedBid()) {
         <!-- Award Complete View -->
         <div class="award-complete">
           <div class="success-banner">
-            <div class="success-icon">✅</div>
+            <div class="success-icon"><app-icon name="circle-check" [size]="32" /></div>
             <h2>Contract Awarded Successfully</h2>
             <p>The contract has been awarded to {{ awardedBid()?.vendorDisplayName }}</p>
           </div>
@@ -49,11 +50,11 @@ import { EvaluationService } from '../../evaluation.service';
           
           <div class="actions-row">
             <button class="btn-download">
-              <span class="icon">📄</span>
+              <span class="icon"><app-icon name="file-text" [size]="18" /></span>
               Download Award Letter
             </button>
             <button class="btn-download">
-              <span class="icon">📋</span>
+              <span class="icon"><app-icon name="clipboard-list" [size]="18" /></span>
               Download Contract
             </button>
           </div>
@@ -69,7 +70,7 @@ import { EvaluationService } from '../../evaluation.service';
           <!-- Selected Winner Summary -->
           <div class="winner-summary">
             <div class="summary-header">
-              <span class="badge">🏆 Selected Winner</span>
+              <span class="badge"><app-icon name="trophy" [size]="14" /> Selected Winner</span>
               <button class="btn-change" (click)="clearSelection()">Change Selection</button>
             </div>
             <div class="vendor-row">
@@ -170,7 +171,7 @@ import { EvaluationService } from '../../evaluation.service';
               class="btn-award" 
               (click)="finalizeAward()"
               [disabled]="!canFinalize()">
-              <span class="icon">🏆</span>
+              <span class="icon"><app-icon name="trophy" [size]="18" /></span>
               Finalize Award
             </button>
           </div>
@@ -178,7 +179,7 @@ import { EvaluationService } from '../../evaluation.service';
       } @else {
         <!-- No Winner Selected -->
         <div class="no-winner">
-          <div class="empty-icon">🏆</div>
+          <div class="empty-icon"><app-icon name="trophy" [size]="32" /></div>
           <h2>Ready to Award</h2>
           <p>Select a vendor from the Shortlisted tab to proceed with the award decision.</p>
           
