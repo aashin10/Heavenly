@@ -85,7 +85,7 @@ curl $API/auth/me -H "Authorization: Bearer <accessToken>"     # → profile
 
 ## After this works — recommended order
 
-1. **Session rehydration**: call `/me` on app start to restore the session after reload (replaces the localStorage-timestamp check). ⬅️ **next**
-2. **Silent refresh**: interceptor catches 401 → `refresh()` → retry once.
+1. ~~**Session rehydration**~~ ✅ **DONE (Stage 6).** On app start with `useRealApi`, `AuthService` calls `GET /me` and treats the cached user as first-paint only. Verified: a valid token survives reload; a **tampered/revoked token clears the session and redirects to `/login`** (previously the stale cache kept a fake dashboard on screen). The client-side session timeout now only guards mock mode — with a real backend the token's own expiry is authoritative. Mock mode re-verified unchanged.
+2. **Silent refresh**: interceptor catches 401 → `refresh()` → retry once. ⬅️ **next**
 3. **Services-portal backend** (the big greenfield): `UserRole` + extend `UserType`, then `Vendor` + verification, then `ServiceRequester`/`ServiceRequest`, per docs 01–04. Only start this once auth round-trips cleanly.
 4. Standardise errors on RFC 9457 Problem Details ([03 §2.4](03-EXISTING-BACKEND-REVIEW.md)) so `422`s carry field-keyed messages the forms can bind.

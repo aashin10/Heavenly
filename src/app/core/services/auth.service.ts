@@ -29,6 +29,11 @@ export class AuthService {
 
   constructor() {
     this.loadUserFromStorage();
+    // Against the real API the cached copy is only a fast first paint — the
+    // server decides whether the session is actually still valid.
+    if (environment.useRealApi) {
+      void this.rehydrateSession();
+    }
   }
 
   private loadUserFromStorage(): void {
@@ -38,19 +43,69 @@ export class AuthService {
     const loginTimestamp = localStorage.getItem(LOGIN_TIMESTAMP_KEY);
 
     if (savedUser && loginTimestamp) {
-      const now = Date.now();
-      const loginTime = Number.parseInt(loginTimestamp, 10);
-      
-      if (now - loginTime > SESSION_TIMEOUT_MS) {
-        this.logout();
-        this.toastService.info('Session expired. Please login again.');
-        return;
+      // With a real backend the token's own expiry is authoritative, so the
+      // client-side timeout only guards the mock session.
+      if (!environment.useRealApi) {
+        const now = Date.now();
+        const loginTime = Number.parseInt(loginTimestamp, 10);
+
+        if (now - loginTime > SESSION_TIMEOUT_MS) {
+          this.logout();
+          this.toastService.info('Session expired. Please login again.');
+          return;
+        }
       }
 
       this.userSignal.set(JSON.parse(savedUser));
     } else if (savedUser) {
       // If we have a user but no timestamp (legacy session), expire it to be safe
       this.logout();
+    }
+  }
+
+  /**
+   * Confirms the restored session with the API on app start.
+   *
+   * A page reload previously trusted whatever sat in localStorage; now the
+   * server is asked. `GET /me` also returns the current profile, so a change
+   * made elsewhere (or a revoked/suspended account) is picked up immediately.
+   * A failure clears the session rather than leaving a stale one on screen.
+   */
+  private async rehydrateSession(): Promise<void> {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (!this.tokenStore.accessToken) {
+      // Tokens gone but a cached user lingering: not a real session.
+      if (this.userSignal()) this.clearSession();
+      return;
+    }
+
+    try {
+      const me = await firstValueFrom(this.authApi.me());
+      const user: User = {
+        id: me.userId,
+        email: me.email,
+        name: me.name,
+        userType: me.userType.toLowerCase() as UserType,
+        company: me.company ?? undefined,
+        acceptedTerms: true,
+        createdAt: this.userSignal()?.createdAt ?? new Date().toISOString(),
+      };
+      this.userSignal.set(user);
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    } catch {
+      // 401/404 → the token is no longer usable. The interceptor handles the
+      // redirect; here we just make sure no stale identity is left behind.
+      this.clearSession();
+    }
+  }
+
+  /** Drops local session state without calling the API. */
+  private clearSession(): void {
+    this.tokenStore.clear();
+    this.userSignal.set(null);
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(CURRENT_USER_KEY);
+      localStorage.removeItem(LOGIN_TIMESTAMP_KEY);
     }
   }
 
@@ -192,12 +247,7 @@ export class AuthService {
     if (environment.useRealApi && this.tokenStore.accessToken) {
       firstValueFrom(this.authApi.logout()).catch(() => undefined);
     }
-    this.tokenStore.clear();
-    this.userSignal.set(null);
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(CURRENT_USER_KEY);
-      localStorage.removeItem(LOGIN_TIMESTAMP_KEY);
-    }
+    this.clearSession();
   }
 
   updateProfile(updates: Partial<User>): void {
