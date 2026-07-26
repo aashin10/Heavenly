@@ -12,7 +12,7 @@
 export const environment = {
   production: false,
   /** Base URL of the .NET API (ApiControllerBase route is `api/[controller]`). */
-  apiBaseUrl: 'https://localhost:5001/api',
+  apiBaseUrl: 'http://localhost:5212/api',
   /** false → localStorage mocks; true → real HTTP calls to `apiBaseUrl`. */
   useRealApi: false,
 };
