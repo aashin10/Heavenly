@@ -2,7 +2,7 @@
 
 **Scope:** the first real vertical slice — **jobs-portal auth** (login / register / session). This is deliberately small: prove the two halves talk before wiring the rest.
 
-> **Status of this stage.** The frontend integration layer is built and verified (compiles; mock path unchanged). The backend changes are written to the existing code's patterns but **were not compiled here — this machine has no .NET SDK.** You need to build and run them. Everything you must do is below.
+> **Status update (2026-07-26).** Since first writing this: the **.NET 10 SDK is installed** and the backend **builds clean** (verified — my Stage-5 auth code compiles). **Secrets are rotated** into user-secrets (`appsettings.json` no longer carries them). The database is **managed Postgres (Cloud SQL)**, not Firestore. Backend build/run + Cloud SQL steps now live in the backend repo's **`SETUP.md`**. The only thing left before the round-trip works is a **running local Postgres** (Docker or Postgres.app — a GUI install only you can do) — then flip the frontend flag.
 
 ---
 
