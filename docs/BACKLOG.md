@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend only.** Every screen runs on `localStorage`; no backend entities exist at all |
+| Services portal | **Frontend on `localStorage`.** Backend: `Vendor` aggregate exists (B2.1); tender/bid/request entities do not yet |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **17 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **40 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -30,9 +30,26 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 **Verified live:** migrated + new users return `roles`; a single account holding `['employer','service_requester']` proves multi-role works; duplicate role rejected by the constraint; no regressions across the auth suite or the AutoMapper endpoints.
 → branch `feature/account-roles`
 
-### 🟠 B2. Services-portal domain ⬅️ **next** (now on a test safety net)
-Now unblocked by B1. The big greenfield: `Vendor` (+verification, documents, bank), `ServiceRequester`, `ServiceRequest` (+drafts, events), `Tender`, `Bid`, `Award`. Depends on B1.
+### 🟠 B2. Services-portal domain — **in progress**
+The big greenfield, taken one aggregate at a time. Depends on B1.
 → [02](backend/02-API-VENDOR-DASHBOARD.md) · [04](backend/04-API-SERVICE-REQUESTS.md)
+
+| | Aggregate | Status |
+|---|---|---|
+| B2.1 | **Vendor** (+documents, portfolio, bank, verification audit) | ✅ **DONE 2026-07-26** |
+| B2.2 | Vendor **API slices** — register, profile read/update, admin verify queue | ⬅️ **next** |
+| B2.3 | `ServiceRequester` | pending |
+| B2.4 | `ServiceRequest` (+drafts, events) | pending |
+| B2.5 | `Tender` | pending |
+| B2.6 | `Bid` | pending |
+| B2.7 | `Award` | pending |
+
+**B2.1 detail.** `Vendor` is a *profile on a `User` account*, not a second identity — credentials/sessions/roles stay in the auth tables and the `Vendor` entry in `user_roles` grants access, with a unique index enforcing one profile per account. This is what makes F3 (collapse the two auth stores) achievable rather than a rewrite.
+
+Verification transitions are enforced in the domain: reject only from pending, suspend only from verified, reinstate only from suspended, approve from pending *or* rejected (resubmission). **This is stricter than the frontend**, whose `VendorAdminService.updateStatus()` allows any status from any other — see F9.
+
+`service_capabilities`/`service_areas` are native `text[]` + GIN (tender matching is an overlap query); `experience_by_service` is `jsonb`; bank details are owned columns. `GetProfileCompletion()` mirrors `computeProfileSections()` exactly and derives percentage from the section list, so BG6 (ring 75% vs caption "2 of 5") cannot recur server-side.
+**Verified:** 23 integration tests against real Postgres; migration applied to Supabase with both GIN indexes, both uniques, `jsonb` and `ARRAY` types confirmed in the live schema.
 
 ### 🟠 B3. Password reset endpoints
 `PasswordResetToken` entity exists and is migrated, but **no endpoints use it** — a user who forgets their password has no recovery path. Needs request + confirm, single-use, expiring.
@@ -78,6 +95,9 @@ All of it still runs on `localStorage` (`ServiceAuthService`, `DraftService`, `S
 
 ### 🟡 F4. Simplify login (IA2)
 Three decisions before credentials (portal → role → login/signup). With roles on the auth response this becomes one email+password form that routes afterwards. Unblocked by B1.
+
+### 🟠 F9. Vendor status transitions are unguarded on the client
+`VendorAdminService.updateStatus()` sets any status from any other — an admin can "suspend" a vendor who was never verified (quietly removing them from the review queue), or "reject" a verified one. The server now refuses all of these (B2.1), so once F2 lands these actions will start failing with 409 rather than silently succeeding. Fix the client to only offer legal actions for the current status.
 
 ### 🟡 F5. Model divergences
 - `RequesterType`: `'large_organization'` (signup) vs `'organization'` (management) — **genuinely disagree**; canonical is `large_organization`
@@ -128,6 +148,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-26** — **B2.1 done:** Vendor aggregate (domain + persistence + migration), 23 new tests, applied to Supabase. Resolved two open questions in doc 02 (portfolio now modelled; `basic` completion rule reconciled). Logged F9.
 - **2026-07-26** — **B4 done:** 17 integration tests (Testcontainers); exposed + fixed a JWT key-divergence bug. **Supabase** wired as the temporary dev DB, migrations applied, auth lifecycle verified.
 - **2026-07-26** — **AutoMapper removed** (explicit EF projections, byte-identical output). Firebase/Cloud SQL investigated: `heavenly-corp` chosen, provisioning script prepared but deliberately not run (billable).
 - **2026-07-26** — **B1 done:** account roles foundation (`user_roles` + extended `UserType`, roles on all auth responses). Multi-role verified.

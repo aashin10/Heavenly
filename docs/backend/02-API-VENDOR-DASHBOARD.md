@@ -6,7 +6,7 @@
 
 Read [README.md](README.md) for conventions, [01-API-AUTH.md](01-API-AUTH.md) for the session model, and [03-EXISTING-BACKEND-REVIEW.md](03-EXISTING-BACKEND-REVIEW.md) for what already exists.
 
-> **Status: entirely new.** No `Vendor`, `Tender`, or `Bid` entity exists in the backend today — this whole screen is greenfield. See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
+> **Status update 2026-07-26.** The **`Vendor` aggregate now exists** (backend B2.1) — `vendors`, `vendor_documents`, `vendor_portfolio_entries`, `vendor_verification_events`, migrated and live. `Tender`, `Bid` and `Award` are still greenfield, so the dashboard endpoint below cannot be built in full yet; the `vendor` and `profileCompletion` blocks can. See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
 
 ---
 
@@ -161,11 +161,13 @@ The frontend derives `percentage` from the checklist so the ring and caption can
 
 | Section | Complete when |
 |---|---|
-| `basic` | `businessName`, `businessType`, `gstNumber`, `panNumber`, `yearEstablished` all present |
+| `basic` | `businessName`, `businessType`, `gstNumber`, `panNumber`, `yearEstablished` **and** `primaryContactPerson`, `phone`, `registeredAddress`, `city`, `state`, `pinCode` |
 | `documents` | `businessCertificate` **and** `gstCertificate` uploaded (trade licence and insurance optional) |
 | `services` | `serviceCapabilities` and `serviceAreas` both non-empty |
-| `portfolio` | ≥ 1 portfolio entry — **entity does not exist yet, see §7** |
+| `portfolio` | ≥ 1 portfolio entry (`vendor_portfolio_entries`) |
 | `bank` | All four `bankDetails` fields present |
+
+> **Reconciled 2026-07-26.** This table originally listed only the five business-identity fields for `basic`, while `computeProfileSections()` on the frontend also required the six contact fields. The **contact fields are included** — a profile with no phone or address is not reviewable — and `Vendor.GetProfileCompletion()` implements exactly this list. The two sides now agree.
 
 > ⚠️ **All five `route` values are dead links.** `/vendor-profile/*` is not a registered route and the `**` wildcard bounces users to the homepage — see [UI_ISSUES.md §1](../UI_ISSUES.md). The API returns them for forward-compatibility; **the screens must be built before this widget is useful.** It is the dashboard's primary CTA and currently every row of it dead-ends.
 
@@ -229,7 +231,7 @@ profileCompletion   → single vendor row + document rows
 
 1. **What is an "active project"?** No entity models post-award work. Options: (a) derive from `awarded` bids without a completion flag — needs an `awards` table with status; (b) drop the KPI until project tracking exists. **Recommend (a)** — a minimal `awards` table is needed for the evaluation flow regardless.
 
-2. **Portfolio is not modelled.** `PROFILE_SECTIONS` includes it and it counts toward completion, but no `Portfolio` type exists anywhere in the frontend. Needs a definition (past projects with photos? client references?) or removal from the checklist — currently no vendor can reach 100%.
+2. ~~**Portfolio is not modelled.**~~ ✅ **Resolved 2026-07-26.** Modelled as `VendorPortfolioEntry` — title, description, year, optional client name. Deliberately no photos in v1: images need the B10 upload path, and the section's purpose (evidence of comparable past work) is served by text. 100% completion is now reachable.
 
 3. **How is `rating` calculated?** `VendorDashboardStats.rating` is optional and nothing produces it. Needs a review mechanism (requester rates vendor post-completion) or removal.
 
