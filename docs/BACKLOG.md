@@ -98,16 +98,27 @@ Deferred deliberately — screens already show spinner + text, so this is refine
 
 | # | Item | Why it's blocked |
 |---|---|---|
-| Y1 | **Cloud SQL production instance** | Needs your GCP console / `gcloud` login. Commands ready in [SETUP.md §5](../../Heavenly-Job-Backend/SETUP.md) |
-| Y2 | **AutoMapper licensing** | v15+ is dual-licensed — free below a revenue threshold, commercial above. We're on 16.2.0. Either confirm Heavenly is under the threshold, or I remove AutoMapper entirely (only 2 DTOs use it; ~40 lines of explicit projections) |
+| Y1 | **Cloud SQL production instance** | **Decided 2026-07-26: project `heavenly-corp`, prepare-only.** A ready-to-run `scripts/provision-cloudsql.sh` exists (dry-run by default, needs `--confirm`); only `gcloud` install + your go-ahead remain. Billable, so deliberately not executed |
+| ~~Y2~~ | ~~AutoMapper licensing~~ | ✅ **Resolved 2026-07-26 — AutoMapper removed entirely.** Replaced with explicit static `Projection` expressions per DTO; output verified byte-identical. No licensing question remains |
 | Y3 | **E5 imagery** | Supplied photos are watermarked Adobe Stock comps and can't ship. Needs licensed photography, or confirmation on `services-01.jpg` |
 | Y4 | **Client/partner logos, team photos** | Content, not code |
 | Y5 | **DLT sender registration** | Required by Indian carriers before SMS/phone OTP can go live; takes days to approve |
 
 ---
 
+## Architecture notes
+
+**Firebase vs GCP is not a choice** (verified 2026-07-26). Every Firebase project *is* a GCP project — `heavenly-corp` already has one. And **Firebase Data Connect is Cloud SQL for PostgreSQL**: listing Data Connect services enabled `sqladmin.googleapis.com`, the Cloud SQL Admin API. So the Cloud SQL decision and "use my Firebase project" are the same choice.
+
+We use **Cloud SQL directly** rather than the Data Connect layer, because Data Connect manages schema from GraphQL SDL (which would fight EF Core migrations) and the .NET API would bypass its GraphQL layer anyway. Data Connect remains available if a direct client→DB use case ever appears.
+
+Because the stack stayed relational, moving local→cloud is a **connection-string change only** — no application code changes.
+
+---
+
 ## Changelog
 
+- **2026-07-26** — **AutoMapper removed** (explicit EF projections, byte-identical output). Firebase/Cloud SQL investigated: `heavenly-corp` chosen, provisioning script prepared but deliberately not run (billable).
 - **2026-07-26** — **B1 done:** account roles foundation (`user_roles` + extended `UserType`, roles on all auth responses). Multi-role verified.
 - **2026-07-26** — Cleared all package CVEs (AutoMapper 16, Swashbuckle 10.2.3, Cryptography.Xml 10.0.10), runtime-verified. Merged to `main`, created `develop`. Backlog created. Started B1.
 - **2026-07-26** — Stage 6: session rehydration via `/me`.
