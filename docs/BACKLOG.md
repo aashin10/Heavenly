@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend on `localStorage`.** Backend: full vendor API live (B2.1+B2.2); tender/bid/request entities do not yet exist |
+| Services portal | **Frontend on `localStorage`.** Backend: vendor + requester APIs live (B2.1–B2.3); request/tender/bid/award entities do not yet exist |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **74 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **93 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -38,11 +38,17 @@ The big greenfield, taken one aggregate at a time. Depends on B1.
 |---|---|---|
 | B2.1 | **Vendor** (+documents, portfolio, bank, verification audit) | ✅ **DONE 2026-07-26** |
 | B2.2 | Vendor **API slices** — register, profile read/update, admin verify queue | ✅ **DONE 2026-07-27** |
-| B2.3 | `ServiceRequester` | ⬅️ **next** |
-| B2.4 | `ServiceRequest` (+drafts, events) | pending |
+| B2.3 | `ServiceRequester` | ✅ **DONE 2026-07-27** |
+| B2.4 | `ServiceRequest` (+drafts, events) | ⬅️ **next** |
 | B2.5 | `Tender` | pending |
 | B2.6 | `Bid` | pending |
 | B2.7 | `Award` | pending |
+
+**B2.3 detail.** `/api/service-requesters` — register (all three types), `GET me`, `PUT me`.
+- **One table, not table-per-hierarchy.** The frontend types this as a discriminated union, but a requester can **change type** (an individual who incorporates becomes an SME). Under TPH that is a delete-and-recreate, losing the id and all future request history. Type changes now go through `ApplyProfile()`, which clears fields the new type doesn't use before validating what it requires.
+- GSTIN required for `large_organization`, optional for `sme` — a large org is always above the registration threshold; an SME may not be.
+- Canonical wire value confirmed as `large_organization` (settles F5's divergence server-side).
+**Verified:** 22 tests including both directions of type change, plus a live pass against Supabase.
 
 **B2.2 detail — 12 endpoints.** `/api/vendors` (register, `me`, `me/profile-completion`, `me/basic`, `me/services`, `me/bank`, `me/documents`, `me/portfolio`) and `/api/service-admin/vendors` (queue with per-status counts, detail, approve/reject/suspend/reinstate).
 - **Ownership is structural, not checked**: every self-service write addresses the profile by the caller's user id from their token. No route or body carries a vendor id, so there is nothing to tamper with.
@@ -107,6 +113,9 @@ Three decisions before credentials (portal → role → login/signup). With role
 ### 🟠 F9. Vendor status transitions are unguarded on the client
 `VendorAdminService.updateStatus()` sets any status from any other — an admin can "suspend" a vendor who was never verified (quietly removing them from the review queue), or "reject" a verified one. The server now refuses all of these (B2.1), so once F2 lands these actions will start failing with 409 rather than silently succeeding. Fix the client to only offer legal actions for the current status.
 
+### 🟡 F10. Requester address field has three names
+The `ServiceRequester` union calls one field `address` (individual), `businessAddress` (SME) and `registeredAddress` (large org). It is one concept — where the requester is — and the API returns it as `address` (B2.3). Collapse the three on the client.
+
 ### 🟡 F5. Model divergences
 - `RequesterType`: `'large_organization'` (signup) vs `'organization'` (management) — **genuinely disagree**; canonical is `large_organization`
 - `VendorBid.status` redeclares `BidStatus` with hyphens + two statuses that don't exist
@@ -169,6 +178,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-27** — **B2.3 done:** `ServiceRequester` aggregate + API (single table, type changes supported). **Fixed validation 400s carrying no `errors` dictionary** — `GlobalExceptionHandler` serialised against the base `ProblemDetails` type, dropping the field-keyed errors the forms bind to; status-code-only tests never noticed. Logged F10.
 - **2026-07-27** — **B2.2 done:** 12 vendor endpoints (self-service + admin verification), under an explicit `ServicesPortal` module boundary for the planned portal split. **Fixed a privilege-escalation hole** (see below) and completed B1's JWT role claims. B6 mostly done via `GlobalExceptionHandler`.
 - **2026-07-27** — 🔴 **SECURITY: `POST /api/auth/register` accepted `userType: Admin`** and minted fully-privileged accounts. Root cause: validators were registered in DI but never resolved — no pipeline behaviour existed, so every FluentValidation rule in the codebase was dead code. Fixed with `ValidationBehaviour`. Confirmed unexploited (no Admin accounts existed).
 - **2026-07-26** — **B2.1 done:** Vendor aggregate (domain + persistence + migration), 23 new tests, applied to Supabase. Resolved two open questions in doc 02 (portfolio now modelled; `basic` completion rule reconciled). Logged F9.
