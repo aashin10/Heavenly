@@ -19,7 +19,9 @@ Read [README.md](README.md) for conventions, [01-API-AUTH.md](01-API-AUTH.md) fo
 > | `GET /api/service-admin/vendors/{id}` | review detail incl. timeline |
 > | `POST /api/service-admin/vendors/{id}/{approve,reject,suspend,reinstate}` | the four decisions |
 >
-> `Tender`, `Bid` and `Award` are **still greenfield**, so `GET /api/vendors/me/dashboard` below cannot be built yet — its `stats`, `opportunities` and `recentBids` blocks have no entities behind them. The `vendor` and `profileCompletion` blocks are available today from `GET /api/vendors/me`. See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
+> **Tenders landed 2026-07-27 (B2.5).** `GET /api/tenders` returns this doc's `opportunities[]` shape — matched on capability **and** area, with `isUrgent` computed server-side on the ≤3-day rule specified in §3, and `budget` **omitted entirely** when withheld exactly as §3 required. `GET /api/tenders/{id}` adds a per-vendor eligibility verdict listing every failure.
+>
+> Still missing for the aggregate dashboard: `Bid` and `Award` (B2.6/B2.7), so `stats.myBids`, `stats.wonBids`, `stats.activeProjects`, `recentBids[]` and `hasBid` have no entities behind them yet. `stats.openTenders` **is** now computable (the matched count from `GET /api/tenders`). See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
 >
 > ⚠️ **Two contract notes for the frontend:**
 > - **The full bank account number is never returned by any endpoint.** `bankDetails` carries `maskedAccountNumber` (`"••••9012"`) and `isComplete` only. The edit form must re-collect the number to change it.
@@ -252,6 +254,8 @@ profileCompletion   → single vendor row + document rows
 
 3. **How is `rating` calculated?** `VendorDashboardStats.rating` is optional and nothing produces it. Needs a review mechanism (requester rates vendor post-completion) or removal.
 
-4. **Tender matching precision.** Is `openTenders` matched on `serviceCapabilities` **and** `serviceAreas`, or capabilities only? Recommend both — a Delhi vendor should not see Chennai tenders in their count. Also decide whether eligibility criteria (insurance, bond capability, years of experience — `TenderEligibilityCriteria`) filter the count or only the detail view. **Recommend filtering the count too**, otherwise the number promises work the vendor cannot bid on.
+4. ~~**Tender matching precision.**~~ ✅ **DECIDED + BUILT 2026-07-27.** Matched on `serviceCapabilities` **and** `serviceAreas`, as recommended. Eligibility criteria do **not** filter the list — instead each tender detail returns an `eligibilityResult` naming every unmet requirement, so a vendor sees near-miss work and what to fix rather than silently never seeing it. `includeUnmatched=true` shows the whole board.
+
+   *(original question)* **Tender matching precision.** Is `openTenders` matched on `serviceCapabilities` **and** `serviceAreas`, or capabilities only? Recommend both — a Delhi vendor should not see Chennai tenders in their count. Also decide whether eligibility criteria (insurance, bond capability, years of experience — `TenderEligibilityCriteria`) filter the count or only the detail view. **Recommend filtering the count too**, otherwise the number promises work the vendor cannot bid on.
 
 5. **Should `pending` vendors see a read-only dashboard?** Currently they are hard-blocked. Letting them browse tenders (without bidding) would show the value of finishing verification. Product call.

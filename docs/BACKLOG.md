@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend on `localStorage`.** Backend: vendor, requester **and service-request** APIs live (B2.1–B2.4); tender/bid/award do not yet exist |
+| Services portal | **Frontend on `localStorage`.** Backend: vendor, requester, service-request **and tender** APIs live (B2.1–B2.5); bid/award do not yet exist |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **117 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **145 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -40,9 +40,18 @@ The big greenfield, taken one aggregate at a time. Depends on B1.
 | B2.2 | Vendor **API slices** — register, profile read/update, admin verify queue | ✅ **DONE 2026-07-27** |
 | B2.3 | `ServiceRequester` | ✅ **DONE 2026-07-27** |
 | B2.4 | `ServiceRequest` (+drafts, events) | ✅ **DONE 2026-07-27** |
-| B2.5 | `Tender` | ⬅️ **next** |
-| B2.6 | `Bid` | pending |
+| B2.5 | `Tender` (+clarifications) | ✅ **DONE 2026-07-27** |
+| B2.6 | `Bid` | ⬅️ **next** |
 | B2.7 | `Award` | pending |
+
+**B2.5 detail — 14 endpoints.** `/api/tenders` (browse matched, detail with eligibility verdict, ask clarification) and `/api/service-admin/tenders` (list, create from approved request, edit draft, publish/close/cancel, clarifications Q&A).
+- 🔒 **Budget visibility is an access rule, not a display hint.** The vendor-facing DTOs have **no field** for a withheld figure — they're separate types from the admin DTO, so the compiler guarantees it rather than a reviewer. `hide` → budget is `null`; `show_range` → the exact figure is withheld too. Verified live that the numbers appear nowhere in the vendor payload.
+- **Publishing is gated** on a coherent bid window (exists, ends after it starts, not already past) and budget figures matching the visibility setting. It also moves the request to `published` — the two states describe one fact.
+- **A published tender can't be edited** — vendors have priced against its scope.
+- **Matching is capability AND area**, both translating to `= ANY(...)` over the GIN-indexed vendor arrays.
+- **Eligibility returns every failure**, not the first — otherwise a vendor fixes one thing, rechecks, and is told the next.
+- **Clarification answers are public to all bidders** (a private answer is an unfair advantage) but **the asker is never named**, and pending questions are hidden from vendors.
+**Verified:** 28 tests + full live pass against Supabase.
 
 **B2.4 detail — 14 endpoints.** `/api/service-requests` (drafts CRUD, submit, mine, detail, cancel) and `/api/service-admin/service-requests` (queue + counts, detail, start-review/approve/request-changes/close).
 - **Drafts are their own table**, not a request with status `draft` — an unfinished form must not enter the admin queue, hold a request number, or live forever. One draft per service per requester (unique index); expiry runs from last save, so an actively edited draft never lapses.
@@ -186,6 +195,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-27** — **B2.5 done:** `Tender` + clarifications. Budget visibility enforced structurally (separate vendor DTO types); vendor matching on capability + area; eligibility verdicts.
 - **2026-07-27** — **B2.4 done:** `ServiceRequest` + drafts + append-only events; the changes-required round trip verified end to end. Fixed `Database.SqlQuery` parameterising a sequence name (Postgres 42P01).
 - **2026-07-27** — **B2.3 done:** `ServiceRequester` aggregate + API (single table, type changes supported). **Fixed validation 400s carrying no `errors` dictionary** — `GlobalExceptionHandler` serialised against the base `ProblemDetails` type, dropping the field-keyed errors the forms bind to; status-code-only tests never noticed. Logged F10.
 - **2026-07-27** — **B2.2 done:** 12 vendor endpoints (self-service + admin verification), under an explicit `ServicesPortal` module boundary for the planned portal split. **Fixed a privilege-escalation hole** (see below) and completed B1's JWT role claims. B6 mostly done via `GlobalExceptionHandler`.
