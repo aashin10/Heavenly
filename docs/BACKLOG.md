@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend on `localStorage`.** Backend: vendor + requester APIs live (B2.1–B2.3); request/tender/bid/award entities do not yet exist |
+| Services portal | **Frontend on `localStorage`.** Backend: vendor, requester **and service-request** APIs live (B2.1–B2.4); tender/bid/award do not yet exist |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **93 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **117 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -39,10 +39,18 @@ The big greenfield, taken one aggregate at a time. Depends on B1.
 | B2.1 | **Vendor** (+documents, portfolio, bank, verification audit) | ✅ **DONE 2026-07-26** |
 | B2.2 | Vendor **API slices** — register, profile read/update, admin verify queue | ✅ **DONE 2026-07-27** |
 | B2.3 | `ServiceRequester` | ✅ **DONE 2026-07-27** |
-| B2.4 | `ServiceRequest` (+drafts, events) | ⬅️ **next** |
-| B2.5 | `Tender` | pending |
+| B2.4 | `ServiceRequest` (+drafts, events) | ✅ **DONE 2026-07-27** |
+| B2.5 | `Tender` | ⬅️ **next** |
 | B2.6 | `Bid` | pending |
 | B2.7 | `Award` | pending |
+
+**B2.4 detail — 14 endpoints.** `/api/service-requests` (drafts CRUD, submit, mine, detail, cancel) and `/api/service-admin/service-requests` (queue + counts, detail, start-review/approve/request-changes/close).
+- **Drafts are their own table**, not a request with status `draft` — an unfinished form must not enter the admin queue, hold a request number, or live forever. One draft per service per requester (unique index); expiry runs from last save, so an actively edited draft never lapses.
+- **The state machine lives in one table on the aggregate**; every transition consults it, so the pipeline can't drift from the code. Cancel only before a tender exists — after that vendors have bids in flight, so it closes instead.
+- **The changes-required round trip works on the same request** — same id, same number, same history, review note cleared on resubmit. Verified live: `submitted → changes_required → submitted` on one row.
+- Request numbers (`SR-2026-00001`) come from a **Postgres sequence**, not `max()+1`, which races under concurrent submissions.
+- **`internalNotes` never reaches the requester** (asserted by test); requester contact details on the admin DTO are a **join**, not stored columns.
+**Verified:** 24 tests + a full live pass against Supabase.
 
 **B2.3 detail.** `/api/service-requesters` — register (all three types), `GET me`, `PUT me`.
 - **One table, not table-per-hierarchy.** The frontend types this as a discriminated union, but a requester can **change type** (an individual who incorporates becomes an SME). Under TPH that is a delete-and-recreate, losing the id and all future request history. Type changes now go through `ApplyProfile()`, which clears fields the new type doesn't use before validating what it requires.
@@ -178,6 +186,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-27** — **B2.4 done:** `ServiceRequest` + drafts + append-only events; the changes-required round trip verified end to end. Fixed `Database.SqlQuery` parameterising a sequence name (Postgres 42P01).
 - **2026-07-27** — **B2.3 done:** `ServiceRequester` aggregate + API (single table, type changes supported). **Fixed validation 400s carrying no `errors` dictionary** — `GlobalExceptionHandler` serialised against the base `ProblemDetails` type, dropping the field-keyed errors the forms bind to; status-code-only tests never noticed. Logged F10.
 - **2026-07-27** — **B2.2 done:** 12 vendor endpoints (self-service + admin verification), under an explicit `ServicesPortal` module boundary for the planned portal split. **Fixed a privilege-escalation hole** (see below) and completed B1's JWT role claims. B6 mostly done via `GlobalExceptionHandler`.
 - **2026-07-27** — 🔴 **SECURITY: `POST /api/auth/register` accepted `userType: Admin`** and minted fully-privileged accounts. Root cause: validators were registered in DI but never resolved — no pipeline behaviour existed, so every FluentValidation rule in the codebase was dead code. Fixed with `ValidationBehaviour`. Confirmed unexploited (no Admin accounts existed).
