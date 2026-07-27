@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend on `localStorage`.** Backend: `Vendor` aggregate exists (B2.1); tender/bid/request entities do not yet |
+| Services portal | **Frontend on `localStorage`.** Backend: full vendor API live (B2.1+B2.2); tender/bid/request entities do not yet exist |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **40 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **74 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -37,12 +37,19 @@ The big greenfield, taken one aggregate at a time. Depends on B1.
 | | Aggregate | Status |
 |---|---|---|
 | B2.1 | **Vendor** (+documents, portfolio, bank, verification audit) | ✅ **DONE 2026-07-26** |
-| B2.2 | Vendor **API slices** — register, profile read/update, admin verify queue | ⬅️ **next** |
-| B2.3 | `ServiceRequester` | pending |
+| B2.2 | Vendor **API slices** — register, profile read/update, admin verify queue | ✅ **DONE 2026-07-27** |
+| B2.3 | `ServiceRequester` | ⬅️ **next** |
 | B2.4 | `ServiceRequest` (+drafts, events) | pending |
 | B2.5 | `Tender` | pending |
 | B2.6 | `Bid` | pending |
 | B2.7 | `Award` | pending |
+
+**B2.2 detail — 12 endpoints.** `/api/vendors` (register, `me`, `me/profile-completion`, `me/basic`, `me/services`, `me/bank`, `me/documents`, `me/portfolio`) and `/api/service-admin/vendors` (queue with per-status counts, detail, approve/reject/suspend/reinstate).
+- **Ownership is structural, not checked**: every self-service write addresses the profile by the caller's user id from their token. No route or body carries a vendor id, so there is nothing to tamper with.
+- **The full bank account number is never returned by any endpoint** — not to its owner, not to reviewing admins. Only the masked tail. Changing it means re-entering it.
+- Registration creates account + role + profile + session in **one** `SaveChanges`; a rejected registration leaves no orphaned login.
+- The four review actions are **named endpoints**, not one set-status call, so the server owns which transitions exist.
+**Verified:** 26 tests, plus a live end-to-end pass against Supabase (register → 40% completion → bank masked → suspend-pending rejected with 409 → approve → verified/canBid).
 
 **B2.1 detail.** `Vendor` is a *profile on a `User` account*, not a second identity — credentials/sessions/roles stay in the auth tables and the `Vendor` entry in `user_roles` grants access, with a unique index enforcing one profile per account. This is what makes F3 (collapse the two auth stores) achievable rather than a rewrite.
 
@@ -62,8 +69,9 @@ Still to add: unit tests for handlers, and a frontend suite.
 ### 🟡 B5. `/register` should return tokens
 Currently returns `{ userId }` only, so the frontend does register-then-login (two round trips). Returning an `AuthResponse` collapses it to one. Frontend already handles both.
 
-### 🟡 B6. RFC 9457 Problem Details
-`AuthController` returns three different error shapes, and the `409` is triggered by **string-matching an exception message** (`ex.Message.Contains("already exists")`) — that breaks the moment someone rewords it. Standardise via middleware; `422`s should carry field-keyed errors the Angular forms can bind.
+### 🟡 B6. RFC 9457 Problem Details — **mostly done 2026-07-27**
+`GlobalExceptionHandler` now maps `ValidationException` → 400 (field-keyed errors), `NotFoundException` → 404, `ForbiddenException` → 403, `AuthenticationException` → 401, `ConflictException`/`DomainException` → 409, as problem details. All new endpoints use it.
+**Remaining:** `AuthController` still has its own try/catch returning bespoke `{message}` and `{errors:[]}` shapes, deliberately left alone because the Angular client parses them — migrating needs a coordinated frontend change. Its `409` is still triggered by string-matching an exception message.
 → [03 §2.4](backend/03-EXISTING-BACKEND-REVIEW.md)
 
 ### 🟡 B7. Email verification flow
@@ -128,6 +136,19 @@ Deferred deliberately — screens already show spinner + text, so this is refine
 
 ---
 
+## Portal modularity (jobs ⟷ services split)
+
+The two portals are being kept **separable** for a future split into independent deployables. Rules now enforced in code and documented in `Application/Features/ServicesPortal/README.md`:
+
+1. **No cross-portal type references** in either direction. Nothing under `ServicesPortal/` touches `Job`, `JobApplication`, `JobDomain`, etc., and jobs code touches nothing in it. This is the most expensive thing to unpick later.
+2. **Identity is the single shared concept** — `Vendor.UserId → users.id` is the only cross-module FK, and is the intended seam (extract identity into its own service, or give each service a projection of the user rows it needs).
+3. **Route prefixes move as a unit** — `/api/vendors/**`, `/api/service-admin/**`. A gateway can route by path with no per-endpoint list.
+4. **The Application layer stays provider-free** — the vendor queue search uses `ToLower().Contains()` rather than Npgsql's `ILike`, so the module lifts out without dragging Npgsql with it.
+
+**Deliberately not done yet:** one `ApplicationDbContext` still holds both portals, and jobs features still sit directly under `Features/` rather than a matching `Features/JobsPortal/`. Both are mechanical moves; doing them now would touch working code for no behavioural gain. Migration path when the split starts: two `DbContext`s over two schemas, then two databases — the entity configurations are already per-entity files and move unchanged.
+
+---
+
 ## Database — current
 
 **Supabase (temporary), Seoul session pooler.** Cloud SQL / Firebase are on hold. Migrations applied and the full auth lifecycle verified against it. Connection is in user-secrets (`ConnectionStrings:DefaultConnection`), with the local Docker string retained as `ConnectionStrings:LocalDocker` to switch back offline. Session pooler port 5432 — **not** transaction pooler 6543, which lacks the session state EF migrations need.
@@ -148,6 +169,8 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-27** — **B2.2 done:** 12 vendor endpoints (self-service + admin verification), under an explicit `ServicesPortal` module boundary for the planned portal split. **Fixed a privilege-escalation hole** (see below) and completed B1's JWT role claims. B6 mostly done via `GlobalExceptionHandler`.
+- **2026-07-27** — 🔴 **SECURITY: `POST /api/auth/register` accepted `userType: Admin`** and minted fully-privileged accounts. Root cause: validators were registered in DI but never resolved — no pipeline behaviour existed, so every FluentValidation rule in the codebase was dead code. Fixed with `ValidationBehaviour`. Confirmed unexploited (no Admin accounts existed).
 - **2026-07-26** — **B2.1 done:** Vendor aggregate (domain + persistence + migration), 23 new tests, applied to Supabase. Resolved two open questions in doc 02 (portfolio now modelled; `basic` completion rule reconciled). Logged F9.
 - **2026-07-26** — **B4 done:** 17 integration tests (Testcontainers); exposed + fixed a JWT key-divergence bug. **Supabase** wired as the temporary dev DB, migrations applied, auth lifecycle verified.
 - **2026-07-26** — **AutoMapper removed** (explicit EF projections, byte-identical output). Firebase/Cloud SQL investigated: `heavenly-corp` chosen, provisioning script prepared but deliberately not run (billable).

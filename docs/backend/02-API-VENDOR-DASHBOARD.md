@@ -6,7 +6,24 @@
 
 Read [README.md](README.md) for conventions, [01-API-AUTH.md](01-API-AUTH.md) for the session model, and [03-EXISTING-BACKEND-REVIEW.md](03-EXISTING-BACKEND-REVIEW.md) for what already exists.
 
-> **Status update 2026-07-26.** The **`Vendor` aggregate now exists** (backend B2.1) — `vendors`, `vendor_documents`, `vendor_portfolio_entries`, `vendor_verification_events`, migrated and live. `Tender`, `Bid` and `Award` are still greenfield, so the dashboard endpoint below cannot be built in full yet; the `vendor` and `profileCompletion` blocks can. See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
+> **Status update 2026-07-27.** The **`Vendor` aggregate and its full API now exist** (backend B2.1 + B2.2). Live endpoints:
+>
+> | | |
+> |---|---|
+> | `POST /api/vendors/register` | account + role + profile in one transaction, returns tokens |
+> | `GET /api/vendors/me` | full profile incl. `profileCompletion` |
+> | `GET /api/vendors/me/profile-completion` | just the checklist block (this doc's §4) |
+> | `PUT /api/vendors/me/{basic,services,bank,documents}` | per-section saves |
+> | `POST`/`DELETE /api/vendors/me/portfolio[/{id}]` | portfolio entries |
+> | `GET /api/service-admin/vendors[?status=&search=&page=]` | verification queue + counts |
+> | `GET /api/service-admin/vendors/{id}` | review detail incl. timeline |
+> | `POST /api/service-admin/vendors/{id}/{approve,reject,suspend,reinstate}` | the four decisions |
+>
+> `Tender`, `Bid` and `Award` are **still greenfield**, so `GET /api/vendors/me/dashboard` below cannot be built yet — its `stats`, `opportunities` and `recentBids` blocks have no entities behind them. The `vendor` and `profileCompletion` blocks are available today from `GET /api/vendors/me`. See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
+>
+> ⚠️ **Two contract notes for the frontend:**
+> - **The full bank account number is never returned by any endpoint.** `bankDetails` carries `maskedAccountNumber` (`"••••9012"`) and `isComplete` only. The edit form must re-collect the number to change it.
+> - **Verification transitions are server-enforced and stricter than the client** — see F9.
 
 ---
 
