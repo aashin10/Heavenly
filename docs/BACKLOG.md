@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend on `localStorage`.** Backend: vendor, requester, service-request **and tender** APIs live (B2.1–B2.5); bid/award do not yet exist |
+| Services portal | **Frontend on `localStorage`.** Backend: request → tender → **bid** pipeline live end to end (B2.1–B2.6); only `Award` remains |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **145 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **170 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -41,8 +41,17 @@ The big greenfield, taken one aggregate at a time. Depends on B1.
 | B2.3 | `ServiceRequester` | ✅ **DONE 2026-07-27** |
 | B2.4 | `ServiceRequest` (+drafts, events) | ✅ **DONE 2026-07-27** |
 | B2.5 | `Tender` (+clarifications) | ✅ **DONE 2026-07-27** |
-| B2.6 | `Bid` | ⬅️ **next** |
-| B2.7 | `Award` | pending |
+| B2.6 | `Bid` (+drafts, sealed bidding, evaluation) | ✅ **DONE 2026-07-29** |
+| B2.7 | `Award` | ⬅️ **next** — last one |
+
+**B2.6 detail — 13 endpoints.** `/api/bids` (draft, submit, my bids, my stats, detail, withdraw) and `/api/service-admin/bids` (per-tender list, count, start-review/shortlist/reject).
+- 🔒 **Sealed bidding is structural.** No DTO shows one vendor another's bid and no vendor-facing route could return one — every query is scoped by the caller's own vendor id *in the same WHERE clause as the bid id*, so a rival's bid is **404, never 403** (its existence isn't confirmed either). Verified live.
+- 🔒 **Evaluators are held to it too**: reading or evaluating a tender's bids is **409 while the window is open**. Scoring bids as they arrive judges early bidders against a different field than late ones. The **count** stays available — it says how contested the work is without revealing a price.
+- **Submission gated server-side** on window + eligibility + no-duplicate. `confirmEligibility` is the vendor's attestation, not the check — a vendor lacking required insurance is refused even when they tick it.
+- **Withdrawal only while open** — afterwards a vendor could read the room and leave once evaluation began.
+- **Rejection requires a reason**; `internalNotes` never reaches the vendor.
+- Adds **`hasBid` + `bidCount`** to tender cards (2 queries per page, not per row) and the **vendor dashboard's four counters** as one call.
+**Verified:** 29 tests + full live pass against Supabase.
 
 **B2.5 detail — 14 endpoints.** `/api/tenders` (browse matched, detail with eligibility verdict, ask clarification) and `/api/service-admin/tenders` (list, create from approved request, edit draft, publish/close/cancel, clarifications Q&A).
 - 🔒 **Budget visibility is an access rule, not a display hint.** The vendor-facing DTOs have **no field** for a withheld figure — they're separate types from the admin DTO, so the compiler guarantees it rather than a reviewer. `hide` → budget is `null`; `show_range` → the exact figure is withheld too. Verified live that the numbers appear nowhere in the vendor payload.
@@ -195,6 +204,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-29** — **B2.6 done:** `Bid` + drafts + sealed bidding + evaluation. The request → tender → bid pipeline now runs end to end. Vendor dashboard's `openTenders`/`myBids`/`wonBids` are live; only `activeProjects` awaits B2.7.
 - **2026-07-27** — **B2.5 done:** `Tender` + clarifications. Budget visibility enforced structurally (separate vendor DTO types); vendor matching on capability + area; eligibility verdicts.
 - **2026-07-27** — **B2.4 done:** `ServiceRequest` + drafts + append-only events; the changes-required round trip verified end to end. Fixed `Database.SqlQuery` parameterising a sequence name (Postgres 42P01).
 - **2026-07-27** — **B2.3 done:** `ServiceRequester` aggregate + API (single table, type changes supported). **Fixed validation 400s carrying no `errors` dictionary** — `GlobalExceptionHandler` serialised against the base `ProblemDetails` type, dropping the field-keyed errors the forms bind to; status-code-only tests never noticed. Logged F10.

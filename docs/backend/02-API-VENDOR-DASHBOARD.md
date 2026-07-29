@@ -21,7 +21,11 @@ Read [README.md](README.md) for conventions, [01-API-AUTH.md](01-API-AUTH.md) fo
 >
 > **Tenders landed 2026-07-27 (B2.5).** `GET /api/tenders` returns this doc's `opportunities[]` shape — matched on capability **and** area, with `isUrgent` computed server-side on the ≤3-day rule specified in §3, and `budget` **omitted entirely** when withheld exactly as §3 required. `GET /api/tenders/{id}` adds a per-vendor eligibility verdict listing every failure.
 >
-> Still missing for the aggregate dashboard: `Bid` and `Award` (B2.6/B2.7), so `stats.myBids`, `stats.wonBids`, `stats.activeProjects`, `recentBids[]` and `hasBid` have no entities behind them yet. `stats.openTenders` **is** now computable (the matched count from `GET /api/tenders`). See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
+> **Bids landed 2026-07-29 (B2.6).** `GET /api/bids/mine/stats` returns this doc's `stats` block in one call — `openTenders` (matched, per §3), `myBids` (live states only), `wonBids`, `activeProjects`. `GET /api/bids/mine` is the `recentBids[]` shape. `hasBid` **and** `bidCount` are now on every opportunity card from `GET /api/tenders`, resolved in two queries per page rather than the N+1 §5 warned about.
+>
+> `activeProjects` currently counts awarded bids on tenders that aren't closed — a stand-in until `Award` (B2.7) models post-award work properly. Everything else in §2 is live.
+>
+> ⚠️ **`recentBids[].status` uses the canonical `BidStatus`** — `under_review` with an underscore, and no `pending`/`accepted`. The dashboard model must import `BidStatus` rather than redeclaring it (change #1 in §6). See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
 >
 > ⚠️ **Two contract notes for the frontend:**
 > - **The full bank account number is never returned by any endpoint.** `bankDetails` carries `maskedAccountNumber` (`"••••9012"`) and `isComplete` only. The edit form must re-collect the number to change it.
@@ -252,7 +256,9 @@ profileCompletion   → single vendor row + document rows
 
 2. ~~**Portfolio is not modelled.**~~ ✅ **Resolved 2026-07-26.** Modelled as `VendorPortfolioEntry` — title, description, year, optional client name. Deliberately no photos in v1: images need the B10 upload path, and the section's purpose (evidence of comparable past work) is served by text. 100% completion is now reachable.
 
-3. **How is `rating` calculated?** `VendorDashboardStats.rating` is optional and nothing produces it. Needs a review mechanism (requester rates vendor post-completion) or removal.
+3. **Bids are sealed** (B2.6). No endpoint returns one vendor another's bid, and the admin bid list 409s until the tender closes. The dashboard can show `bidCount` on an open tender — a count reveals no price — but never any competitor's amount.
+
+4. **How is `rating` calculated?** `VendorDashboardStats.rating` is optional and nothing produces it. Needs a review mechanism (requester rates vendor post-completion) or removal.
 
 4. ~~**Tender matching precision.**~~ ✅ **DECIDED + BUILT 2026-07-27.** Matched on `serviceCapabilities` **and** `serviceAreas`, as recommended. Eligibility criteria do **not** filter the list — instead each tender detail returns an `eligibilityResult` naming every unmet requirement, so a vendor sees near-miss work and what to fix rather than silently never seeing it. `includeUnmatched=true` shows the whole board.
 
