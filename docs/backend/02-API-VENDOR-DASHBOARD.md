@@ -23,7 +23,7 @@ Read [README.md](README.md) for conventions, [01-API-AUTH.md](01-API-AUTH.md) fo
 >
 > **Bids landed 2026-07-29 (B2.6).** `GET /api/bids/mine/stats` returns this doc's `stats` block in one call — `openTenders` (matched, per §3), `myBids` (live states only), `wonBids`, `activeProjects`. `GET /api/bids/mine` is the `recentBids[]` shape. `hasBid` **and** `bidCount` are now on every opportunity card from `GET /api/tenders`, resolved in two queries per page rather than the N+1 §5 warned about.
 >
-> `activeProjects` currently counts awarded bids on tenders that aren't closed — a stand-in until `Award` (B2.7) models post-award work properly. Everything else in §2 is live.
+> **Awards landed 2026-07-29 (B2.7) — every block in §2 is now live.** `activeProjects` counts awards in `accepted`/`in_progress`, so a delivered job stops counting at sign-off.
 >
 > ⚠️ **`recentBids[].status` uses the canonical `BidStatus`** — `under_review` with an underscore, and no `pending`/`accepted`. The dashboard model must import `BidStatus` rather than redeclaring it (change #1 in §6). See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
 >
@@ -252,7 +252,7 @@ profileCompletion   → single vendor row + document rows
 
 ## 7. Open questions
 
-1. **What is an "active project"?** No entity models post-award work. Options: (a) derive from `awarded` bids without a completion flag — needs an `awards` table with status; (b) drop the KPI until project tracking exists. **Recommend (a)** — a minimal `awards` table is needed for the evaluation flow regardless.
+1. ~~**What is an "active project"?**~~ ✅ **ANSWERED + BUILT 2026-07-29.** Option (a), as recommended: an `awards` table with status. An active project is an award in `accepted` or `in_progress` — work committed to but not yet delivered. Counted from the award, not the bid, so a finished job stops counting the moment it is signed off.
 
 2. ~~**Portfolio is not modelled.**~~ ✅ **Resolved 2026-07-26.** Modelled as `VendorPortfolioEntry` — title, description, year, optional client name. Deliberately no photos in v1: images need the B10 upload path, and the section's purpose (evidence of comparable past work) is served by text. 100% completion is now reachable.
 

@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend on `localStorage`.** Backend: request → tender → **bid** pipeline live end to end (B2.1–B2.6); only `Award` remains |
+| Services portal | **Frontend on `localStorage`.** Backend: **B2 COMPLETE** — request → tender → bid → award runs end to end |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **170 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **188 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -30,7 +30,7 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 **Verified live:** migrated + new users return `roles`; a single account holding `['employer','service_requester']` proves multi-role works; duplicate role rejected by the constraint; no regressions across the auth suite or the AutoMapper endpoints.
 → branch `feature/account-roles`
 
-### 🟠 B2. Services-portal domain — **in progress**
+### ✅ B2. Services-portal domain — **COMPLETE 2026-07-29**
 The big greenfield, taken one aggregate at a time. Depends on B1.
 → [02](backend/02-API-VENDOR-DASHBOARD.md) · [04](backend/04-API-SERVICE-REQUESTS.md)
 
@@ -42,7 +42,15 @@ The big greenfield, taken one aggregate at a time. Depends on B1.
 | B2.4 | `ServiceRequest` (+drafts, events) | ✅ **DONE 2026-07-27** |
 | B2.5 | `Tender` (+clarifications) | ✅ **DONE 2026-07-27** |
 | B2.6 | `Bid` (+drafts, sealed bidding, evaluation) | ✅ **DONE 2026-07-29** |
-| B2.7 | `Award` | ⬅️ **next** — last one |
+| B2.7 | `Award` (+work tracking) | ✅ **DONE 2026-07-29** |
+
+**B2.7 detail — 12 endpoints.** `/api/awards` (vendor), `/api/service-requests/{id}/award` (requester), `/api/service-admin/awards` (award a bid, list, start/complete/cancel).
+- **Awarding is one transaction** touching four things: winner awarded, every other live bid rejected, tender marked awarded, award created. A partial application would leave two vendors both believing they won.
+- Losing bids get a **deliberately generic** reason — why one bid beat another is commercially sensitive to the winner — but they *are* rejected, since that's the only thing telling those vendors the outcome.
+- 🔒 **Sealed bidding survives the award**: a losing vendor gets 404 on it and never learns the winning amount. The requester sees it in full — they're paying for the job.
+- **`activeProjects` finally has a real definition** (doc 02 §7's open question): awards in `accepted`/`in_progress`. Counted from the award, so a finished job stops counting at sign-off — verified live 1 → 0, with `wonBids` staying 1.
+- **Completing/cancelling closes the underlying request** — the three describe one job, and a request left `published` after delivery sits in the requester's list forever.
+**Verified:** 18 tests + full pipeline walked live (`SR-2026-00004 → TND-2026-00003 → 2 sealed bids → AWD-2026-00001 → completed`).
 
 **B2.6 detail — 13 endpoints.** `/api/bids` (draft, submit, my bids, my stats, detail, withdraw) and `/api/service-admin/bids` (per-tender list, count, start-review/shortlist/reject).
 - 🔒 **Sealed bidding is structural.** No DTO shows one vendor another's bid and no vendor-facing route could return one — every query is scoped by the caller's own vendor id *in the same WHERE clause as the bid id*, so a rival's bid is **404, never 403** (its existence isn't confirmed either). Verified live.
@@ -204,6 +212,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-07-29** — **B2.7 done — B2 COMPLETE.** `Award` + post-award work tracking. The whole services-portal pipeline (request → tender → bid → award) now runs end to end and is verified live. `activeProjects` answered doc 02 §7.
 - **2026-07-29** — **B2.6 done:** `Bid` + drafts + sealed bidding + evaluation. The request → tender → bid pipeline now runs end to end. Vendor dashboard's `openTenders`/`myBids`/`wonBids` are live; only `activeProjects` awaits B2.7.
 - **2026-07-27** — **B2.5 done:** `Tender` + clarifications. Budget visibility enforced structurally (separate vendor DTO types); vendor matching on capability + area; eligibility verdicts.
 - **2026-07-27** — **B2.4 done:** `ServiceRequest` + drafts + append-only events; the changes-required round trip verified end to end. Fixed `Database.SqlQuery` parameterising a sequence name (Postgres 42P01).
