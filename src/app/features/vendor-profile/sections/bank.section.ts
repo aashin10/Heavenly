@@ -186,7 +186,7 @@ export class BankSectionComponent {
     this.isEditing.set(false);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.toastService.error('Please fix the highlighted fields.');
@@ -194,7 +194,7 @@ export class BankSectionComponent {
     }
 
     const value = this.form.value;
-    this.serviceAuthService.updateVendorProfile({
+    await this.serviceAuthService.updateVendorProfileAsync({
       bankDetails: {
         accountHolderName: value.accountHolderName,
         accountNumber: value.accountNumber,

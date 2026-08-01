@@ -4,13 +4,19 @@
  * domain `User` model so the mapping between them is explicit.
  */
 
-/** Response from POST /api/auth/login, /register (once it returns tokens), /refresh. */
+/** Response from POST /api/auth/login, /register (jobs — {userId} only today; vendors/requesters get this directly), /refresh. */
 export interface AuthResponse {
   userId: string;
   email: string;
   name: string;
-  /** Lowercase once the API's enum serialization is fixed: 'employer' | 'applicant' | 'admin'. */
+  /** Lowercase snake_case, e.g. 'employer' | 'applicant' | 'admin' | 'vendor' | 'service_requester'. */
   userType: string;
+  /**
+   * The account's full role set (backend B1), lowercase snake_case. A vendor
+   * who is also a service requester holds both — check membership here, not
+   * `userType` alone, when deciding whether an account may act in a portal.
+   */
+  roles: string[];
   company: string | null;
   accessToken: string;
   refreshToken: string;
@@ -24,6 +30,7 @@ export interface MeResponse {
   email: string;
   name: string;
   userType: string;
+  roles: string[];
   company: string | null;
 }
 

@@ -10,6 +10,14 @@ Read [README.md](README.md) for conventions and [03-EXISTING-BACKEND-REVIEW.md](
 
 ---
 
+> **Status update 2026-07-27 — this is now BUILT (backend B2.4).** Every endpoint below is live, plus the admin review side. Three deltas from what this doc originally specified:
+>
+> 1. **Drafts are keyed by `serviceId` per requester, as specified** — but expiry runs from *last save*, not creation, so an actively edited draft never lapses mid-wizard.
+> 2. **Resubmission is folded into `POST /api/service-requests`** rather than a separate `/{id}/resubmit`: the wizard already posts everything it has, and `resubmitOfRequestId` in the body switches it from "create" to "replace". Same result, one endpoint, and the client can't accidentally create a duplicate by posting to the wrong one.
+> 3. **Admin review endpoints added** (not in the original scope): `GET /api/service-admin/service-requests` (queue + per-status counts), `GET {id}`, and `POST {id}/start-review|approve|request-changes|close`.
+>
+> **`internalNotes` is admin-only** and is absent from the requester-facing DTO entirely. Requester name/email/phone on the admin view are joined from `service_requesters` — not stored on the request.
+
 ## 1. How the frontend actually works
 
 The flow, as built:
@@ -316,6 +324,6 @@ This is the **canonical** `ServiceRequest` — the resolution of the duplicate-m
 
 ## 7. Open questions
 
-1. **`changes_required` round-trip — ANSWERED (2026-07-19): yes.** The requester can re-edit and resubmit. Mechanism: `changes_required` clones `form_data` back into a draft (bypassing the one-draft-per-service uniqueness for this case, or replacing the existing draft after confirmation), the request keeps status `changes_required` until a resubmit — `POST /api/service-requests/{id}/resubmit` — replaces its `form_data`, sets `submitted`, and writes a `service_request_events` row. UI lands in Set 2 of [UI_SETS.md](../UI_SETS.md) (request detail page).
-2. **Can a requester cancel a submitted request?** `cancelled` exists in the union; no UI triggers it. Recommend allowing cancel while `submitted`/`under_review` only.
+1. ~~**`changes_required` round-trip**~~ ✅ **BUILT 2026-07-27.** Works on the same request — same id, same number, same event history; the review note is cleared on resubmit. Implemented via `resubmitOfRequestId` on the submit endpoint rather than a separate route. Original answer (2026-07-19): yes. The requester can re-edit and resubmit. Mechanism: `changes_required` clones `form_data` back into a draft (bypassing the one-draft-per-service uniqueness for this case, or replacing the existing draft after confirmation), the request keeps status `changes_required` until a resubmit — `POST /api/service-requests/{id}/resubmit` — replaces its `form_data`, sets `submitted`, and writes a `service_request_events` row. UI lands in Set 2 of [UI_SETS.md](../UI_SETS.md) (request detail page).
+2. ~~**Can a requester cancel a submitted request?**~~ ✅ **DECIDED + BUILT 2026-07-27.** Yes, while `submitted`, `under_review`, `changes_required` or `approved` — i.e. any time before a tender is published. Once published, vendors have bids in flight, so it `close`s instead. `POST /api/service-requests/{id}/cancel`; an illegal cancel returns 409. **UI still needed** — no screen triggers it yet.
 3. **Dedicated confirmation screen** — worth building? The dashboard landing works, but a proper confirmation (request number, what happens next, timeline) is better UX. Product call; cheap to add later without API changes.

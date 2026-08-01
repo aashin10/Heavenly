@@ -270,7 +270,7 @@ export class ServiceRequesterSignupPageComponent {
     this.showTerms.set(false);
   }
 
-  handleSubmit(): void {
+  async handleSubmit(): Promise<void> {
     this.error.set('');
 
     if (!this.validateStep3()) {
@@ -301,7 +301,7 @@ export class ServiceRequesterSignupPageComponent {
       formData.step3LargeOrg = this.step3LargeOrg();
     }
 
-    const success = this.serviceAuthService.signupServiceRequester(formData);
+    const success = await this.serviceAuthService.signupServiceRequesterAsync(formData);
 
     if (success) {
       this.router.navigate(['/service-requester-dashboard']);

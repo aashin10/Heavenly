@@ -56,7 +56,7 @@ export class MyRequestsListPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadData();
+    void this.loadData();
 
     // Honour deep-links from the dashboard quick actions
     // (?tab=drafts, ?filter=live).
@@ -68,19 +68,16 @@ export class MyRequestsListPageComponent implements OnInit {
     }
   }
 
-  private loadData(): void {
+  private async loadData(): Promise<void> {
     const session = this.serviceAuthService.getCurrentUserSession();
     const requesterId = session?.id;
     if (requesterId) {
-      const mine = this.requestService
-        .getRequestsByRequester(requesterId)
+      const mine = (await this.requestService.getRequestsByRequesterAsync(requesterId))
         .sort((a, b) => this.time(b.updatedAt) - this.time(a.updatedAt));
       this.requests.set(mine);
     }
-    // Drafts are keyed to the browser, not the account, in the mock layer.
     this.drafts.set(
-      this.draftService
-        .getAllDrafts()
+      (await this.draftService.getAllDraftsAsync())
         .sort((a, b) => this.time(b.lastSaved) - this.time(a.lastSaved))
     );
   }
@@ -121,9 +118,9 @@ export class MyRequestsListPageComponent implements OnInit {
     });
   }
 
-  discardDraft(draft: ServiceRequestDraft, event: Event): void {
+  async discardDraft(draft: ServiceRequestDraft, event: Event): Promise<void> {
     event.stopPropagation();
-    this.draftService.clearDraft(draft.id);
-    this.loadData();
+    await this.draftService.clearDraftAsync(draft.id);
+    await this.loadData();
   }
 }

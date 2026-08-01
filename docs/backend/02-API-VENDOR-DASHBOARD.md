@@ -6,7 +6,30 @@
 
 Read [README.md](README.md) for conventions, [01-API-AUTH.md](01-API-AUTH.md) for the session model, and [03-EXISTING-BACKEND-REVIEW.md](03-EXISTING-BACKEND-REVIEW.md) for what already exists.
 
-> **Status: entirely new.** No `Vendor`, `Tender`, or `Bid` entity exists in the backend today — this whole screen is greenfield. See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
+> **Status update 2026-07-27.** The **`Vendor` aggregate and its full API now exist** (backend B2.1 + B2.2). Live endpoints:
+>
+> | | |
+> |---|---|
+> | `POST /api/vendors/register` | account + role + profile in one transaction, returns tokens |
+> | `GET /api/vendors/me` | full profile incl. `profileCompletion` |
+> | `GET /api/vendors/me/profile-completion` | just the checklist block (this doc's §4) |
+> | `PUT /api/vendors/me/{basic,services,bank,documents}` | per-section saves |
+> | `POST`/`DELETE /api/vendors/me/portfolio[/{id}]` | portfolio entries |
+> | `GET /api/service-admin/vendors[?status=&search=&page=]` | verification queue + counts |
+> | `GET /api/service-admin/vendors/{id}` | review detail incl. timeline |
+> | `POST /api/service-admin/vendors/{id}/{approve,reject,suspend,reinstate}` | the four decisions |
+>
+> **Tenders landed 2026-07-27 (B2.5).** `GET /api/tenders` returns this doc's `opportunities[]` shape — matched on capability **and** area, with `isUrgent` computed server-side on the ≤3-day rule specified in §3, and `budget` **omitted entirely** when withheld exactly as §3 required. `GET /api/tenders/{id}` adds a per-vendor eligibility verdict listing every failure.
+>
+> **Bids landed 2026-07-29 (B2.6).** `GET /api/bids/mine/stats` returns this doc's `stats` block in one call — `openTenders` (matched, per §3), `myBids` (live states only), `wonBids`, `activeProjects`. `GET /api/bids/mine` is the `recentBids[]` shape. `hasBid` **and** `bidCount` are now on every opportunity card from `GET /api/tenders`, resolved in two queries per page rather than the N+1 §5 warned about.
+>
+> **Awards landed 2026-07-29 (B2.7) — every block in §2 is now live.** `activeProjects` counts awards in `accepted`/`in_progress`, so a delivered job stops counting at sign-off.
+>
+> ⚠️ **`recentBids[].status` uses the canonical `BidStatus`** — `under_review` with an underscore, and no `pending`/`accepted`. The dashboard model must import `BidStatus` rather than redeclaring it (change #1 in §6). See [03 §1](03-EXISTING-BACKEND-REVIEW.md).
+>
+> ⚠️ **Two contract notes for the frontend:**
+> - **The full bank account number is never returned by any endpoint.** `bankDetails` carries `maskedAccountNumber` (`"••••9012"`) and `isComplete` only. The edit form must re-collect the number to change it.
+> - **Verification transitions are server-enforced and stricter than the client** — see F9.
 
 ---
 
@@ -161,11 +184,13 @@ The frontend derives `percentage` from the checklist so the ring and caption can
 
 | Section | Complete when |
 |---|---|
-| `basic` | `businessName`, `businessType`, `gstNumber`, `panNumber`, `yearEstablished` all present |
+| `basic` | `businessName`, `businessType`, `gstNumber`, `panNumber`, `yearEstablished` **and** `primaryContactPerson`, `phone`, `registeredAddress`, `city`, `state`, `pinCode` |
 | `documents` | `businessCertificate` **and** `gstCertificate` uploaded (trade licence and insurance optional) |
 | `services` | `serviceCapabilities` and `serviceAreas` both non-empty |
-| `portfolio` | ≥ 1 portfolio entry — **entity does not exist yet, see §7** |
+| `portfolio` | ≥ 1 portfolio entry (`vendor_portfolio_entries`) |
 | `bank` | All four `bankDetails` fields present |
+
+> **Reconciled 2026-07-26.** This table originally listed only the five business-identity fields for `basic`, while `computeProfileSections()` on the frontend also required the six contact fields. The **contact fields are included** — a profile with no phone or address is not reviewable — and `Vendor.GetProfileCompletion()` implements exactly this list. The two sides now agree.
 
 > ⚠️ **All five `route` values are dead links.** `/vendor-profile/*` is not a registered route and the `**` wildcard bounces users to the homepage — see [UI_ISSUES.md §1](../UI_ISSUES.md). The API returns them for forward-compatibility; **the screens must be built before this widget is useful.** It is the dashboard's primary CTA and currently every row of it dead-ends.
 
@@ -227,12 +252,16 @@ profileCompletion   → single vendor row + document rows
 
 ## 7. Open questions
 
-1. **What is an "active project"?** No entity models post-award work. Options: (a) derive from `awarded` bids without a completion flag — needs an `awards` table with status; (b) drop the KPI until project tracking exists. **Recommend (a)** — a minimal `awards` table is needed for the evaluation flow regardless.
+1. ~~**What is an "active project"?**~~ ✅ **ANSWERED + BUILT 2026-07-29.** Option (a), as recommended: an `awards` table with status. An active project is an award in `accepted` or `in_progress` — work committed to but not yet delivered. Counted from the award, not the bid, so a finished job stops counting the moment it is signed off.
 
-2. **Portfolio is not modelled.** `PROFILE_SECTIONS` includes it and it counts toward completion, but no `Portfolio` type exists anywhere in the frontend. Needs a definition (past projects with photos? client references?) or removal from the checklist — currently no vendor can reach 100%.
+2. ~~**Portfolio is not modelled.**~~ ✅ **Resolved 2026-07-26.** Modelled as `VendorPortfolioEntry` — title, description, year, optional client name. Deliberately no photos in v1: images need the B10 upload path, and the section's purpose (evidence of comparable past work) is served by text. 100% completion is now reachable.
 
-3. **How is `rating` calculated?** `VendorDashboardStats.rating` is optional and nothing produces it. Needs a review mechanism (requester rates vendor post-completion) or removal.
+3. **Bids are sealed** (B2.6). No endpoint returns one vendor another's bid, and the admin bid list 409s until the tender closes. The dashboard can show `bidCount` on an open tender — a count reveals no price — but never any competitor's amount.
 
-4. **Tender matching precision.** Is `openTenders` matched on `serviceCapabilities` **and** `serviceAreas`, or capabilities only? Recommend both — a Delhi vendor should not see Chennai tenders in their count. Also decide whether eligibility criteria (insurance, bond capability, years of experience — `TenderEligibilityCriteria`) filter the count or only the detail view. **Recommend filtering the count too**, otherwise the number promises work the vendor cannot bid on.
+4. **How is `rating` calculated?** `VendorDashboardStats.rating` is optional and nothing produces it. Needs a review mechanism (requester rates vendor post-completion) or removal.
+
+4. ~~**Tender matching precision.**~~ ✅ **DECIDED + BUILT 2026-07-27.** Matched on `serviceCapabilities` **and** `serviceAreas`, as recommended. Eligibility criteria do **not** filter the list — instead each tender detail returns an `eligibilityResult` naming every unmet requirement, so a vendor sees near-miss work and what to fix rather than silently never seeing it. `includeUnmatched=true` shows the whole board.
+
+   *(original question)* **Tender matching precision.** Is `openTenders` matched on `serviceCapabilities` **and** `serviceAreas`, or capabilities only? Recommend both — a Delhi vendor should not see Chennai tenders in their count. Also decide whether eligibility criteria (insurance, bond capability, years of experience — `TenderEligibilityCriteria`) filter the count or only the detail view. **Recommend filtering the count too**, otherwise the number promises work the vendor cannot bid on.
 
 5. **Should `pending` vendors see a read-only dashboard?** Currently they are hard-blocked. Letting them browse tenders (without bidding) would show the value of finishing verification. Product call.

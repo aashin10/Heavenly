@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
 import { humanizeEnum } from '../../shared/utils/humanize.util';
 import {
   PublishedTender,
@@ -14,9 +15,20 @@ import {
   TenderFilters,
   EligibilityResult,
   BidStatusResult,
-  BidStatus
+  BidStatus,
+  BudgetVisibility,
+  TenderStatus
 } from './vendor.model';
 import { ToastService } from '../../core/services/toast.service';
+import { environment } from '../../../environments/environment';
+import { TenderApiService } from '../../core/api/services-portal/tender-api.service';
+import {
+  TenderBudgetDto,
+  TenderClarificationDto,
+  TenderEligibilityDto,
+  VendorTenderDto,
+  TenderOpportunityDto,
+} from '../../core/api/services-portal/tender-api.models';
 
 const TENDERS_KEY = 'heavenly_published_tenders';
 const BIDS_KEY = 'heavenly_vendor_bids';
@@ -30,6 +42,7 @@ const CLARIFICATIONS_KEY = 'heavenly_vendor_clarifications';
 export class VendorTenderService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly toastService = inject(ToastService);
+  private readonly tenderApi = inject(TenderApiService);
 
   // Signals
   private readonly tendersSignal = signal<PublishedTender[]>([]);
@@ -119,6 +132,13 @@ export class VendorTenderService {
 
   constructor() {
     this.loadData();
+    // The mock-seeded list is only a fast first paint against the real API —
+    // same pattern as session rehydration elsewhere. `tendersSignal` is what
+    // every computed here (filteredTenders, stats, filterOptions, ...) reads
+    // from, so overwriting it is enough to bring the whole page live.
+    if (environment.useRealApi) {
+      void this.refreshTendersAsync();
+    }
   }
 
   // ==================== DATA LOADING ====================
@@ -253,10 +273,23 @@ export class VendorTenderService {
   }
 
   getFilterOptions(): FilterOptions {
+    return this.computeFilterOptions();
+  }
+
+  /**
+   * Reactive counterpart of `getFilterOptions()` — derives from `tendersSignal`
+   * rather than being computed once. `getFilterOptions()` read at the wrong
+   * moment (before the real-API refresh in the constructor resolves) would
+   * freeze on an empty or stale list forever, since nothing would call it
+   * again — the same class of race already hit and fixed on the profile pages.
+   */
+  readonly filterOptions = computed<FilterOptions>(() => this.computeFilterOptions());
+
+  private computeFilterOptions(): FilterOptions {
     const tenders = this.tendersSignal();
     const serviceTypes = [...new Set(tenders.map(t => t.serviceType))];
     const locations = [...new Set(tenders.map(t => t.city))];
-    
+
     return {
       serviceTypes: serviceTypes.map(s => ({ value: s, label: this.formatServiceType(s) })),
       locations,
@@ -670,6 +703,87 @@ export class VendorTenderService {
     ];
   }
 
+  // ==================== real API (behind environment.useRealApi) ====================
+  //
+  // Saved tenders, "not interested", and per-tender bid status have no
+  // backend counterpart — the API has no endpoints for them (confirmed
+  // against TendersController; bid status genuinely belongs to the Bid API,
+  // out of scope here). saveTenderForLater/removeSavedTender/isTenderSaved/
+  // markTenderNotInterested/getMyBidStatus stay exactly as they are above,
+  // client-side only, regardless of useRealApi.
+
+  /** Replaces the mock-seeded tender list with the vendor's real matched tenders. */
+  private async refreshTendersAsync(): Promise<void> {
+    try {
+      const page = await firstValueFrom(this.tenderApi.browse());
+      this.tendersSignal.set(page.items.map(mapOpportunityDto));
+    } catch {
+      // 403 (unverified vendor) or a network hiccup: leave the list empty
+      // rather than the mock seed data, which would misrepresent real
+      // opportunities as available. The existing empty-state UI handles it.
+      this.tendersSignal.set([]);
+    }
+  }
+
+  /**
+   * One tender in full, bundled with its clarifications and this vendor's
+   * eligibility verdict — all three come from the same `GET /tenders/{id}`
+   * response, so the detail page makes one call instead of three.
+   */
+  async getTenderDetailBundleAsync(
+    tenderId: string
+  ): Promise<{ tender: PublishedTender; clarifications: TenderClarification[]; eligibility: EligibilityResult } | null> {
+    if (!environment.useRealApi) {
+      const tender = this.getTenderDetail(tenderId);
+      if (!tender) return null;
+      return {
+        tender,
+        clarifications: this.getTenderClarifications(tenderId),
+        eligibility: this.checkTenderEligibility(tenderId),
+      };
+    }
+
+    try {
+      const dto = await firstValueFrom(this.tenderApi.getById(tenderId));
+      return {
+        tender: mapVendorTenderDto(dto),
+        clarifications: dto.clarifications.map(c => mapClarificationDto(c, tenderId)),
+        eligibility: {
+          eligible: dto.eligibilityResult?.eligible ?? false,
+          reasons: dto.eligibilityResult?.reasons ?? [],
+          // The backend folds "why not" into one reasons list rather than
+          // separating a missing-requirements checklist from free-text
+          // reasons — nothing here to split it back into.
+          missingRequirements: [],
+        },
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Asks a question — `POST /tenders/{id}/clarifications`. Returns the new
+   * (pending) clarification so the caller can show it immediately: a re-fetch
+   * of the tender would not, since the vendor-facing detail only ever
+   * includes *answered* questions.
+   */
+  async askClarificationAsync(tenderId: string, question: string): Promise<TenderClarification | null> {
+    if (!environment.useRealApi) {
+      this.askClarification(tenderId, question);
+      return this.getTenderClarifications(tenderId).at(-1) ?? null;
+    }
+
+    try {
+      const dto = await firstValueFrom(this.tenderApi.askClarification(tenderId, question));
+      this.toastService.success('Your question has been submitted');
+      return mapClarificationDto(dto, tenderId);
+    } catch {
+      this.toastService.error('Could not submit your question. Please try again.');
+      return null;
+    }
+  }
+
   private getMockClarifications(): TenderClarification[] {
     return [
       {
@@ -704,4 +818,120 @@ export class VendorTenderService {
       }
     ];
   }
+}
+
+function mapBudget(budget: TenderBudgetDto | null): { budgetMin?: number; budgetMax?: number; budgetExact?: number } {
+  return {
+    budgetMin: budget?.min ?? undefined,
+    budgetMax: budget?.max ?? undefined,
+    budgetExact: budget?.exact ?? undefined,
+  };
+}
+
+/**
+ * The backend expresses eligibility as structured booleans (`insuranceRequired`
+ * + a coverage string, etc.); the frontend model displays it as a flat bullet
+ * list. This is the one place that turns one into the other.
+ */
+function eligibilityCriteriaList(e: TenderEligibilityDto): string[] {
+  const items: string[] = [];
+  if (e.certificationsRequired) {
+    items.push(e.certificationDetails || 'Relevant certifications required');
+  }
+  if (e.insuranceRequired) {
+    items.push(e.insuranceMinCoverage
+      ? `Insurance coverage of at least ${e.insuranceMinCoverage}`
+      : 'Insurance coverage required');
+  }
+  if (e.bondCapabilityRequired) {
+    items.push(e.bondMinAmount
+      ? `Bond capability of at least ${e.bondMinAmount}`
+      : 'Bond capability required');
+  }
+  if (e.regionalPresenceRequired) items.push('Regional presence required');
+  if (e.experienceRequired) {
+    items.push(e.minimumExperienceYears
+      ? `Minimum ${e.minimumExperienceYears} years of experience`
+      : 'Prior relevant experience required');
+  }
+  if (e.customCriteria) items.push(e.customCriteria);
+  return items;
+}
+
+/** List-row mapping — `TenderOpportunityDto` doesn't carry scope, requirements, or attachments. */
+function mapOpportunityDto(dto: TenderOpportunityDto): PublishedTender {
+  return {
+    id: dto.id,
+    tenderId: dto.tenderNumber,
+    title: dto.title,
+    category: dto.category,
+    categoryLabel: humanizeEnum(dto.category),
+    location: dto.state ? `${dto.city}, ${dto.state}` : dto.city,
+    city: dto.city,
+    state: dto.state ?? '',
+    scopeSummary: '',
+    technicalRequirements: [],
+    budgetVisibility: dto.budgetVisibility as BudgetVisibility,
+    ...mapBudget(dto.budget),
+    expectedTimeline: '',
+    bidWindowStart: '',
+    bidWindowEnd: dto.deadline ?? '',
+    publishedAt: dto.publishedAt ?? '',
+    paymentStructure: '',
+    warrantyExpectation: '',
+    eligibilityCriteria: [],
+    tags: [],
+    serviceType: dto.serviceId,
+    attachments: [],
+    status: 'published',
+  };
+}
+
+/** Full detail mapping — every field the vendor-facing `GET /tenders/{id}` carries. */
+function mapVendorTenderDto(dto: VendorTenderDto): PublishedTender {
+  return {
+    id: dto.id,
+    tenderId: dto.tenderNumber,
+    title: dto.title,
+    category: dto.category,
+    categoryLabel: humanizeEnum(dto.category),
+    location: dto.location ?? (dto.state ? `${dto.city}, ${dto.state}` : dto.city),
+    city: dto.city,
+    state: dto.state ?? '',
+    scopeSummary: dto.scopeSummary,
+    detailedScope: dto.detailedScope ?? undefined,
+    technicalRequirements: dto.technicalRequirements,
+    budgetVisibility: dto.budgetVisibility as BudgetVisibility,
+    ...mapBudget(dto.budget),
+    expectedTimeline: dto.expectedTimeline ?? '',
+    bidWindowStart: dto.bidWindowStart ?? '',
+    bidWindowEnd: dto.bidWindowEnd ?? '',
+    publishedAt: dto.publishedAt ?? '',
+    paymentStructure: dto.paymentStructure ?? '',
+    warrantyExpectation: dto.warrantyExpectation ?? '',
+    eligibilityCriteria: eligibilityCriteriaList(dto.eligibility),
+    tags: dto.tags,
+    serviceType: dto.serviceId,
+    attachments: dto.attachments.map(a => ({
+      id: a.id,
+      name: a.fileName,
+      size: a.fileSizeBytes ?? 0,
+      type: a.contentType ?? '',
+      url: a.fileUrl,
+    })),
+    status: dto.status as TenderStatus,
+  };
+}
+
+function mapClarificationDto(dto: TenderClarificationDto, tenderId: string): TenderClarification {
+  return {
+    id: dto.id,
+    tenderId,
+    vendorId: '',
+    question: dto.question,
+    askedAt: dto.askedAt,
+    status: dto.status as 'pending' | 'answered',
+    answer: dto.answer ?? undefined,
+    answeredAt: dto.answeredAt ?? undefined,
+  };
 }
