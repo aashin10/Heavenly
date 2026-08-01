@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { VendorTenderService } from '../vendor.service';
@@ -14,16 +14,14 @@ import { EmptyStateComponent } from '../../../shared/components/empty-state/empt
   templateUrl: './tender-browse.page.html',
   styleUrl: './tender-browse.page.scss'
 })
-export class TenderBrowsePageComponent implements OnInit {
+export class TenderBrowsePageComponent {
   private readonly vendorService = inject(VendorTenderService);
   private readonly router = inject(Router);
 
-  // Filter options
-  filterOptions = signal<FilterOptions>({
-    serviceTypes: [],
-    locations: [],
-    categories: []
-  });
+  // Reactive to the service's own tender list, rather than a one-time read —
+  // in real-API mode the list is still loading (async, kicked off from the
+  // service's constructor) when this component first renders.
+  filterOptions = computed<FilterOptions>(() => this.vendorService.filterOptions());
 
   // Current filters
   filters = signal<TenderFilters>({
@@ -42,15 +40,6 @@ export class TenderBrowsePageComponent implements OnInit {
     let tenders = this.vendorService.filteredTenders();
     return this.sortTenders(tenders);
   });
-
-  ngOnInit(): void {
-    this.loadFilterOptions();
-  }
-
-  private loadFilterOptions(): void {
-    const options = this.vendorService.getFilterOptions();
-    this.filterOptions.set(options);
-  }
 
   private sortTenders(tenders: PublishedTender[]): PublishedTender[] {
     const sorted = [...tenders];
