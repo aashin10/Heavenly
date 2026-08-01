@@ -233,7 +233,7 @@ export class ServicesSectionComponent {
     this.dirty.set(true);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     if (this.selected().size === 0) {
       this.toastService.error('Select at least one service capability.');
       return;
@@ -243,7 +243,7 @@ export class ServicesSectionComponent {
       return;
     }
 
-    this.serviceAuthService.updateVendorProfile({
+    await this.serviceAuthService.updateVendorProfileAsync({
       serviceCapabilities: [...this.selected()],
       serviceAreas: this.areas(),
     });

@@ -3,6 +3,7 @@ import { ServiceAuthService } from '../../../core/services/service-auth.service'
 import { ToastService } from '../../../core/services/toast.service';
 import { Vendor, VendorDocuments } from '../../../core/models/service.model';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { environment } from '../../../../environments/environment';
 
 interface DocumentSlot {
   key: keyof VendorDocuments;
@@ -182,10 +183,14 @@ export class DocumentsSectionComponent {
     this.dirty.set(true);
   }
 
-  save(): void {
-    this.serviceAuthService.updateVendorProfile({ documentsUploaded: this.uploaded() });
+  async save(): Promise<void> {
+    // updateVendorProfileAsync shows its own explanatory toast against the
+    // real API — uploads need a file host that isn't wired yet (backlog B10).
+    await this.serviceAuthService.updateVendorProfileAsync({ documentsUploaded: this.uploaded() });
     this.dirty.set(false);
-    this.toastService.success('Documents saved.');
+    if (!environment.useRealApi) {
+      this.toastService.success('Documents saved.');
+    }
     this.saved.emit();
   }
 }

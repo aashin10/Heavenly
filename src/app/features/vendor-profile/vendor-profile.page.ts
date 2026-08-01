@@ -1,7 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ServiceAuthService } from '../../core/services/service-auth.service';
-import { Vendor } from '../../core/models/service.model';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import {
   VendorProfileSection,
@@ -42,7 +41,12 @@ export class VendorProfilePageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
-  vendor = signal<Vendor | null>(null);
+  // Tracks the service's own signal reactively rather than a one-time
+  // snapshot. On a hard navigation (real API), the route guard only checks
+  // the cached session — it does not wait for the async GET /me rehydration
+  // that follows — so a snapshot taken in ngOnInit() could read null and
+  // never update once the fetch actually resolves.
+  vendor = computed(() => this.serviceAuthService.vendor());
   activeSection = signal<SectionId>('basic');
 
   sections = computed(() => computeProfileSections(this.vendor()));
@@ -59,8 +63,6 @@ export class VendorProfilePageComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.loadVendor();
-
     this.route.paramMap.subscribe(params => {
       const section = params.get('section') as SectionId | null;
       if (section && SECTION_IDS.includes(section)) {
@@ -72,13 +74,10 @@ export class VendorProfilePageComponent implements OnInit {
     });
   }
 
-  private loadVendor(): void {
-    const user = this.serviceAuthService.getCurrentUser();
-    this.vendor.set(user as Vendor | null);
-  }
-
-  /** Sections call this after a successful save so completion states refresh. */
-  onSectionSaved(): void {
-    this.loadVendor();
-  }
+  /**
+   * Sections call this after a successful save. `vendor` is already reactive
+   * to the service's own signal, so there is nothing to refetch here — this
+   * exists as the template hook the section outputs bind to.
+   */
+  onSectionSaved(): void {}
 }
