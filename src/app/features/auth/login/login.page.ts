@@ -183,11 +183,11 @@ export class LoginPageComponent {
     this.isSubmitting.set(false);
   }
 
-  handleServiceLoginSubmit(): void {
+  async handleServiceLoginSubmit(): Promise<void> {
     this.error.set('');
-    
+
     const data = this.serviceLoginData();
-    
+
     // Validate email format
     if (!this.isValidEmail(data.email)) {
       this.error.set('Please enter a valid email address');
@@ -195,9 +195,9 @@ export class LoginPageComponent {
     }
 
     this.isSubmitting.set(true);
-    const user = this.serviceAuthService.loginServiceUser(
-      data.email, 
-      data.password, 
+    const user = await this.serviceAuthService.loginServiceUserAsync(
+      data.email,
+      data.password,
       data.serviceUserType
     );
 

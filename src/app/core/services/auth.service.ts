@@ -92,6 +92,12 @@ export class AuthService {
       };
       this.userSignal.set(user);
       localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      // Without this, the NEXT app boot finds a cached user with no
+      // timestamp, reads it as a legacy/corrupt session (loadUserFromStorage's
+      // "savedUser but no loginTimestamp" branch) and calls logout() — which
+      // POSTs to /api/auth/logout and clears the token store shared with the
+      // services portal, silently ending both sessions on the following reload.
+      localStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString());
     } catch {
       // 401/404 → the token is no longer usable. The interceptor handles the
       // redirect; here we just make sure no stale identity is left behind.

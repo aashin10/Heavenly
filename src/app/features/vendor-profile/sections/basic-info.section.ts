@@ -186,7 +186,7 @@ export class BasicInfoSectionComponent implements OnInit {
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.toastService.error('Please fix the highlighted fields.');
@@ -194,7 +194,7 @@ export class BasicInfoSectionComponent implements OnInit {
     }
 
     const value = this.form.value;
-    this.serviceAuthService.updateVendorProfile({
+    await this.serviceAuthService.updateVendorProfileAsync({
       ...value,
       gstNumber: value.gstNumber?.toUpperCase(),
       panNumber: value.panNumber?.toUpperCase(),

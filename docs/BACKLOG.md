@@ -1,6 +1,6 @@
 # Heavenly — Consolidated Backlog
 
-**Last updated:** 2026-07-26 · **Maintained on the go** — updated after every coding iteration, not retroactively.
+**Last updated:** 2026-08-01 · **Maintained on the go** — updated after every coding iteration, not retroactively.
 
 Single source of "what's left" across both repos. Detail lives in the linked docs; this file is the prioritised index.
 
@@ -17,9 +17,9 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Frontend on `localStorage`.** Backend: **B2 COMPLETE** — request → tender → bid → award runs end to end |
+| Services portal | **Auth + profile editing wired to the real API** (F2.1/F2.2, behind `useRealApi`, committed `false`). Request/tender/bid/award screens still on `localStorage`. Backend: **B2 COMPLETE** — request → tender → bid → award runs end to end |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **188 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **191 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
 
 ---
 
@@ -135,7 +135,16 @@ The interceptor currently clears the session and redirects on 401. It should try
 → [05 §After this works](backend/05-INTEGRATION-RUNBOOK.md)
 
 ### 🟠 F2. Services portal → real API
-All of it still runs on `localStorage` (`ServiceAuthService`, `DraftService`, `ServiceRequestService`, `VendorAdminService`). Blocked on B1/B2. Sequenced per-screen behind the same `useRealApi` flag.
+All of it still runs on `localStorage` (`ServiceAuthService`, `DraftService`, `ServiceRequestService`, `VendorAdminService`). Blocked on B1/B2 (both now done). Sequenced per-screen behind the same `useRealApi` flag.
+
+**F2.1/F2.2 done 2026-08-01 — auth + profile editing.** New `VendorApiService`/`RequesterApiService` (+ wire DTOs) mirror the existing `AuthApiService` pattern. `ServiceAuthService` keeps every mock method unchanged for `!useRealApi` and adds `*Async` siblings (`signupVendorAsync`, `loginServiceUserAsync`, `updateVendorProfileAsync`, `addVendorPortfolioEntryAsync`, …) for the real path, plus session rehydration against `GET /me` on boot, mirroring the jobs portal's Stage 6 pattern. Login reuses `/api/auth/login` and checks `roles[]` before granting portal access.
+- **Vendor editing wired**: basic info, services, bank details, portfolio add/remove — each verified against a live network request and the profile-completion percentage updating correctly. Documents section deliberately stops short of persisting (shows an explanatory toast) — blocked on B10, no file host exists yet.
+- **Requester editing wired**: whole-profile `PUT /me`, type included.
+- **Found and fixed a real bug in existing Stage 5/6 code, not new to this work**: `AuthService.rehydrateSession()` (jobs portal) wrote the cached user to `localStorage` but never the login timestamp. The *next* boot read that as a legacy/corrupt session and called `logout()` — which hits the real endpoint and clears the `TokenStore` **shared** with the services portal, silently ending both sessions. It only surfaced now because a vendor/requester is also a valid jobs `User`, the first scenario to exercise real-API rehydration repeatedly across portals. One line (`localStorage.setItem(LOGIN_TIMESTAMP_KEY, …)`) fixes it; verified with repeated clean reproductions before and after.
+- **Two route-guard race conditions fixed** (`vendor-profile.page.ts`, `service-requester-profile.page.ts`): guards only check the cached session, not that the async `GET /me` rehydration following a hard navigation has finished. A snapshot taken in `ngOnInit()` could read null and never update — blanking the vendor page, or wrongly redirecting a logged-in requester to `/login`. Fixed by making the profile signals `computed()` against the service's own state instead of one-time reads. This class of guard/rehydration race is **not fully audited elsewhere** — only these two pages were touched.
+- **Backend fix**: `ServiceRequesterDto` didn't carry `email`/`phone` (the frontend model requires both; a requester's contact *is* their account, unlike Vendor). Projected from `User` instead of duplicating. `UpdateServiceRequesterProfileCommand` gained an optional `Phone` field with "cannot be blanked out" validation. 2 new regression tests; 191/191 backend tests passing.
+- Architectural tension surfaced, not resolved here: two independent auth stores (`AuthService`/`ServiceAuthService`) sharing one `TokenStore` is exactly what F3 exists to collapse — see F3.
+- Remaining under F2: service-request drafts/wizard, tender browse, bid submission, admin verification/evaluation screens, award flows. None started yet.
 
 ### 🟡 F3. Collapse the two auth stores (C1)
 `AuthService` (jobs) and `ServiceAuthService` (services) are separate, and a user can be signed into both at once. The API models one account with many roles, so these merge once B1 lands.
@@ -212,6 +221,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-08-01** — **F2.1/F2.2 done:** services-portal auth (register/login/rehydrate) and vendor + requester profile editing wired to the real API behind `useRealApi` (committed `false`). Found and fixed a real cross-portal session bug in existing Stage 5/6 code (missing login-timestamp write caused a shared-`TokenStore` wipe) and two route-guard race conditions. Backend: `ServiceRequesterDto` now carries email/phone; `UpdateServiceRequesterProfileCommand` can update phone. 191/191 backend tests passing. Detail under F2.
 - **2026-07-29** — **B2.7 done — B2 COMPLETE.** `Award` + post-award work tracking. The whole services-portal pipeline (request → tender → bid → award) now runs end to end and is verified live. `activeProjects` answered doc 02 §7.
 - **2026-07-29** — **B2.6 done:** `Bid` + drafts + sealed bidding + evaluation. The request → tender → bid pipeline now runs end to end. Vendor dashboard's `openTenders`/`myBids`/`wonBids` are live; only `activeProjects` awaits B2.7.
 - **2026-07-27** — **B2.5 done:** `Tender` + clarifications. Budget visibility enforced structurally (separate vendor DTO types); vendor matching on capability + area; eligibility verdicts.

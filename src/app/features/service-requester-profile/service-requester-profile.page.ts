@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ServiceAuthService } from '../../core/services/service-auth.service';
@@ -29,7 +29,10 @@ export class ServiceRequesterProfilePageComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
 
-  requester = signal<ServiceRequester | null>(null);
+  // Reactive to the service's own signal (see the constructor) rather than a
+  // locally-set one — the effect below only needs to build the form once the
+  // profile arrives, not write it anywhere.
+  requester = computed(() => this.serviceAuthService.serviceRequester());
   form!: FormGroup;
 
   readonly typeLabel = computed(() => humanizeEnum(this.requester()?.requesterType ?? ''));
@@ -40,20 +43,35 @@ export class ServiceRequesterProfilePageComponent implements OnInit {
   });
   readonly gstRequired = computed(() => this.requester()?.requesterType === 'large_organization');
 
-  ngOnInit(): void {
-    const session = this.serviceAuthService.getCurrentUserSession();
-    if (session?.userType !== 'service_requester') {
-      this.router.navigate(['/login']);
-      return;
-    }
-    const requester = this.serviceAuthService.getCurrentUser() as ServiceRequester;
-    if (!requester) {
-      this.router.navigate(['/login']);
-      return;
-    }
-    this.requester.set(requester);
-    this.buildForm(requester);
+  private formBuilt = false;
+
+  constructor() {
+    // The route guard only checks the cached session, not that the async
+    // real-API rehydration (GET /me) that follows a hard navigation has
+    // finished — so the requester profile can still be null on the first
+    // tick even for a legitimately logged-in user. Reacting to the signal
+    // rather than snapshotting it once means the form builds whenever the
+    // profile actually arrives, and only redirects if the session itself
+    // turns out to be invalid (rehydration failure clears it).
+    effect(() => {
+      const session = this.serviceAuthService.currentUser();
+      if (!session) {
+        this.router.navigate(['/login']);
+        return;
+      }
+      if (session.userType !== 'service_requester') {
+        this.router.navigate(['/login']);
+        return;
+      }
+      const requester = this.serviceAuthService.serviceRequester();
+      if (requester && !this.formBuilt) {
+        this.buildForm(requester);
+        this.formBuilt = true;
+      }
+    });
   }
+
+  ngOnInit(): void {}
 
   private buildForm(r: ServiceRequester): void {
     const gstValidators = [Validators.pattern(GSTIN_PATTERN)];
@@ -95,7 +113,7 @@ export class ServiceRequesterProfilePageComponent implements OnInit {
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
-  save(): void {
+  async save(): Promise<void> {
     const r = this.requester();
     if (!r) return;
     if (this.form.invalid) {
@@ -125,8 +143,9 @@ export class ServiceRequesterProfilePageComponent implements OnInit {
       }
     }
 
-    this.serviceAuthService.updateServiceRequesterProfile(updates);
-    this.requester.set(this.serviceAuthService.getCurrentUser() as ServiceRequester);
+    // requester is reactive to the service's own signal, which the update
+    // call already refreshes — nothing to set here.
+    await this.serviceAuthService.updateServiceRequesterProfileAsync(updates);
     this.form.markAsPristine();
     this.toastService.success('Profile updated.');
   }

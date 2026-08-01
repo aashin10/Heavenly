@@ -351,7 +351,7 @@ export class VendorSignupPageComponent {
     this.showTerms.set(false);
   }
 
-  handleSubmit(): void {
+  async handleSubmit(): Promise<void> {
     this.error.set('');
 
     if (!this.validateStep4()) {
@@ -375,7 +375,7 @@ export class VendorSignupPageComponent {
       }
     };
 
-    const success = this.serviceAuthService.signupVendor(formData);
+    const success = await this.serviceAuthService.signupVendorAsync(formData);
 
     if (success) {
       this.router.navigate(['/verification-pending']);

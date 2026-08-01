@@ -5,7 +5,6 @@ import { ToastService } from '../../../core/services/toast.service';
 import { PortfolioEntry, Vendor } from '../../../core/models/service.model';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
-import { generateUniqueId } from '../../../shared/utils/helpers';
 
 @Component({
   selector: 'app-profile-portfolio',
@@ -197,34 +196,36 @@ export class PortfolioSectionComponent {
     return !!control && control.invalid && (control.dirty || control.touched);
   }
 
-  addEntry(): void {
+  async addEntry(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
     const value = this.form.value;
-    const entry: PortfolioEntry = {
-      id: generateUniqueId(),
+
+    // Real API: the server assigns the id, so re-read the vendor signal after
+    // the call rather than trusting a client-generated one that would not
+    // match what a later remove() needs to address.
+    await this.serviceAuthService.addVendorPortfolioEntryAsync({
       title: value.title,
       year: value.year,
       clientName: value.clientName || undefined,
       description: value.description,
-    };
+    });
+    this.refreshFromVendor();
 
-    const next = [...this.entries(), entry];
-    this.entries.set(next);
-    this.persist(next);
     this.form.reset({ year: this.currentYear });
     this.showForm.set(false);
     this.toastService.success('Portfolio entry added.');
+    this.saved.emit();
   }
 
-  remove(id: string): void {
-    const next = this.entries().filter(e => e.id !== id);
-    this.entries.set(next);
-    this.persist(next);
+  async remove(id: string): Promise<void> {
+    await this.serviceAuthService.removeVendorPortfolioEntryAsync(id);
+    this.refreshFromVendor();
     this.toastService.info('Portfolio entry removed.');
+    this.saved.emit();
   }
 
   cancelForm(): void {
@@ -232,8 +233,7 @@ export class PortfolioSectionComponent {
     this.showForm.set(false);
   }
 
-  private persist(entries: PortfolioEntry[]): void {
-    this.serviceAuthService.updateVendorProfile({ portfolio: entries });
-    this.saved.emit();
+  private refreshFromVendor(): void {
+    this.entries.set([...(this.serviceAuthService.vendor()?.portfolio ?? [])]);
   }
 }
