@@ -1,7 +1,14 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { ServiceCategory } from '../models/service.model';
 import { ToastService } from './toast.service';
 import { DraftService } from './draft.service';
+import { environment } from '../../../environments/environment';
+import { ServiceRequestApiService } from '../api/services-portal/service-request-api.service';
+import {
+  ServiceRequestDto,
+  ServiceRequestSummaryDto,
+} from '../api/services-portal/service-request-api.models';
 
 export type RequestStatus = 
   | 'draft'
@@ -35,6 +42,15 @@ export interface ServiceRequestSubmission {
   /** Admin's message when status is `changes_required`. */
   reviewNote?: string;
   events?: RequestEvent[];
+  /**
+   * Server-computed, real-API mode only. The backend's cancel/resubmit rules
+   * are broader than the mock's status-based `canCancel`/`canEditAndResubmit`
+   * (e.g. `approved` is still cancellable) — when present, these are
+   * authoritative; `canCancel`/`canEditAndResubmit` fall back to the status
+   * check only when they're absent (mock mode).
+   */
+  isCancellableByRequester?: boolean;
+  isEditableByRequester?: boolean;
 }
 
 export interface SubmissionResult {
@@ -52,6 +68,7 @@ const REQUESTS_STORAGE_KEY = 'heavenly_service_requests';
 export class ServiceRequestService {
   private readonly toastService = inject(ToastService);
   private readonly draftService = inject(DraftService);
+  private readonly serviceRequestApi = inject(ServiceRequestApiService);
 
   readonly isSubmitting = signal<boolean>(false);
   readonly lastSubmittedId = signal<string | null>(null);
@@ -231,14 +248,19 @@ export class ServiceRequestService {
     return ok;
   }
 
-  /** A request can be cancelled only before Heavenly starts acting on it. */
-  canCancel(status: RequestStatus): boolean {
-    return status === 'submitted' || status === 'under_review';
+  /**
+   * A request can be cancelled only before Heavenly starts acting on it.
+   * `serverValue`, when supplied (real-API mode), is authoritative — the
+   * backend allows cancelling through `approved`, which this status-only
+   * check does not.
+   */
+  canCancel(status: RequestStatus, serverValue?: boolean): boolean {
+    return serverValue ?? (status === 'submitted' || status === 'under_review');
   }
 
   /** A request can be re-edited only when the admin has asked for changes. */
-  canEditAndResubmit(status: RequestStatus): boolean {
-    return status === 'changes_required';
+  canEditAndResubmit(status: RequestStatus, serverValue?: boolean): boolean {
+    return serverValue ?? status === 'changes_required';
   }
 
   /**
@@ -353,4 +375,158 @@ export class ServiceRequestService {
     };
     return classes[status];
   }
+
+  // ==================== real API (behind environment.useRealApi) ====================
+
+  /**
+   * Submits a completed wizard, or resubmits when `formData` carries a
+   * `resubmitOfRequestId`-tagged draft — mirrored by the mock's separate
+   * `submitRequest`/`resubmitRequest`, but the real endpoint folds both into
+   * one call (`POST /api/service-requests`).
+   */
+  async submitRequestAsync(
+    serviceId: string,
+    serviceName: string,
+    category: ServiceCategory,
+    formData: Record<string, unknown>,
+    requesterId: string,
+    resubmitOfRequestId?: string
+  ): Promise<SubmissionResult> {
+    if (!environment.useRealApi) {
+      return this.submitRequest(serviceId, serviceName, category, formData, requesterId);
+    }
+
+    this.isSubmitting.set(true);
+    try {
+      const dto = await firstValueFrom(
+        this.serviceRequestApi.submit({ serviceId, serviceName, category, formData, resubmitOfRequestId })
+      );
+      this.lastSubmittedId.set(dto.id);
+      this.toastService.success('Service request submitted successfully!');
+      return {
+        success: true,
+        requestId: dto.id,
+        message: 'Your service request has been submitted and is pending review.',
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An unexpected error occurred';
+      this.toastService.error(message);
+      return { success: false, message, errors: [message] };
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  /** One of the caller's own requests, in full — `GET /api/service-requests/{id}`. */
+  async getRequestAsync(requestId: string): Promise<ServiceRequestSubmission | null> {
+    if (!environment.useRealApi) {
+      return this.getRequest(requestId);
+    }
+    try {
+      const dto = await firstValueFrom(this.serviceRequestApi.getOne(requestId));
+      return mapRequestDto(dto);
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * The caller's own requests, newest first. `requesterId` is unused in
+   * real-API mode (the backend scopes to the caller's token) but kept so
+   * call sites — which already have it on hand for the mock path — don't
+   * need a separate branch.
+   */
+  async getRequestsByRequesterAsync(requesterId: string): Promise<ServiceRequestSubmission[]> {
+    if (!environment.useRealApi) {
+      return this.getRequestsByRequester(requesterId);
+    }
+    const dtos = await firstValueFrom(this.serviceRequestApi.getMine());
+    return dtos.map(mapSummaryDto);
+  }
+
+  /** Withdraws a request — `POST /api/service-requests/{id}/cancel`. */
+  async cancelRequestAsync(requestId: string, reason?: string): Promise<boolean> {
+    if (!environment.useRealApi) {
+      return this.cancelRequest(requestId);
+    }
+    try {
+      await firstValueFrom(this.serviceRequestApi.cancel(requestId, { reason }));
+      this.toastService.info('Request cancelled.');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Resubmits a `changes_required` request via the same submit endpoint,
+   * tagged with the request it replaces — see `submitRequestAsync`.
+   */
+  async resubmitRequestAsync(
+    requestId: string,
+    serviceId: string,
+    serviceName: string,
+    category: ServiceCategory,
+    formData: Record<string, unknown>
+  ): Promise<boolean> {
+    if (!environment.useRealApi) {
+      return this.resubmitRequest(requestId, formData);
+    }
+    try {
+      await firstValueFrom(
+        this.serviceRequestApi.submit({
+          serviceId,
+          serviceName,
+          category,
+          formData,
+          resubmitOfRequestId: requestId,
+        })
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function mapRequestDto(dto: ServiceRequestDto): ServiceRequestSubmission {
+  return {
+    id: dto.id,
+    requestNumber: dto.requestNumber,
+    serviceId: dto.serviceId,
+    serviceName: dto.serviceName,
+    category: dto.category as ServiceCategory,
+    formData: dto.formData,
+    status: dto.status as RequestStatus,
+    requesterId: dto.requesterId,
+    submittedAt: new Date(dto.submittedAt),
+    createdAt: new Date(dto.submittedAt),
+    updatedAt: new Date(dto.updatedAt),
+    reviewNote: dto.reviewNote ?? undefined,
+    events: dto.events.map(e => ({
+      status: e.toStatus as RequestStatus,
+      at: new Date(e.occurredAt),
+      note: e.note ?? undefined,
+    })),
+    isCancellableByRequester: dto.isCancellableByRequester,
+    isEditableByRequester: dto.isEditableByRequester,
+  };
+}
+
+function mapSummaryDto(dto: ServiceRequestSummaryDto): ServiceRequestSubmission {
+  return {
+    id: dto.id,
+    requestNumber: dto.requestNumber,
+    serviceId: dto.serviceId,
+    serviceName: dto.serviceName,
+    category: dto.category as ServiceCategory,
+    // List rows don't carry formData (§ServiceRequestSummaryDto) — no screen
+    // reading from the "mine" list renders it, only the detail fetch does.
+    formData: {},
+    status: dto.status as RequestStatus,
+    requesterId: dto.requesterId,
+    submittedAt: new Date(dto.submittedAt),
+    createdAt: new Date(dto.submittedAt),
+    updatedAt: new Date(dto.updatedAt),
+  };
 }

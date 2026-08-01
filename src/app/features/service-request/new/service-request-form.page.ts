@@ -64,16 +64,16 @@ export class ServiceRequestFormPageComponent implements OnInit {
 
       // If we have a draftId, load from draft
       if (draftIdParam) {
-        this.loadFromDraft(draftIdParam, stepParam ? Number.parseInt(stepParam, 10) : undefined);
+        void this.loadFromDraft(draftIdParam, stepParam ? Number.parseInt(stepParam, 10) : undefined);
         return;
       }
 
       // Load service and check for existing draft
-      this.loadService(serviceId, categoryParam);
+      void this.loadService(serviceId, categoryParam);
     });
   }
 
-  private loadService(serviceId: string, categoryParam?: ServiceCategory): void {
+  private async loadService(serviceId: string, categoryParam?: ServiceCategory): Promise<void> {
     const service = SERVICES.find(s => s.id === serviceId);
     
     if (!service) {
@@ -97,7 +97,7 @@ export class ServiceRequestFormPageComponent implements OnInit {
     });
 
     // Check for existing draft
-    const existingDraft = this.draftService.getDraftByServiceId(serviceId);
+    const existingDraft = await this.draftService.getDraftByServiceIdAsync(serviceId);
     if (existingDraft) {
       this.showRestoreModal(existingDraft);
     }
@@ -105,9 +105,9 @@ export class ServiceRequestFormPageComponent implements OnInit {
     this.isLoading.set(false);
   }
 
-  private loadFromDraft(draftId: string, step?: number): void {
-    const draft = this.draftService.getDraft(draftId);
-    
+  private async loadFromDraft(draftId: string, step?: number): Promise<void> {
+    const draft = await this.draftService.getDraftAsync(draftId);
+
     if (!draft) {
       this.router.navigate(['/services']);
       return;
@@ -153,10 +153,10 @@ export class ServiceRequestFormPageComponent implements OnInit {
     this.restoreModal.update(m => ({ ...m, isOpen: false }));
   }
 
-  onStartFresh(): void {
+  async onStartFresh(): Promise<void> {
     const modal = this.restoreModal();
     if (modal.draftId) {
-      this.draftService.clearDraft(modal.draftId);
+      await this.draftService.clearDraftAsync(modal.draftId);
     }
     this.draftId.set(null);
     this.initialStep.set(1);
