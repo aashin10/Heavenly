@@ -56,7 +56,10 @@ export class AuthService {
         }
       }
 
+      // Refresh session timestamp
+      this.updateSessionTimestamp();
       this.userSignal.set(JSON.parse(savedUser));
+      this.startSessionTimer();
     } else if (savedUser) {
       // If we have a user but no timestamp (legacy session), expire it to be safe
       this.logout();
@@ -113,6 +116,29 @@ export class AuthService {
       localStorage.removeItem(CURRENT_USER_KEY);
       localStorage.removeItem(LOGIN_TIMESTAMP_KEY);
     }
+    if ((this as any).sessionTimer) {
+      clearInterval((this as any).sessionTimer);
+    }
+  }
+
+  private startSessionTimer(): void {
+    // Clear existing timer if any
+    if ((this as any).sessionTimer) {
+      clearInterval((this as any).sessionTimer);
+    }
+
+    // Update timestamp every 5 minutes to keep session alive while app is open
+    (this as any).sessionTimer = setInterval(() => {
+      if (this.isLoggedIn()) {
+        this.updateSessionTimestamp();
+      }
+    }, 300000); // 5 minutes
+  }
+
+  private updateSessionTimestamp(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString());
+    }
   }
 
   private getUsers(): User[] {
@@ -166,7 +192,8 @@ export class AuthService {
       this.userSignal.set(foundUser);
       if (isPlatformBrowser(this.platformId)) {
         localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(foundUser));
-        localStorage.setItem(LOGIN_TIMESTAMP_KEY, Date.now().toString());
+        this.updateSessionTimestamp();
+        this.startSessionTimer();
       }
       this.toastService.success(`Welcome back, ${foundUser.name}!`);
       return true;
@@ -253,6 +280,7 @@ export class AuthService {
     if (environment.useRealApi && this.tokenStore.accessToken) {
       firstValueFrom(this.authApi.logout()).catch(() => undefined);
     }
+    // clearSession() also stops the session timer — nothing more to do here.
     this.clearSession();
   }
 

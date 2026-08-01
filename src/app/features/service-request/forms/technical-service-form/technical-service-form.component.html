@@ -570,7 +570,14 @@
 
           <div class="form-group">
             <label for="expectedCompletionDate">Expected Completion Date</label>
-            <input type="date" id="expectedCompletionDate" formControlName="expectedCompletionDate">
+            <input 
+              type="date" 
+              id="expectedCompletionDate" 
+              formControlName="expectedCompletionDate"
+              [class.error]="hasStepError(4, 'dateRange')">
+            @if (hasStepError(4, 'dateRange')) {
+              <span class="error-text">Completion date must be after start date</span>
+            }
           </div>
         </div>
 

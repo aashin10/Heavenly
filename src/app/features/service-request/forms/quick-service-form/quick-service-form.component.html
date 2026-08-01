@@ -105,7 +105,7 @@
                 <label [for]="'type-' + $index" class="required">Type</label>
                 <select [id]="'type-' + $index" formControlName="type" [class.error]="hasEquipmentError($index, 'type', 'required')">
                   <option value="">Select type</option>
-                  @for (eqType of getEquipmentTypes(); track eqType) {
+                  @for (eqType of equipmentTypes(); track eqType) {
                     <option [value]="eqType">{{ eqType }}</option>
                   }
                 </select>
@@ -242,9 +242,12 @@
               type="date" 
               id="preferredDate" 
               formControlName="preferredDate"
-              [class.error]="hasError(3, 'preferredDate', 'required')">
+              [class.error]="hasError(3, 'preferredDate', 'required') || hasError(3, 'preferredDate', 'futureDate')">
             @if (hasError(3, 'preferredDate', 'required')) {
               <span class="error-text">Date is required</span>
+            }
+            @if (hasError(3, 'preferredDate', 'futureDate')) {
+              <span class="error-text">Date cannot be in the past</span>
             }
           </div>
 

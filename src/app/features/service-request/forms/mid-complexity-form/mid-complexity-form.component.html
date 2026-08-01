@@ -571,7 +571,14 @@
 
           <div class="form-group">
             <label for="mustCompleteBy">Must complete by</label>
-            <input type="date" id="mustCompleteBy" formControlName="mustCompleteBy">
+            <input 
+              type="date" 
+              id="mustCompleteBy" 
+              formControlName="mustCompleteBy"
+              [class.error]="hasStepError(5, 'dateRange')">
+            @if (hasStepError(5, 'dateRange')) {
+              <span class="error-text">Completion date must be after start date</span>
+            }
           </div>
         </div>
 

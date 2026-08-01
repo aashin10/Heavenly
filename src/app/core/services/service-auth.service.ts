@@ -101,6 +101,9 @@ export class ServiceAuthService {
       const session: ServiceUserSession = JSON.parse(savedSession);
       this.currentUserSignal.set(session);
 
+      // Refresh session timestamp on successful load (extends session on page refresh)
+      localStorage.setItem(SERVICE_LOGIN_TIMESTAMP_KEY, Date.now().toString());
+
       // Load full profile based on user type
       if (!environment.useRealApi) {
         if (session.userType === 'service_requester') {
@@ -369,6 +372,20 @@ export class ServiceAuthService {
     }
 
     return false;
+  }
+
+  /**
+   * Refresh the session timestamp to extend the session.
+   * Called on user activity (e.g. autosaving a draft) to prevent session
+   * expiry during active use. Real-API mode doesn't need this — the token's
+   * own expiry is authoritative — but writing the timestamp anyway is
+   * harmless, so this stays unconditional rather than adding a branch.
+   */
+  refreshSession(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    if (this.currentUserSignal()) {
+      localStorage.setItem(SERVICE_LOGIN_TIMESTAMP_KEY, Date.now().toString());
+    }
   }
 
   /**

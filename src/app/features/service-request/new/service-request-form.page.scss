@@ -162,6 +162,14 @@
   z-index: 1000;
   padding: 1rem;
   animation: fadeIn 0.2s ease-out;
+  // Reset button styles when using <button> as backdrop
+  border: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  text-align: left;
+  cursor: default;
+  font-family: inherit;
 }
 
 @keyframes fadeIn {
@@ -174,6 +182,9 @@
 }
 
 .modal-content {
+  position: relative; /* Override default dialog position */
+  margin: auto; /* Ensure centering in flex container */
+  border: none; /* Remove default dialog border */
   background: white;
   border-radius: 16px;
   padding: 2rem;

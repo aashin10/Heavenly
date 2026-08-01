@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, OnDestroy, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray, AbstractControl, ValidationErrors } from '@angular/forms';
 import { DraftService } from '../../../../core/services/draft.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { interval, Subscription } from 'rxjs';
 import { FormStepperComponent } from '../../../../shared/components/form-stepper/form-stepper.component';
 import { FormProgressComponent } from '../../../../shared/components/form-progress/form-progress.component';
@@ -17,6 +18,24 @@ import {
   COMPLIANCE_STANDARDS,
   TECHNICAL_STEP_LABELS
 } from '../../../../core/constants/form-options';
+
+// Custom validator for date range
+function dateRangeValidator(startField: string, endField: string) {
+  return (group: AbstractControl): ValidationErrors | null => {
+    const start = group.get(startField)?.value;
+    const end = group.get(endField)?.value;
+    
+    if (start && end) {
+      const startDate = new Date(start);
+      const endDate = new Date(end);
+      
+      if (startDate > endDate) {
+        return { dateRange: true };
+      }
+    }
+    return null;
+  };
+}
 
 interface CustomField {
   name: string;
@@ -45,11 +64,13 @@ export class TechnicalServiceFormComponent implements OnInit, OnDestroy {
   @Input() initialStep = 1;
 
   @Output() saved = new EventEmitter<string>();
-  @Output() completed = new EventEmitter<void>();
+  @Output() completed = new EventEmitter<string>();
   @Output() cancelled = new EventEmitter<void>();
 
   private readonly fb = inject(FormBuilder);
   private readonly draftService = inject(DraftService);
+  private readonly toastService = inject(ToastService);
+  private readonly elementRef = inject(ElementRef);
   private autoSaveSubscription?: Subscription;
 
   // State
@@ -149,7 +170,7 @@ export class TechnicalServiceFormComponent implements OnInit, OnDestroy {
         annualMaintenanceRequired: [false],
         warrantyRequired: [false],
         warrantyPeriod: ['']
-      }),
+      }, { validators: dateRangeValidator('expectedStartDate', 'expectedCompletionDate') }),
 
       // Step 5: Constraints & Compliance
       step5: this.fb.group({
@@ -264,10 +285,96 @@ export class TechnicalServiceFormComponent implements OnInit, OnDestroy {
   private markCurrentStepAsTouched(): void {
     const stepGroup = this.form.get(`step${this.currentStep()}`) as FormGroup;
     if (stepGroup) {
+      const invalidFields: string[] = [];
+
+      // Check group level errors
+      if (stepGroup.hasError('dateRange')) {
+        invalidFields.push('Date Range (Completion date must be after start date)');
+      }
+
       Object.keys(stepGroup.controls).forEach(key => {
-        stepGroup.get(key)?.markAsTouched();
+        const control = stepGroup.get(key);
+        control?.markAsTouched();
+        if (control?.invalid) {
+          const label = this.getFieldLabel(key);
+          if (control.hasError('required')) invalidFields.push(`${label} (Required)`);
+          else if (control.hasError('minlength')) invalidFields.push(`${label} (Too Short)`);
+          else if (control.hasError('maxlength')) invalidFields.push(`${label} (Too Long)`);
+          else if (control.hasError('pattern')) invalidFields.push(`${label} (Invalid Format)`);
+          else if (control.hasError('email')) invalidFields.push(`${label} (Invalid Email)`);
+          else invalidFields.push(label);
+        }
       });
+      
+      // Show validation toast with specific field names
+      if (invalidFields.length > 0) {
+        const fieldList = invalidFields.slice(0, 3).join(', ');
+        const more = invalidFields.length > 3 ? ` and ${invalidFields.length - 3} more` : '';
+        this.toastService.show({
+          message: `Validation failed: ${fieldList}${more}`,
+          type: 'error',
+          duration: 4000
+        });
+      }
+      
+      // Scroll to first invalid field
+      this.scrollToFirstError();
     }
+  }
+
+  private scrollToFirstError(): void {
+    setTimeout(() => {
+      const invalidElements = this.elementRef.nativeElement.querySelectorAll('.ng-invalid.ng-touched, .error');
+      for (let i = 0; i < invalidElements.length; i++) {
+        const element = invalidElements[i] as HTMLElement;
+        // Check if element is visible
+        if (element.offsetParent !== null) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          if (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') {
+            element.focus();
+          }
+          return;
+        }
+        
+        // If hidden (like radio input), try to scroll to parent
+        let parent = element.parentElement;
+        while (parent) {
+          if (parent.offsetParent !== null && (parent.classList.contains('form-group') || parent.classList.contains('radio-card') || parent.classList.contains('quality-card'))) {
+            parent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+          parent = parent.parentElement;
+          if (!parent || parent === this.elementRef.nativeElement) break;
+        }
+      }
+    }, 100);
+  }
+
+  private getFieldLabel(controlName: string): string {
+    const labels: Record<string, string> = {
+      systemType: 'System Type',
+      systemDetails: 'System Details',
+      equipmentType: 'Equipment Type',
+      capacity: 'Capacity',
+      operatingHours: 'Operating Hours',
+      voltageRequirement: 'Voltage Requirement',
+      propertyType: 'Property Type',
+      installationLocation: 'Installation Location',
+      siteAddress: 'Site Address',
+      pincode: 'PIN Code',
+      contactName: 'Contact Name',
+      contactPhone: 'Contact Phone',
+      budgetRange: 'Budget Range',
+      preferredStartDate: 'Preferred Start Date',
+      urgency: 'Urgency Level',
+      termsAccepted: 'Terms & Conditions'
+    };
+    return labels[controlName] || controlName.replaceAll(/([A-Z])/g, ' $1').trim();
+  }
+
+  hasStepError(step: number, error: string): boolean {
+    const stepGroup = this.getStepGroup(step);
+    return stepGroup ? stepGroup.hasError(error) : false;
   }
 
   // Form Helpers
@@ -340,7 +447,7 @@ export class TechnicalServiceFormComponent implements OnInit, OnDestroy {
   async onSubmit(): Promise<void> {
     if (this.form.valid) {
       await this.saveDraft();
-      this.completed.emit();
+      this.completed.emit(this.draftId || undefined);
     } else {
       // Mark all fields in current step as touched
       this.markCurrentStepAsTouched();

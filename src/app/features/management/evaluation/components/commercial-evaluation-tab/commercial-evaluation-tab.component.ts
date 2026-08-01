@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, computed } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LiveTender, EvaluationBid } from '../../evaluation.model';
@@ -147,7 +147,7 @@ export class CommercialEvaluationTabComponent {
   @Input() bids: EvaluationBid[] = [];
   @Output() bidUpdated = new EventEmitter<void>();
   
-  private evaluationService = inject(EvaluationService);
+  private readonly evaluationService = inject(EvaluationService);
   
   qualifiedBids = computed(() => 
     this.bids.filter(b => b.technicalStatus === 'qualified')

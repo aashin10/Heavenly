@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { ServiceRequestApiService } from '../api/services-portal/service-request-api.service';
 import { ServiceRequestDraftDto } from '../api/services-portal/service-request-api.models';
 import { ServiceCategory } from '../models/service.model';
+import { ServiceAuthService } from './service-auth.service';
 
 export interface ServiceRequestDraft {
   id: string;
@@ -40,6 +41,7 @@ const DRAFT_RETENTION_DAYS = 7;
 export class DraftService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly serviceRequestApi = inject(ServiceRequestApiService);
+  private readonly serviceAuthService = inject(ServiceAuthService);
   private currentDraftId: string | null = null;
 
   constructor() {
@@ -147,6 +149,10 @@ export class DraftService {
 
     this.currentDraftId = draftId;
     this.saveDraftsToStorage(drafts);
+    
+    // Refresh session on user activity to prevent session timeout
+    this.serviceAuthService.refreshSession();
+    
     return draftId;
   }
 
