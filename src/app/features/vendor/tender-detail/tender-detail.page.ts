@@ -53,20 +53,22 @@ export class TenderDetailPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.tenderId = this.route.snapshot.params['id'];
-    this.loadTenderDetails();
+    void this.loadTenderDetails();
   }
 
-  private loadTenderDetails(): void {
-    const tender = this.vendorService.getTenderDetail(this.tenderId);
-    if (!tender) {
+  private async loadTenderDetails(): Promise<void> {
+    const bundle = await this.vendorService.getTenderDetailBundleAsync(this.tenderId);
+    if (!bundle) {
       this.toastService.error('Tender not found');
       this.router.navigate(['/vendor/tenders']);
       return;
     }
-    
-    this.tender.set(tender);
-    this.clarifications.set(this.vendorService.getTenderClarifications(this.tenderId));
-    this.eligibility.set(this.vendorService.checkTenderEligibility(this.tenderId));
+
+    this.tender.set(bundle.tender);
+    this.clarifications.set(bundle.clarifications);
+    this.eligibility.set(bundle.eligibility);
+    // No backend endpoint for either: bid status belongs to the (separate)
+    // Bid API, and "saved" is a local-only bookmark with nothing to sync.
     this.bidStatus.set(this.vendorService.getMyBidStatus(this.tenderId));
     this.isSaved.set(this.vendorService.isTenderSaved(this.tenderId));
   }
@@ -114,18 +116,22 @@ export class TenderDetailPageComponent implements OnInit {
     this.showClarificationModal.set(false);
   }
 
-  submitClarification(): void {
+  async submitClarification(): Promise<void> {
     const question = this.clarificationQuestion().trim();
     if (!question) {
       this.toastService.error('Please enter your question');
       return;
     }
-    
-    this.vendorService.askClarification(this.tenderId, question);
+
+    const asked = await this.vendorService.askClarificationAsync(this.tenderId, question);
     this.closeClarificationModal();
-    
-    // Reload clarifications
-    this.clarifications.set(this.vendorService.getTenderClarifications(this.tenderId));
+
+    // Append locally rather than re-fetching: the vendor-facing tender detail
+    // only ever includes *answered* clarifications, so a re-fetch would drop
+    // the pending question that was just asked right back out of view.
+    if (asked) {
+      this.clarifications.update(list => [...list, asked]);
+    }
   }
 
   closeEligibilityModal(): void {
