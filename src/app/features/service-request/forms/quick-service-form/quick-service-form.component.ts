@@ -74,9 +74,9 @@ export class QuickServiceFormComponent implements OnInit, OnDestroy {
   urgencyLevels = ['Today', 'Tomorrow', 'Within 3 days', 'Within a week', 'Flexible'];
   budgetRanges = ['Under ₹500', '₹500 - ₹1,000', '₹1,000 - ₹2,500', '₹2,500 - ₹5,000', 'Above ₹5,000'];
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.initializeForm();
-    this.loadDraftIfExists();
+    await this.loadDraftIfExists();
     this.startAutoSave();
     this.currentStep.set(this.initialStep);
   }
@@ -134,9 +134,9 @@ export class QuickServiceFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loadDraftIfExists(): void {
+  private async loadDraftIfExists(): Promise<void> {
     if (this.draftId) {
-      const draft = this.draftService.getDraft(this.draftId);
+      const draft = await this.draftService.getDraftAsync(this.draftId);
       if (draft?.formData) {
         // Handle equipment list array
         const formData = draft.formData;
@@ -157,12 +157,12 @@ export class QuickServiceFormComponent implements OnInit, OnDestroy {
   private startAutoSave(): void {
     this.autoSaveSubscription = interval(30000).subscribe(() => {
       if (this.form.dirty) {
-        this.saveDraft();
+        void this.saveDraft();
       }
     });
   }
 
-  saveDraft(): void {
+  async saveDraft(): Promise<void> {
     this.saveStatus.set('saving');
 
     try {
@@ -176,8 +176,8 @@ export class QuickServiceFormComponent implements OnInit, OnDestroy {
         totalSteps: this.totalSteps()
       };
 
-      const savedId = this.draftService.saveDraft(draftData);
-      
+      const savedId = await this.draftService.saveDraftAsync(draftData);
+
       if (!this.draftId) {
         this.draftId = savedId;
         this.saved.emit(savedId);
@@ -207,14 +207,14 @@ export class QuickServiceFormComponent implements OnInit, OnDestroy {
         }
       }
       this.currentStep.set(step);
-      this.saveDraft();
+      void this.saveDraft();
     }
   }
 
   nextStep(): void {
     if (this.canGoNext() && this.isCurrentStepValid()) {
       this.currentStep.update(s => s + 1);
-      this.saveDraft();
+      void this.saveDraft();
     } else {
       this.markCurrentStepAsTouched();
     }
@@ -301,9 +301,9 @@ export class QuickServiceFormComponent implements OnInit, OnDestroy {
   }
 
   // Submission
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.form.valid) {
-      this.saveDraft();
+      await this.saveDraft();
       this.completed.emit();
     } else {
       this.markCurrentStepAsTouched();

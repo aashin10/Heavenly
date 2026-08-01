@@ -1,5 +1,10 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { ServiceRequestApiService } from '../api/services-portal/service-request-api.service';
+import { ServiceRequestDraftDto } from '../api/services-portal/service-request-api.models';
+import { ServiceCategory } from '../models/service.model';
 
 export interface ServiceRequestDraft {
   id: string;
@@ -34,6 +39,7 @@ const DRAFT_RETENTION_DAYS = 7;
 })
 export class DraftService {
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly serviceRequestApi = inject(ServiceRequestApiService);
   private currentDraftId: string | null = null;
 
   constructor() {
@@ -271,4 +277,95 @@ export class DraftService {
     if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
     return `${days} day${days === 1 ? '' : 's'} ago`;
   }
+
+  // ==================== real API (behind environment.useRealApi) ====================
+  //
+  // The backend has no "get draft by its own id" lookup — only by serviceId,
+  // which is also what enforces the one-draft-per-service rule server-side.
+  // So in real-API mode the "key" this service hands back and accepts IS the
+  // serviceId, not a generated row id. Every call site already treats a
+  // draft's `id` as an opaque handle, so this substitution is invisible to
+  // callers — it just means the handle is stable and human-readable instead
+  // of a UUID.
+
+  /** Create-or-update the caller's draft for a service. Returns the draft's handle. */
+  async saveDraftAsync(
+    draftData: Omit<ServiceRequestDraft, 'id' | 'lastSaved' | 'createdAt' | 'expiresAt'> & { id?: string }
+  ): Promise<string> {
+    if (!environment.useRealApi) {
+      return this.saveDraft(draftData);
+    }
+
+    const dto = await firstValueFrom(
+      this.serviceRequestApi.saveDraft(draftData.serviceId, {
+        serviceName: draftData.serviceName,
+        category: draftData.category,
+        currentStep: draftData.currentStep,
+        totalSteps: draftData.totalSteps,
+        formData: draftData.formData,
+        resubmitOfRequestId: draftData.resubmitOfRequestId,
+      })
+    );
+    this.currentDraftId = dto.serviceId;
+    return dto.serviceId;
+  }
+
+  /** Resume lookup by the draft's handle (a serviceId in real-API mode). */
+  async getDraftAsync(key: string): Promise<ServiceRequestDraft | null> {
+    if (!environment.useRealApi) {
+      return this.getDraft(key);
+    }
+    return this.getDraftByServiceIdAsync(key);
+  }
+
+  /** Resume lookup by serviceId — the check the wizard runs before starting fresh. */
+  async getDraftByServiceIdAsync(serviceId: string): Promise<ServiceRequestDraft | null> {
+    if (!environment.useRealApi) {
+      return this.getDraftByServiceId(serviceId);
+    }
+
+    try {
+      const dto = await firstValueFrom(this.serviceRequestApi.getDraft(serviceId));
+      return mapDraftDto(dto);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Every unexpired draft belonging to the caller. */
+  async getAllDraftsAsync(): Promise<ServiceRequestDraft[]> {
+    if (!environment.useRealApi) {
+      return this.getAllDrafts();
+    }
+    const dtos = await firstValueFrom(this.serviceRequestApi.getDrafts());
+    return dtos.map(mapDraftDto);
+  }
+
+  /** Discards a draft by its handle — "start over" in the wizard. */
+  async clearDraftAsync(key: string): Promise<void> {
+    if (!environment.useRealApi) {
+      this.clearDraft(key);
+      return;
+    }
+    await firstValueFrom(this.serviceRequestApi.deleteDraft(key));
+    if (this.currentDraftId === key) {
+      this.currentDraftId = null;
+    }
+  }
+}
+
+function mapDraftDto(dto: ServiceRequestDraftDto): ServiceRequestDraft {
+  return {
+    id: dto.serviceId,
+    serviceId: dto.serviceId,
+    serviceName: dto.serviceName,
+    category: dto.category as ServiceCategory,
+    formData: dto.formData,
+    currentStep: dto.currentStep,
+    totalSteps: dto.totalSteps,
+    lastSaved: new Date(dto.lastSaved),
+    createdAt: new Date(dto.createdAt),
+    expiresAt: new Date(dto.expiresAt),
+    resubmitOfRequestId: dto.resubmitOfRequestId ?? undefined,
+  };
 }

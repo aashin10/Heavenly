@@ -55,21 +55,25 @@ export class MyRequestDetailPageComponent implements OnInit {
 
   canCancel = computed(() => {
     const req = this.request();
-    return !!req && this.requestService.canCancel(req.status);
+    return !!req && this.requestService.canCancel(req.status, req.isCancellableByRequester);
   });
 
   canResubmit = computed(() => {
     const req = this.request();
-    return !!req && this.requestService.canEditAndResubmit(req.status);
+    return !!req && this.requestService.canEditAndResubmit(req.status, req.isEditableByRequester);
   });
 
   ngOnInit(): void {
+    void this.loadRequest();
+  }
+
+  private async loadRequest(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
       this.notFound.set(true);
       return;
     }
-    const req = this.requestService.getRequest(id);
+    const req = await this.requestService.getRequestAsync(id);
     if (!req) {
       this.notFound.set(true);
       return;
@@ -90,11 +94,11 @@ export class MyRequestDetailPageComponent implements OnInit {
     return this.requestService.getStatusLabel(status);
   }
 
-  cancel(): void {
+  async cancel(): Promise<void> {
     const req = this.request();
     if (!req?.id) return;
-    if (this.requestService.cancelRequest(req.id)) {
-      this.request.set(this.requestService.getRequest(req.id));
+    if (await this.requestService.cancelRequestAsync(req.id)) {
+      this.request.set(await this.requestService.getRequestAsync(req.id));
     }
   }
 
@@ -103,11 +107,11 @@ export class MyRequestDetailPageComponent implements OnInit {
    * request it resubmits, then open the wizard. On submit the wizard updates
    * the original request rather than creating a new one.
    */
-  editAndResubmit(): void {
+  async editAndResubmit(): Promise<void> {
     const req = this.request();
     if (!req?.id) return;
 
-    const draftId = this.draftService.saveDraft({
+    const draftId = await this.draftService.saveDraftAsync({
       serviceId: req.serviceId,
       serviceName: req.serviceName,
       category: req.category,

@@ -77,7 +77,7 @@ export class ServiceRequesterDashboardPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
-    this.loadDashboardData();
+    void this.loadDashboardData();
   }
 
   private loadUserData(): void {
@@ -91,15 +91,13 @@ export class ServiceRequesterDashboardPageComponent implements OnInit {
     }
   }
 
-  private loadDashboardData(): void {
+  private async loadDashboardData(): Promise<void> {
     const requesterId = this.serviceAuthService.getCurrentUserSession()?.id;
     const requests = requesterId
-      ? this.requestService
-          .getRequestsByRequester(requesterId)
+      ? (await this.requestService.getRequestsByRequesterAsync(requesterId))
           .sort((a, b) => this.timeOf(b.updatedAt) - this.timeOf(a.updatedAt))
       : [];
-    const drafts = this.draftService
-      .getAllDrafts()
+    const drafts = (await this.draftService.getAllDraftsAsync())
       .sort((a, b) => this.timeOf(b.lastSaved) - this.timeOf(a.lastSaved));
 
     const isActive = (s: string) =>
@@ -143,8 +141,8 @@ export class ServiceRequesterDashboardPageComponent implements OnInit {
     return d ? new Date(d).getTime() : 0;
   }
 
-  continueDraft(draftId: string): void {
-    const draft = this.draftService.getDraft(draftId);
+  async continueDraft(draftId: string): Promise<void> {
+    const draft = await this.draftService.getDraftAsync(draftId);
     this.router.navigate(['/service-request/new'], {
       queryParams: { draftId, step: draft?.currentStep ?? 1 },
     });

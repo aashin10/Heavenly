@@ -35,18 +35,18 @@ export class ServiceRequestPreviewPage implements OnInit {
 
   ngOnInit(): void {
     const draftId = this.route.snapshot.queryParams['draftId'];
-    
+
     if (!draftId) {
       this.router.navigate(['/services']);
       return;
     }
 
-    this.loadDraft(draftId);
+    void this.loadDraft(draftId);
   }
 
-  private loadDraft(draftId: string): void {
-    const draft = this.draftService.getDraft(draftId);
-    
+  private async loadDraft(draftId: string): Promise<void> {
+    const draft = await this.draftService.getDraftAsync(draftId);
+
     if (!draft) {
       this.router.navigate(['/services']);
       return;
@@ -94,12 +94,15 @@ export class ServiceRequestPreviewPage implements OnInit {
     // Edit-and-resubmit path: this draft is a re-edit of a request the admin
     // sent back. Update that request in place rather than creating a new one.
     if (draft.resubmitOfRequestId) {
-      const ok = this.serviceRequestService.resubmitRequest(
+      const ok = await this.serviceRequestService.resubmitRequestAsync(
         draft.resubmitOfRequestId,
+        draft.serviceId,
+        draft.serviceName,
+        draft.category,
         draft.formData
       );
       if (ok) {
-        this.draftService.clearDraft(draft.id);
+        await this.draftService.clearDraftAsync(draft.id);
         this.toastService.success('Request resubmitted for review.');
         this.router.navigate(['/my-requests', draft.resubmitOfRequestId]);
       } else {
@@ -113,7 +116,7 @@ export class ServiceRequestPreviewPage implements OnInit {
       const requesterId =
         this.serviceAuthService.getCurrentUserSession()?.id ?? 'temp-requester-id';
 
-      const result = await this.serviceRequestService.submitRequest(
+      const result = await this.serviceRequestService.submitRequestAsync(
         draft.serviceId,
         draft.serviceName,
         draft.category,
@@ -122,9 +125,11 @@ export class ServiceRequestPreviewPage implements OnInit {
       );
 
       if (result.success && result.requestId) {
-        // Clear the draft after successful submission
-        this.draftService.clearDraft(draft.id);
-
+        // No explicit draft cleanup here: both submitRequest (mock) and the
+        // real submit endpoint already delete the source draft as part of
+        // the submission itself — a second delete here was previously
+        // hitting the real API's (now-fixed) non-idempotent DELETE and
+        // reporting the whole submission as failed.
         this.toastService.success(`Request ${result.requestId} submitted successfully!`);
 
         // Land on the request detail, where the requester sees its status and
