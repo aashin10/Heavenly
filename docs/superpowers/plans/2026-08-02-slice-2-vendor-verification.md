@@ -907,6 +907,7 @@ cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && git add src/app/core/servi
 
 **Files:**
 - Modify: `src/app/features/management/vendors/vendor-queue.component.ts`
+- Modify: `src/app/features/management/vendors/vendor-queue.component.html:104-105`
 - Modify: `src/app/features/management/management.page.ts`
 - Modify: `src/app/features/management/management.page.html:45`
 
@@ -920,6 +921,19 @@ ways once the data is remote: it reads the mock-computed `stats()` (which
 counts only the rows currently loaded, i.e. one page) and nothing triggers a
 load until the user opens the tab, so the badge that exists to *draw* them to
 the tab reads zero until they go there anyway.
+
+**A second, separate misleading-data problem, caught in Task 5's review.**
+`VendorSummaryDto` (Task 4) does not carry a document count — the backend's
+queue query deliberately doesn't load each vendor's full `Documents`
+collection for a paged list, which is the right performance call. So Task 5's
+`summaryToVendor` sets `documentsUploaded: {}` for every real-API row, and
+`documentCount(vendor)` — unchanged, still reading that field — returns `0`
+for all of them. The badge doesn't go blank or say "unknown"; it renders
+**"0/4"**, which reads as "checked, and none are uploaded" on a screen whose
+whole purpose is judging document completeness. Step 3 below stops that
+specific lie without inventing a new backend field under this fix's time
+pressure — a real `documentCount` on the queue DTO is deferred to the backlog
+(recorded in Task 8).
 
 - [ ] **Step 1: Switch the component to the async load and server counts**
 
@@ -960,7 +974,23 @@ Replace `setFilter` with:
 
 `filteredVendors` stays exactly as it is: in mock mode it does the filtering, and in real-API mode the server has already filtered, so the predicate is a harmless no-op that keeps one code path.
 
-- [ ] **Step 2: Point the tab badge at the authoritative counts**
+- [ ] **Step 2: Stop the document-count badge from lying in real-API mode**
+
+`vendor-queue.component.ts`'s `documentCount()` reads `vendor.documentsUploaded`, which Task 5's `summaryToVendor` sets to `{}` for every row fetched from the real API (the queue endpoint doesn't load each vendor's documents — a deliberate, separate backend concern, not a bug in this task). Left alone, every real-API row would render **"0/4"**, which reads as "checked, none uploaded" rather than "not loaded at this level" — actively wrong on a screen whose job is judging document completeness.
+
+In `src/app/features/management/vendors/vendor-queue.component.html`, lines 104–105, wrap the count in a mode check:
+
+```html
+                @if (!vendorAdmin.useRealApi) {
+                  <span class="doc-count" [class.doc-count--incomplete]="documentCount(vendor) < 2">
+                    {{ documentCount(vendor) }}/4
+                  </span>
+                }
+```
+
+`vendorAdmin` is already a private field on the component (`private readonly vendorAdmin = inject(VendorAdminService)`) — change it to `protected readonly` so the template can read `useRealApi` off it, matching how `management.page.ts` already exposes its injected services as `protected readonly`.
+
+- [ ] **Step 3: Point the tab badge at the authoritative counts**
 
 In `src/app/features/management/management.page.html`, line 45, replace `stats()` with `queueStats()`:
 
@@ -968,7 +998,7 @@ In `src/app/features/management/management.page.html`, line 45, replace `stats()
           <span class="tab-badge">{{ vendorAdminService.queueStats().pending }}</span>
 ```
 
-- [ ] **Step 3: Populate the badge without opening the tab**
+- [ ] **Step 4: Populate the badge without opening the tab**
 
 `ManagementPageComponent` currently has no lifecycle hook. In `src/app/features/management/management.page.ts`, add `OnInit` to the class and load the queue once:
 
@@ -987,7 +1017,7 @@ export class ManagementPageComponent implements OnInit {
 
 Add `OnInit` to the existing `@angular/core` import on that file.
 
-- [ ] **Step 4: Verify**
+- [ ] **Step 5: Verify**
 
 ```bash
 cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && npx ng build && npx ng test --watch=false --browsers=ChromeHeadless
@@ -995,10 +1025,10 @@ cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && npx ng build && npx ng tes
 
 Expected: build succeeds, 22/22 specs pass.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && git add src/app/features/management/vendors/vendor-queue.component.ts src/app/features/management/management.page.ts src/app/features/management/management.page.html && git commit -m "feat: vendor queue and tab badge load from the API with server-side counts"
+cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && git add src/app/features/management/vendors/vendor-queue.component.ts src/app/features/management/vendors/vendor-queue.component.html src/app/features/management/management.page.ts src/app/features/management/management.page.html && git commit -m "feat: vendor queue and tab badge load from the API with server-side counts"
 ```
 
 ---
@@ -1066,20 +1096,22 @@ and add this member to the component:
 
 - [ ] **Step 3: Make the four decisions async**
 
+Task 5's fix round (applied after its initial review) redesigned the four `*Async` decision methods to take an `actor` parameter and branch internally on `useRealApi` — mirroring `refreshAsync`/`getVendorAsync`, which already do this. That means every `*Async` method is now safe to call unconditionally, in either mode; this page does not need its own mode check. Pass `this.actor()` (the existing private method already in this file) as the actor argument.
+
 Replace the `approve`, `reinstate` and `confirmReason` methods with:
 
 ```ts
   async approve(): Promise<void> {
     const v = this.vendor();
     if (!v) return;
-    const updated = await this.vendorAdmin.approveAsync(v.id);
+    const updated = await this.vendorAdmin.approveAsync(v.id, this.actor());
     if (updated) this.vendor.set(updated);
   }
 
   async reinstate(): Promise<void> {
     const v = this.vendor();
     if (!v) return;
-    const updated = await this.vendorAdmin.reinstateAsync(v.id);
+    const updated = await this.vendorAdmin.reinstateAsync(v.id, this.actor());
     if (updated) this.vendor.set(updated);
   }
 
@@ -1091,8 +1123,8 @@ Replace the `approve`, `reinstate` and `confirmReason` methods with:
 
     const updated =
       action === 'reject'
-        ? await this.vendorAdmin.rejectAsync(v.id, reason)
-        : await this.vendorAdmin.suspendAsync(v.id, reason);
+        ? await this.vendorAdmin.rejectAsync(v.id, reason, this.actor())
+        : await this.vendorAdmin.suspendAsync(v.id, reason, this.actor());
 
     if (updated) this.vendor.set(updated);
     this.pendingAction.set(null);
@@ -1215,10 +1247,11 @@ In `docs/BACKLOG.md`:
 1. Under **F2**, add an `F2.5 done 2026-08-02` paragraph recording: the queue and review screens wired to `/api/service-admin/vendors`; server-side counts (the client holds one page, so local counts would misreport); the shared `mapVendorDto` extracted so the admin and vendor views cannot drift; and the backend addition of reviewer names on the timeline.
 2. Change **F9**'s heading to `### ✅ F9. Vendor status transitions are unguarded on the client — **DONE 2026-08-02**` and record what was actually wrong, which was narrower and more specific than the original entry: the mock's `reinstate()` set `pending` where the server sets `verified`, and the review template offered "Return to Queue" on a rejected vendor — an action the server refuses with 409 every time. Both fixed; `legalVendorActions()` now mirrors `Domain/Entities/Vendor.cs` and has its own spec.
 3. Update the **Current state** table: services portal now includes the admin vendor-verification surface; frontend specs 17 → 22; backend tests 212 → 214.
-4. Add to the changelog:
+4. Add a new backend item, `🟢 B12`, recording the gap Task 6 worked around: `GetVendorQueueQuery`/`VendorSummaryDto` don't carry a document count, so the admin queue can't show one without either loading every vendor's full `Documents` collection in a paged list query (wrong performance trade for a list view) or adding a lightweight count-only field to the projection. The queue currently hides the count entirely in real-API mode rather than showing a wrong one.
+5. Add to the changelog:
 
 ```markdown
-- **2026-08-02** — **Slice 2 done (F2.5 + F9):** the vendor verification queue and review screens run on the real API, so a vendor can be verified through the UI for the first time — the prerequisite Slices 4+ were blocked on, and the gap F2.4 recorded honestly. Backend gained reviewer names on the verification timeline (a join, not a stored column) so the audit trail reads as people rather than GUIDs; the vendor's own profile deliberately does not get them. Found and fixed two real client/server divergences: `reinstate` moved a vendor to `pending` on the client and `verified` on the server, and the review screen offered a "Return to Queue" action on rejected vendors that the server refuses with 409 every time. 214/214 backend, 22/22 frontend.
+- **2026-08-02** — **Slice 2 done (F2.5 + F9):** the vendor verification queue and review screens run on the real API, so a vendor can be verified through the UI for the first time — the prerequisite Slices 4+ were blocked on, and the gap F2.4 recorded honestly. Backend gained reviewer names on the verification timeline (a join, not a stored column) so the audit trail reads as people rather than GUIDs; the vendor's own profile deliberately does not get them. Found and fixed three real client/server divergences: `reinstate` moved a vendor to `pending` on the client and `verified` on the server; the review screen offered a "Return to Queue" action on rejected vendors that the server refuses with 409 every time (this half was live in the shipped mock-mode app for several commits before Task 7 removed it — pulled forward as a direct fix once caught); and the queue's document-count badge would have read "0/4" on every real-API row (the summary DTO doesn't carry one) rather than showing nothing — logged as B12. 214/214 backend, 22/22 frontend.
 ```
 
 - [ ] **Step 8: Commit and merge both repos**
