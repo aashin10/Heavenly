@@ -63,12 +63,20 @@ export class VendorAdminService {
     () => this.serverStatsSignal() ?? this.stats()
   );
 
+  private refreshRequestId = 0;
+
   /** Replaces the queue from the API. `status` omitted or 'all' fetches every vendor. */
   async refreshAsync(status?: VendorStatus | 'all'): Promise<void> {
     if (!this.useRealApi) {
       this.refresh();
       return;
     }
+
+    // A newer call can resolve before an older one — e.g. rapid filter-tab
+    // clicks. Only the response matching the most recently *issued* call may
+    // update state; an older one that resolves late is discarded rather than
+    // overwriting a fresher result.
+    const requestId = ++this.refreshRequestId;
 
     try {
       const dto = await firstValueFrom(
@@ -77,6 +85,7 @@ export class VendorAdminService {
           pageSize: 100,
         })
       );
+      if (requestId !== this.refreshRequestId) return;
       this.vendorsSignal.set(dto.items.map(item => this.summaryToVendor(item)));
       this.serverStatsSignal.set({
         pending: dto.stats.pending,
@@ -85,6 +94,7 @@ export class VendorAdminService {
         suspended: dto.stats.suspended,
       });
     } catch {
+      if (requestId !== this.refreshRequestId) return;
       // A 403 here means the signed-in admin lacks ServiceAdmin — show an
       // empty queue rather than a crashed page, exactly as F2.4 handles the
       // unverified-vendor 403 on tender browse.
@@ -104,41 +114,81 @@ export class VendorAdminService {
     }
   }
 
-  approveAsync(id: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.approve(id), 'Vendor approved.');
+  /** Legal from pending or rejected. `actor` is only used in mock mode — the real API derives the actor from the caller's token. */
+  approveAsync(id: string, actor: string): Promise<Vendor | null> {
+    return this.decide(
+      id,
+      () => this.api.approve(id),
+      () => this.approve(id, actor),
+      'Vendor approved.'
+    );
   }
 
-  rejectAsync(id: string, reason: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.reject(id, reason), 'Vendor rejected.');
+  /** Legal from pending only. The reason is shown to the vendor. */
+  rejectAsync(id: string, reason: string, actor: string): Promise<Vendor | null> {
+    return this.decide(
+      id,
+      () => this.api.reject(id, reason),
+      () => this.reject(id, actor, reason),
+      'Vendor rejected.'
+    );
   }
 
-  suspendAsync(id: string, reason: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.suspend(id, reason), 'Vendor suspended.');
+  /** Legal from verified only. */
+  suspendAsync(id: string, reason: string, actor: string): Promise<Vendor | null> {
+    return this.decide(
+      id,
+      () => this.api.suspend(id, reason),
+      () => this.suspend(id, actor, reason),
+      'Vendor suspended.'
+    );
   }
 
-  reinstateAsync(id: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.reinstate(id), 'Vendor reinstated.');
+  /** Legal from suspended only — and returns the vendor to *verified*. */
+  reinstateAsync(id: string, actor: string): Promise<Vendor | null> {
+    return this.decide(
+      id,
+      () => this.api.reinstate(id),
+      () => this.reinstate(id, actor),
+      'Vendor reinstated.'
+    );
   }
 
   /**
-   * Sends one decision and returns the updated vendor.
+   * Sends one decision and returns the updated vendor, in either mode.
    *
-   * A 409 here means the client offered an action the server's transition
-   * rules forbid — `legalVendorActions` exists to make that unreachable, so
-   * seeing this message means the two have drifted apart.
+   * Mock mode calls the existing synchronous mock method and re-reads the
+   * result — mirroring `refreshAsync`/`getVendorAsync`, which already branch
+   * this way. Every *Async method is therefore safe to call regardless of
+   * `useRealApi`; nothing at a call site needs to know which mode is active.
+   *
+   * A 409 in real-API mode means the client offered an action the server's
+   * transition rules forbid — `legalVendorActions` exists to make that
+   * unreachable, so seeing this message means the two have drifted apart.
    */
   private async decide(
     id: string,
     call: () => Observable<VendorDto>,
+    mockCall: () => boolean,
     successMessage: string
   ): Promise<Vendor | null> {
+    if (!this.useRealApi) {
+      if (!mockCall()) {
+        this.toastService.error('That vendor could not be found.');
+        return null;
+      }
+      return this.getVendor(id);
+    }
+
     try {
+      const previousStatus = this.vendorsSignal().find(v => v.id === id)?.verificationStatus;
       const vendor = mapVendorDto(await firstValueFrom(call()));
       this.toastService.success(successMessage);
       // Keep the queue consistent with the decision without a second read.
       this.vendorsSignal.update(list =>
         list.map(v => (v.id === vendor.id ? vendor : v))
       );
+      if (previousStatus) this.adjustServerStats(previousStatus, vendor.verificationStatus);
       return vendor;
     } catch (error) {
       const status = (error as { status?: number })?.status;
@@ -149,6 +199,22 @@ export class VendorAdminService {
       );
       return null;
     }
+  }
+
+  /**
+   * Keeps `queueStats`' server-supplied counts in sync with a decision made
+   * against the currently-loaded page, without a full requery (which would
+   * defeat the reason `refreshAsync` fetches counts separately from rows —
+   * see its own docs). A no-op before any refresh has landed, since updating
+   * a `null` signal via `.update()` is safe and the next real refresh will
+   * compute correct counts from scratch anyway.
+   */
+  private adjustServerStats(from: VendorStatus, to: VendorStatus): void {
+    if (from === to) return;
+    this.serverStatsSignal.update(stats => {
+      if (!stats) return stats;
+      return { ...stats, [from]: stats[from] - 1, [to]: stats[to] + 1 };
+    });
   }
 
   /**
@@ -192,15 +258,15 @@ export class VendorAdminService {
   }
 
   approve(id: string, actor: string): boolean {
-    return this.transition(id, 'verified', actor, undefined, 'Vendor approved.');
+    return this.transition(id, 'verified', actor, undefined, 'Vendor approved.', true);
   }
 
   reject(id: string, actor: string, reason: string): boolean {
-    return this.transition(id, 'rejected', actor, reason, 'Vendor rejected.');
+    return this.transition(id, 'rejected', actor, reason, 'Vendor rejected.', false);
   }
 
   suspend(id: string, actor: string, reason: string): boolean {
-    return this.transition(id, 'suspended', actor, reason, 'Vendor suspended.');
+    return this.transition(id, 'suspended', actor, reason, 'Vendor suspended.', false);
   }
 
   /**
@@ -208,9 +274,13 @@ export class VendorAdminService {
    * `Vendor.Reinstate` on the server. This previously set 'pending', which no
    * server transition produces; a reinstated vendor went back into the review
    * queue in mock mode and straight to verified against the real API.
+   *
+   * Does not stamp `verifiedAt` — the server's own `Reinstate()` doesn't
+   * either, only `Approve()` does. The original verification date survives a
+   * suspend/reinstate round trip.
    */
   reinstate(id: string, actor: string): boolean {
-    return this.transition(id, 'verified', actor, undefined, 'Vendor reinstated.');
+    return this.transition(id, 'verified', actor, undefined, 'Vendor reinstated.', false);
   }
 
   private transition(
@@ -218,7 +288,8 @@ export class VendorAdminService {
     status: VendorStatus,
     actor: string,
     reason: string | undefined,
-    successMessage: string
+    successMessage: string,
+    stampVerifiedAt: boolean
   ): boolean {
     const vendors = this.readVendors();
     const index = vendors.findIndex(v => v.id === id);
@@ -234,7 +305,7 @@ export class VendorAdminService {
     vendors[index] = {
       ...current,
       verificationStatus: status,
-      verifiedAt: status === 'verified' ? now : current.verifiedAt,
+      verifiedAt: stampVerifiedAt ? now : current.verifiedAt,
       rejectionReason: reason,
       reviewedBy: actor,
       verificationEvents: [...priorEvents, { status, at: now, actor, note: reason }],
