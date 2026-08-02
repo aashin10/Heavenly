@@ -5,19 +5,20 @@
  * Dates arrive as ISO 8601 strings and stay strings here — converting to Date
  * is the mapper's job, not the transport's.
  */
+import { VendorBusinessType, VendorStatus } from '../../models/service.model';
 
 /** One row of the verification queue. Deliberately smaller than VendorDto. */
 export interface VendorSummaryDto {
   id: string;
   businessName: string;
-  businessType: string;
+  businessType: VendorBusinessType;
   city: string | null;
   state: string | null;
   primaryContactPerson: string | null;
   email: string | null;
   phone: string | null;
   serviceCapabilities: string[];
-  verificationStatus: string;
+  verificationStatus: VendorStatus;
   createdAt: string;
   verifiedAt: string | null;
 }
@@ -45,8 +46,8 @@ export interface VendorQueueDto {
 }
 
 export interface VendorQueueParams {
-  /** Lowercase status, e.g. 'pending'. Omit for every vendor. */
-  status?: string;
+  /** Omit for every vendor. */
+  status?: VendorStatus;
   search?: string;
   page?: number;
   pageSize?: number;
