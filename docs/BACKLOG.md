@@ -1,11 +1,13 @@
 # Heavenly — Consolidated Backlog
 
-**Last updated:** 2026-08-01 · **Maintained on the go** — updated after every coding iteration, not retroactively.
+**Last updated:** 2026-08-02 · **Maintained on the go** — updated after every coding iteration, not retroactively.
 
 Single source of "what's left" across both repos. Detail lives in the linked docs; this file is the prioritised index.
 
-- **Frontend:** `aashin10/Heavenly` — branch `Feature/UI-Rework-Backend-Docs`
+- **Frontend:** `aashin10/Heavenly` — branch `dev-non-test` ← feature branches
 - **Backend:** `aashin10/Heavenly-Job-Backend` — `main` ← `develop` ← feature branches
+
+> The services-portal completion work is tracked as a slice-by-slice roadmap: [`docs/superpowers/plans/2026-08-02-services-portal-roadmap.md`](superpowers/plans/2026-08-02-services-portal-roadmap.md). This file stays the prioritised index; the roadmap has the sequencing, the file-level detail, and the decisions behind it.
 
 **Status legend:** 🔴 blocker · 🟠 high · 🟡 medium · 🟢 low · 🔵 needs *your* decision/action
 
@@ -17,9 +19,10 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 |---|---|
 | Frontend UI | **Feature-complete on mocks.** All 4 UI sets shipped; 14 dead links fixed; 0 raw hex; 0 emoji; real 404 |
 | Jobs-portal auth | **Live end-to-end.** Angular → .NET 10 → Postgres 16. Login/signup/`me`/`refresh`/`logout` all verified |
-| Services portal | **Auth, profile editing, the request wizard, and tender browsing wired to the real API** (F2.1–F2.4, behind `useRealApi`, committed `false`). Bid/award screens still on `localStorage`. Backend: **B2 COMPLETE** — request → tender → bid → award runs end to end |
+| Services portal | **Auth, profile editing, the request wizard, and tender browsing wired to the real API** (F2.1–F2.4, behind `useRealApi`, committed `false`). Bid/award and all admin screens still on `localStorage` — that's the services-portal roadmap's remaining scope. Backend: **B2 COMPLETE** — request → tender → bid → award runs end to end |
+| Admin surface | **Unblocked (B11).** A `ServiceAdmin`/`Admin` account can now exist and be granted — every `/api/service-admin/**` route is reachable for the first time |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
-| Tests | **193 backend integration tests**, Testcontainers-backed, self-contained. Frontend still has none |
+| Tests | **208 backend integration tests**, Testcontainers-backed, self-contained. **16 frontend specs** (first frontend test suite — 13 new: token-refresh coordinator + interceptor; 3 pre-existing app-shell specs fixed along the way) |
 
 ---
 
@@ -126,13 +129,19 @@ Login/register/reset are unthrottled — brute-force and enumeration exposure.
 ### 🟢 B10. File upload (GCS signed URLs)
 Needed for vendor documents + tender attachments. `UploadedFile` entity exists. Sign → client PUTs → notify API. Never proxy bytes.
 
+### ✅ B11. Admin bootstrap — **DONE 2026-08-02**
+No `ServiceAdmin` could exist: registration refuses `UserType.Admin` (a past privilege-escalation bug, see B2.2's changelog entry) and nothing seeded one, so every `/api/service-admin/**` route was unreachable — the reason F2.4's vendor happy path could never be verified live. Now: `AdminSeeder` creates one platform `Admin` from `AdminSeed:*` configuration at startup — idempotent, **never** overwrites an existing account's password on re-run (rotating the seed secret alone does nothing once the row exists; rotation needs the row deleted or the email changed too, documented on the class). `POST/DELETE /api/admin/users/{id}/roles` (Admin-only, not ServiceAdmin — a services admin must not be able to mint more admins) lets that Admin find an account and grant/revoke `ServiceAdmin` or `Admin`. Only those two roles are grantable — `Vendor`/`ServiceRequester` are profile-backed and must come through their own registration endpoints, or the granted account would pass `[Authorize]` and 404 on every `me` call. Revoking a primary role or the last `Admin` is refused.
+**Verified:** 26 integration tests (14 in the grant/revoke surface, including a test that genuinely drives the last-admin guard to zero rather than incidentally passing through a different guard) + a live pass registering a real vendor through the running API and reaching the verification-pending screen.
+→ branch `feature/admin-bootstrap`
+
 ---
 
 ## FRONTEND
 
-### 🟠 F1. Silent token refresh
-The interceptor currently clears the session and redirects on 401. It should try `refresh()` once and retry the request. Without it, users are hard-logged-out when the 60-minute access token expires mid-session.
-→ [05 §After this works](backend/05-INTEGRATION-RUNBOOK.md)
+### ✅ F1. Silent token refresh — **DONE 2026-08-02**
+The interceptor used to clear the session and redirect on any 401, hard-logging users out when the 60-minute access token expired mid-session. Now: a `TokenRefreshCoordinator` shares a single in-flight `/auth/refresh` call across every concurrent 401 (the refresh token rotates server-side, so two independent refreshes would consume it out from under each other and log the user out anyway) via `shareReplay`; the interceptor retries the original request once with the fresh token, and only clears + redirects if the refresh itself fails or the retry also 401s. A non-auth failure on the retry (a transient 500, say) propagates to the caller untouched rather than ending the session — the first cut of this code didn't distinguish that case from an auth failure, caught in review before it shipped.
+**Verified live** against the running API with the access token shortened to 1 minute: a hard navigation firing two concurrent authenticated calls on an expired token produced exactly **one** `POST /auth/refresh` and both calls succeeded on retry; corrupting the refresh token produced exactly one failed refresh attempt, a clean session clear, and a single redirect to `/login` — no loop either way. 13 new frontend specs (5 coordinator + 8 interceptor), plus 3 pre-existing `app.component.spec.ts` specs fixed along the way (one had silently lacked an `HttpClient` provider for months; another asserted CLI-scaffold boilerplate — an `<h1>` — that the app shell hasn't rendered since a UI rework in December 2025).
+→ branch `feature/silent-token-refresh` · [05 §After this works](backend/05-INTEGRATION-RUNBOOK.md)
 
 ### 🟠 F2. Services portal → real API
 All of it still runs on `localStorage` (`ServiceAuthService`, `DraftService`, `ServiceRequestService`, `VendorAdminService`). Blocked on B1/B2 (both now done). Sequenced per-screen behind the same `useRealApi` flag.
@@ -220,7 +229,7 @@ The two portals are being kept **separable** for a future split into independent
 
 **Supabase (temporary), Seoul session pooler.** Cloud SQL / Firebase are on hold. Migrations applied and the full auth lifecycle verified against it. Connection is in user-secrets (`ConnectionStrings:DefaultConnection`), with the local Docker string retained as `ConnectionStrings:LocalDocker` to switch back offline. Session pooler port 5432 — **not** transaction pooler 6543, which lacks the session state EF migrations need.
 
-⚠️ **Rotate the Supabase DB password** — it was shared in a chat session that is archived to the private `heavenly-session-archive` repo. Supabase dashboard → Settings → Database → Reset password, then re-run the `dotnet user-secrets set` command.
+🔴 **Rotate the Supabase DB password — now exposed twice, not just once.** Originally shared in a chat session archived to the private `heavenly-session-archive` repo; on 2026-08-02, printed a second time into a coding-assistant session transcript via an unfiltered `dotnet user-secrets list` (the command itself is now avoided — check presence with `grep -c`, never list values). Still not rotated as of this writing — deliberately not done autonomously since it's a shared resource other things depend on. Supabase dashboard → Settings → Database → Reset password, then re-run the `dotnet user-secrets set` command. The same session also generated the `AdminSeed:Password` local dev secret (B11) and printed *that* in plaintext too — lower stakes (local dev admin only) but rotate it in the same pass: `dotnet user-secrets set "AdminSeed:Password" "<new-value>"` (changing it alone has no effect on the already-seeded row — see B11's note on why).
 
 ---
 
@@ -236,6 +245,7 @@ Because the stack stayed relational, moving local→cloud is a **connection-stri
 
 ## Changelog
 
+- **2026-08-02** — **B11 + F1 done (Slice 1 of the services-portal roadmap):** admin bootstrap (config-seeded `Admin`, role grant/revoke, `Admin`-only so a `ServiceAdmin` can't mint further admins) unblocks the entire `/api/service-admin/**` surface for the first time; silent token refresh (single-flight coordinator + retry-once interceptor) replaces the hard logout on 401, verified live with a real 1-minute token against the running API — one refresh call for two concurrent 401s, one clean redirect on a genuinely failed refresh, no loop either way. First frontend test suite (16 specs). 208/208 backend tests passing. Two pre-existing, unrelated bugs found and fixed along the way: `app.component.spec.ts` had silently lacked an `HttpClient` DI provider for months, and one of its assertions checked for CLI-scaffold `<h1>` text the app shell stopped rendering in December 2025. **Also: the Supabase DB password was accidentally printed into this session's transcript** (an unfiltered `dotnet user-secrets list`) — not yet rotated, flagged above under Database, deliberately left for a deliberate human action rather than done autonomously.
 - **2026-08-01** — **F2.4 done:** vendor tender browsing (list, detail, ask clarification) wired to the real API. No backend changes needed — verified against the backend's own 30 `TenderApiTests` for wire-shape correctness, plus a live browser pass proving graceful handling of an unverified vendor (403 → empty state, not a crash). Full happy-path browser verification blocked on there being no way to verify a vendor short of the admin UI or a raw DB write — flagged as a follow-up, not skipped silently.
 - **2026-08-01** — **F2.3 done:** service-request drafts wizard (all 3 forms), preview/submit, my-requests (list/detail/cancel/resubmit), and both dashboards' widgets wired to the real API. Found and fixed a same-session bug: `DELETE /drafts/{serviceId}` wasn't actually idempotent despite being documented as such, which surfaced as "submission failed" toasts on requests that had, in fact, been created. 193/193 backend tests passing.
 - **2026-08-01** — **F2.1/F2.2 done:** services-portal auth (register/login/rehydrate) and vendor + requester profile editing wired to the real API behind `useRealApi` (committed `false`). Found and fixed a real cross-portal session bug in existing Stage 5/6 code (missing login-timestamp write caused a shared-`TokenStore` wipe) and two route-guard race conditions. Backend: `ServiceRequesterDto` now carries email/phone; `UpdateServiceRequesterProfileCommand` can update phone. 191/191 backend tests passing. Detail under F2.
