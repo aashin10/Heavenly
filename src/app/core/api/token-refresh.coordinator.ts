@@ -41,8 +41,12 @@ export class TokenRefreshCoordinator {
       map((response) => response.accessToken),
       tap({
         // A rejected refresh means the session is genuinely over — the token
-        // was revoked, expired past its 7 days, or already rotated. Clearing
-        // here keeps the interceptor's job to navigation alone.
+        // was revoked, expired past its 7 days, or already rotated. We clear
+        // it here as part of failing our own refresh. The interceptor's
+        // endSession clears it again independently as part of ending the
+        // session generally — including the case where the retried request
+        // itself 401s and this coordinator was never involved. Both clears
+        // are idempotent, so the overlap is harmless.
         error: () => this.tokenStore.clear(),
       }),
       finalize(() => (this.inFlight = null)),
