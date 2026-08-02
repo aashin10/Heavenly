@@ -44,9 +44,9 @@ export class TokenRefreshCoordinator {
         // was revoked, expired past its 7 days, or already rotated. We clear
         // it here as part of failing our own refresh. The interceptor's
         // endSession clears it again independently as part of ending the
-        // session generally — including the case where the retried request
-        // itself 401s and this coordinator was never involved. Both clears
-        // are idempotent, so the overlap is harmless.
+        // session generally — including paths where this coordinator was
+        // never invoked at all, e.g. no refresh token was stored to begin
+        // with. Both clears are idempotent, so the overlap is harmless.
         error: () => this.tokenStore.clear(),
       }),
       finalize(() => (this.inFlight = null)),
