@@ -131,7 +131,7 @@ Needed for vendor documents + tender attachments. `UploadedFile` entity exists. 
 
 ### ✅ B11. Admin bootstrap — **DONE 2026-08-02**
 No `ServiceAdmin` could exist: registration refuses `UserType.Admin` (a past privilege-escalation bug, see B2.2's changelog entry) and nothing seeded one, so every `/api/service-admin/**` route was unreachable — the reason F2.4's vendor happy path could never be verified live. Now: `AdminSeeder` creates one platform `Admin` from `AdminSeed:*` configuration at startup — idempotent, **never** overwrites an existing account's password on re-run (rotating the seed secret alone does nothing once the row exists; rotation needs the row deleted or the email changed too, documented on the class). `POST/DELETE /api/admin/users/{id}/roles` (Admin-only, not ServiceAdmin — a services admin must not be able to mint more admins) lets that Admin find an account and grant/revoke `ServiceAdmin` or `Admin`. Only those two roles are grantable — `Vendor`/`ServiceRequester` are profile-backed and must come through their own registration endpoints, or the granted account would pass `[Authorize]` and 404 on every `me` call. Revoking a primary role or the last `Admin` is refused.
-**Verified:** 26 integration tests (14 in the grant/revoke surface, including a test that genuinely drives the last-admin guard to zero rather than incidentally passing through a different guard) + a live pass registering a real vendor through the running API and reaching the verification-pending screen.
+**Verified:** 15 integration tests (13 in the grant/revoke surface, including a test that genuinely drives the last-admin guard to zero rather than incidentally passing through a different guard) + a live pass registering a real vendor through the running API and reaching the verification-pending screen.
 → branch `feature/admin-bootstrap`
 
 ---
@@ -170,9 +170,9 @@ All of it still runs on `localStorage` (`ServiceAuthService`, `DraftService`, `S
 - **Verification note**: `GET /api/tenders` requires a *verified* vendor (`vendor.CanBid`), and no self-service path exists to verify one against the live dev database (verification is an admin-only action; creating a live admin account would mean either a raw DB write or a live-DB bypass, both correctly out of reach). Confirmed instead via the backend's own 30 `TenderApiTests` — which already assert the exact JSON field names this session's TypeScript models mirror (`budget.min/max/exact`, `eligibilityResult.eligible/reasons`, `clarifications[].answer` with no `vendorId`) — and via the browser against an *unverified* vendor: the 403 is caught and produces an empty list rather than a crash, and a missing tender correctly toasts "Tender not found" and redirects. The full happy path (a verified vendor seeing real published tenders) is unverified in the browser; low risk given the DTO-level test coverage, but worth a live pass once there's a way to verify a vendor outside the admin UI.
 - Remaining under F2: bid submission, admin verification/evaluation screens, award flows. None started yet.
 
-### 🟡 F3. Collapse the two auth stores (C1)
-`AuthService` (jobs) and `ServiceAuthService` (services) are separate, and a user can be signed into both at once. The API models one account with many roles, so these merge once B1 lands.
-→ [UI_ISSUES.md §5](UI_ISSUES.md)
+### 🟠 F3. Collapse the two auth stores (C1)
+`AuthService` (jobs) and `ServiceAuthService` (services) are separate, and a user can be signed into both at once. The API models one account with many roles, so these merge once B1 lands. **Upgraded from 🟡 (2026-08-02):** F11 depends on this — `authInterceptor`'s session-clear can't be made complete while there are two independent stores to clear.
+→ [UI_ISSUES.md §5](UI_ISSUES.md) · [F11](#-f11-authinterceptors-session-clear-is-incomplete-for-the-jobs-portal)
 
 ### 🟡 F4. Simplify login (IA2)
 Three decisions before credentials (portal → role → login/signup). With roles on the auth response this becomes one email+password form that routes afterwards. Unblocked by B1.
@@ -182,6 +182,11 @@ Three decisions before credentials (portal → role → login/signup). With role
 
 ### 🟡 F10. Requester address field has three names
 The `ServiceRequester` union calls one field `address` (individual), `businessAddress` (SME) and `registeredAddress` (large org). It is one concept — where the requester is — and the API returns it as `address` (B2.3). Collapse the three on the client.
+
+### 🟠 F11. `authInterceptor`'s session-clear is incomplete for the jobs portal
+Found in F1's final review (2026-08-02). On a failed refresh, `authInterceptor`'s `endSession()` clears `TokenStore` and navigates to `/login` — but that's only half a logout. `AuthService`'s (jobs-portal) own state (`userSignal`, `CURRENT_USER_KEY`/`LOGIN_TIMESTAMP_KEY` in `localStorage`) and `ServiceAuthService`'s cached session are untouched. For a jobs-portal user this means: `endSession()` → `/login` → `guestGuard` sees `authService.isLoggedIn()` still `true` → bounces back to `/dashboard` → its data calls 401 with no refresh token left → `endSession()` again → back to `/login` → loop.
+
+This is **pre-existing behavior** (the old interceptor had the same two lines) and is **dormant today** because `useRealApi` is committed `false`. It stops being dormant the moment any real-API session hits it — F1's own live verification didn't catch it because that pass ran as a vendor through `ServiceAuthService`, which `guestGuard` doesn't gate the same way. Don't band-aid this in isolation: the real fix is F3 (collapse the two auth stores into one), which removes the two independent pieces of state this bug lives in the gap between. Close F3 before or alongside flipping `useRealApi` on for real (roadmap Slice 10), not after.
 
 ### 🟡 F5. Model divergences
 - `RequesterType`: `'large_organization'` (signup) vs `'organization'` (management) — **genuinely disagree**; canonical is `large_organization`

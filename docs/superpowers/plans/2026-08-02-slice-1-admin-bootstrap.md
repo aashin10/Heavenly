@@ -93,7 +93,7 @@ Expected: `Switched to branch 'develop'` and an up-to-date working tree.
 ls /Users/admin/Heavenly-agentic/Heavenly-Job-Backend/src/Api/Heavenly-Job.Api/Controllers/ServicesPortal/
 ```
 
-Expected: eight files — `AwardAdminController.cs`, `AwardsController.cs`, `BidAdminController.cs`, `BidsController.cs`, `ServiceRequestAdminController.cs`, `ServiceRequestersController.cs`, `ServiceRequestsController.cs`, `TenderAdminController.cs`, `VendorAdminController.cs`, `VendorsController.cs`. (Ten, in fact — if you see zero, you are still on `main`.)
+Expected: ten files — `AwardAdminController.cs`, `AwardsController.cs`, `BidAdminController.cs`, `BidsController.cs`, `ServiceRequestAdminController.cs`, `ServiceRequestersController.cs`, `ServiceRequestsController.cs`, `TenderAdminController.cs`, `VendorAdminController.cs`, `VendorsController.cs`. If you see zero, you are still on `main`.
 
 - [ ] **Step 4: Establish the green baseline**
 
@@ -1610,7 +1610,7 @@ Use the **session pooler on port 5432**, not the transaction pooler on 6543 — 
 
 In `docs/BACKLOG.md`:
 
-1. Change the `### 🟠 F1. Silent token refresh` heading to `### ✅ F1. Silent token refresh — **DONE 2026-08-02**` and replace its body with what was built: single-flight coordinator, retry-once interceptor, 12 frontend specs — the first real frontend tests in the repo.
+1. Change the `### 🟠 F1. Silent token refresh` heading to `### ✅ F1. Silent token refresh — **DONE 2026-08-02**` and replace its body with what was built: single-flight coordinator, retry-once interceptor, 16 frontend specs (13 new + 3 pre-existing fixed) — the first real frontend tests in the repo.
 2. Add a new backend entry above B3:
 
 ```markdown
@@ -1641,8 +1641,8 @@ cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && git checkout dev-non-test 
 
 ## Done when
 
-- [ ] `dotnet test` passes with 207 tests.
-- [ ] `npx ng test --watch=false --browsers=ChromeHeadless` passes with 13 specs.
+- [ ] `dotnet test` passes with 208 tests.
+- [ ] `npx ng test --watch=false --browsers=ChromeHeadless` passes with 16 specs.
 - [ ] `npx ng build` succeeds with 0 errors.
 - [ ] A seeded `Admin` logs in against the running API and promotes another account to `ServiceAdmin`, and that account reaches `GET /api/service-admin/vendors`.
 - [ ] An expired access token is refreshed and the request retried in a real browser, with exactly one `POST /auth/refresh` for a burst of parallel requests.
