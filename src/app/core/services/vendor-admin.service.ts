@@ -1,6 +1,12 @@
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { firstValueFrom, Observable } from 'rxjs';
 import { ToastService } from './toast.service';
+import { environment } from '../../../environments/environment';
+import { VendorAdminApiService } from '../api/services-portal/vendor-admin-api.service';
+import { VendorSummaryDto } from '../api/services-portal/vendor-admin-api.models';
+import { VendorDto } from '../api/services-portal/vendor-api.models';
+import { mapVendorDto } from '../api/services-portal/vendor-dto.mapper';
 import { Vendor, VendorStatus } from '../models/service.model';
 
 /**
@@ -41,6 +47,141 @@ export class VendorAdminService {
     };
   });
 
+  private readonly api = inject(VendorAdminApiService);
+
+  readonly useRealApi = environment.useRealApi;
+
+  /** Server-supplied counts. Null in mock mode, where `stats` computes them. */
+  private readonly serverStatsSignal = signal<VendorQueueStats | null>(null);
+
+  /**
+   * Counts come from the server when it is authoritative: it counts the whole
+   * queue, while the client only holds the current page, so computing them
+   * locally would report "3 pending" when 3 is simply the page size.
+   */
+  readonly queueStats = computed<VendorQueueStats>(
+    () => this.serverStatsSignal() ?? this.stats()
+  );
+
+  /** Replaces the queue from the API. `status` omitted or 'all' fetches every vendor. */
+  async refreshAsync(status?: VendorStatus | 'all'): Promise<void> {
+    if (!this.useRealApi) {
+      this.refresh();
+      return;
+    }
+
+    try {
+      const dto = await firstValueFrom(
+        this.api.queue({
+          status: status && status !== 'all' ? status : undefined,
+          pageSize: 100,
+        })
+      );
+      this.vendorsSignal.set(dto.items.map(item => this.summaryToVendor(item)));
+      this.serverStatsSignal.set({
+        pending: dto.stats.pending,
+        verified: dto.stats.verified,
+        rejected: dto.stats.rejected,
+        suspended: dto.stats.suspended,
+      });
+    } catch {
+      // A 403 here means the signed-in admin lacks ServiceAdmin — show an
+      // empty queue rather than a crashed page, exactly as F2.4 handles the
+      // unverified-vendor 403 on tender browse.
+      this.vendorsSignal.set([]);
+      this.serverStatsSignal.set({ pending: 0, verified: 0, rejected: 0, suspended: 0 });
+      this.toastService.error('Could not load the vendor queue.');
+    }
+  }
+
+  async getVendorAsync(id: string): Promise<Vendor | null> {
+    if (!this.useRealApi) return this.getVendor(id);
+
+    try {
+      return mapVendorDto(await firstValueFrom(this.api.getById(id)));
+    } catch {
+      return null;
+    }
+  }
+
+  approveAsync(id: string): Promise<Vendor | null> {
+    return this.decide(id, () => this.api.approve(id), 'Vendor approved.');
+  }
+
+  rejectAsync(id: string, reason: string): Promise<Vendor | null> {
+    return this.decide(id, () => this.api.reject(id, reason), 'Vendor rejected.');
+  }
+
+  suspendAsync(id: string, reason: string): Promise<Vendor | null> {
+    return this.decide(id, () => this.api.suspend(id, reason), 'Vendor suspended.');
+  }
+
+  reinstateAsync(id: string): Promise<Vendor | null> {
+    return this.decide(id, () => this.api.reinstate(id), 'Vendor reinstated.');
+  }
+
+  /**
+   * Sends one decision and returns the updated vendor.
+   *
+   * A 409 here means the client offered an action the server's transition
+   * rules forbid — `legalVendorActions` exists to make that unreachable, so
+   * seeing this message means the two have drifted apart.
+   */
+  private async decide(
+    id: string,
+    call: () => Observable<VendorDto>,
+    successMessage: string
+  ): Promise<Vendor | null> {
+    try {
+      const vendor = mapVendorDto(await firstValueFrom(call()));
+      this.toastService.success(successMessage);
+      // Keep the queue consistent with the decision without a second read.
+      this.vendorsSignal.update(list =>
+        list.map(v => (v.id === vendor.id ? vendor : v))
+      );
+      return vendor;
+    } catch (error) {
+      const status = (error as { status?: number })?.status;
+      this.toastService.error(
+        status === 409
+          ? 'That action is not allowed for this vendor’s current status.'
+          : 'The decision could not be saved.'
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Queue rows are summaries, not full profiles. The fields the queue renders
+   * are filled from the summary and the rest left empty — the review page
+   * fetches the full profile by id when it opens.
+   */
+  private summaryToVendor(item: VendorSummaryDto): Vendor {
+    return {
+      id: item.id,
+      businessName: item.businessName,
+      businessType: item.businessType,
+      panNumber: '',
+      yearEstablished: 0,
+      primaryContactPerson: item.primaryContactPerson ?? '',
+      designation: '',
+      email: item.email ?? '',
+      phone: item.phone ?? '',
+      registeredAddress: '',
+      city: item.city ?? '',
+      state: item.state ?? '',
+      pinCode: '',
+      serviceCapabilities: item.serviceCapabilities,
+      serviceAreas: [],
+      verificationStatus: item.verificationStatus,
+      documentsUploaded: {},
+      bankDetails: { accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '' },
+      createdAt: new Date(item.createdAt),
+      verifiedAt: item.verifiedAt ? new Date(item.verifiedAt) : undefined,
+      isEmailVerified: false,
+    };
+  }
+
   /** Refresh from storage — call on entering the queue in case a vendor registered. */
   refresh(): void {
     this.vendorsSignal.set(this.readVendors());
@@ -62,9 +203,14 @@ export class VendorAdminService {
     return this.transition(id, 'suspended', actor, reason, 'Vendor suspended.');
   }
 
-  /** Reinstate a rejected/suspended vendor back to pending for another look. */
+  /**
+   * Lifts a suspension, returning the vendor to verified — matching
+   * `Vendor.Reinstate` on the server. This previously set 'pending', which no
+   * server transition produces; a reinstated vendor went back into the review
+   * queue in mock mode and straight to verified against the real API.
+   */
   reinstate(id: string, actor: string): boolean {
-    return this.transition(id, 'pending', actor, undefined, 'Vendor returned to the queue.');
+    return this.transition(id, 'verified', actor, undefined, 'Vendor reinstated.');
   }
 
   private transition(
