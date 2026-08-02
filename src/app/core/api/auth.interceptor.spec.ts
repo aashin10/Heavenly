@@ -1,5 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  provideHttpClient,
+  withInterceptors,
+} from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
@@ -68,6 +73,24 @@ describe('authInterceptor', () => {
 
     expect(body).toEqual({ businessName: 'Sharma Electricals' });
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('propagates a non-401 failure on the retried request without ending the session', () => {
+    let error: unknown;
+    http.get(url).subscribe({ error: (err) => (error = err) });
+
+    httpMock.expectOne(url).flush({}, { status: 401, statusText: 'Unauthorized' });
+
+    httpMock
+      .expectOne(`${environment.apiBaseUrl}/auth/refresh`)
+      .flush({ accessToken: 'fresh-access', refreshToken: 'fresh-refresh' });
+
+    httpMock.expectOne(url).flush({}, { status: 500, statusText: 'Internal Server Error' });
+
+    expect((error as HttpErrorResponse).status).toBe(500);
+    expect(router.navigate).not.toHaveBeenCalled();
+    expect(tokenStore.accessToken).toBe('fresh-access');
+    expect(tokenStore.refreshToken).toBe('fresh-refresh');
   });
 
   it('gives up after one retry when the retried request also 401s', () => {

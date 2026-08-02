@@ -58,8 +58,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       return coordinator.refresh().pipe(
-        switchMap((accessToken) => next(withAuth(accessToken))),
-        catchError((retryError: unknown) => endSession(retryError))
+        catchError((refreshError: unknown) => endSession(refreshError)),
+        switchMap((accessToken) =>
+          next(withAuth(accessToken)).pipe(
+            catchError((retryError: unknown) => {
+              const retryStatus = (retryError as HttpErrorResponse)?.status;
+              return retryStatus === 401 ? endSession(retryError) : throwError(() => retryError);
+            })
+          )
+        )
       );
     })
   );
