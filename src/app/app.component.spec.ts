@@ -32,10 +32,12 @@ describe('AppComponent', () => {
     expect(app.title).toEqual('Heavenly');
   });
 
-  it('should render title', () => {
+  it('should render the app shell — navbar, routed content area, footer', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, Heavenly');
+    expect(compiled.querySelector('app-navbar')).toBeTruthy();
+    expect(compiled.querySelector('main.app-main router-outlet')).toBeTruthy();
+    expect(compiled.querySelector('app-footer')).toBeTruthy();
   });
 });
