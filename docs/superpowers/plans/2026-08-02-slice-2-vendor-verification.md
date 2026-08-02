@@ -862,7 +862,7 @@ Add these members inside the class, after the existing `stats` computed:
     return {
       id: item.id,
       businessName: item.businessName,
-      businessType: item.businessType as Vendor['businessType'],
+      businessType: item.businessType,
       panNumber: '',
       yearEstablished: 0,
       primaryContactPerson: item.primaryContactPerson ?? '',
@@ -875,7 +875,7 @@ Add these members inside the class, after the existing `stats` computed:
       pinCode: '',
       serviceCapabilities: item.serviceCapabilities,
       serviceAreas: [],
-      verificationStatus: item.verificationStatus as VendorStatus,
+      verificationStatus: item.verificationStatus,
       documentsUploaded: {},
       bankDetails: { accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '' },
       createdAt: new Date(item.createdAt),
