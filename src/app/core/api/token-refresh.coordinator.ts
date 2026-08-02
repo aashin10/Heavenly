@@ -15,7 +15,10 @@ import { TokenStore } from './token-store.service';
  *
  * `shareReplay({ refCount: false })` keeps the result available to subscribers
  * that arrive after the response lands, and `finalize` clears the slot so the
- * next genuine expiry starts a fresh exchange.
+ * next genuine expiry starts a fresh exchange. That replay guarantee is
+ * success-only: shareReplay hardcodes `resetOnError: true`, so a late
+ * subscriber arriving after a failed exchange triggers a fresh attempt rather
+ * than replaying the error.
  */
 @Injectable({ providedIn: 'root' })
 export class TokenRefreshCoordinator {
