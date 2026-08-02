@@ -144,4 +144,39 @@ describe('authInterceptor', () => {
     httpMock.expectNone(`${environment.apiBaseUrl}/auth/refresh`);
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
+
+  it('shares one refresh across two independent requests that both 401 concurrently', () => {
+    const secondUrl = `${environment.apiBaseUrl}/vendors/tenders`;
+    let firstBody: unknown;
+    let secondBody: unknown;
+
+    http.get(url).subscribe((res) => (firstBody = res));
+    http.get(secondUrl).subscribe((res) => (secondBody = res));
+
+    // Both original requests are in flight before either 401 lands. Fetching
+    // them by URL (rather than relying on registration order) mirrors how a
+    // real dashboard fires several requests before any response returns.
+    const firstReq = httpMock.expectOne(url);
+    const secondReq = httpMock.expectOne(secondUrl);
+    firstReq.flush({}, { status: 401, statusText: 'Unauthorized' });
+    secondReq.flush({}, { status: 401, statusText: 'Unauthorized' });
+
+    // Exactly one refresh call — expectOne fails the test if the second 401
+    // triggered its own refresh instead of sharing the first's.
+    httpMock
+      .expectOne(`${environment.apiBaseUrl}/auth/refresh`)
+      .flush({ accessToken: 'fresh-access', refreshToken: 'fresh-refresh' });
+
+    // Both originals are retried with the new token and both succeed.
+    const firstRetry = httpMock.expectOne(url);
+    const secondRetry = httpMock.expectOne(secondUrl);
+    expect(firstRetry.request.headers.get('Authorization')).toBe('Bearer fresh-access');
+    expect(secondRetry.request.headers.get('Authorization')).toBe('Bearer fresh-access');
+    firstRetry.flush({ id: 1 });
+    secondRetry.flush({ id: 2 });
+
+    expect(firstBody).toEqual({ id: 1 });
+    expect(secondBody).toEqual({ id: 2 });
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
 });
