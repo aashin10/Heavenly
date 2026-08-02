@@ -1,10 +1,22 @@
 import { TestBed } from '@angular/core/testing';
+import { importProvidersFrom } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+import { APP_ICONS } from './shared/icons/app-icons';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        importProvidersFrom(LucideAngularModule.pick(APP_ICONS)),
+      ],
     }).compileComponents();
   });
 
