@@ -701,205 +701,45 @@ cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && git add src/app/core/api/s
 
 ---
 
-## Task 5: `VendorAdminService` async siblings
+## Task 5: `VendorAdminService` async siblings — ✅ done (commits 6830d0c, 396757b)
 
 **Files:**
-- Modify: `src/app/core/services/vendor-admin.service.ts`
+- Modified: `src/app/core/services/vendor-admin.service.ts`
 
-**Interfaces:**
-- Consumes: `VendorAdminApiService` (Task 4), `mapVendorDto` (Task 2), `VendorAction` (Task 3)
-- Produces, on `VendorAdminService`:
-  - `refreshAsync(status?: VendorStatus | 'all'): Promise<void>`
-  - `getVendorAsync(id: string): Promise<Vendor | null>`
-  - `approveAsync(id: string): Promise<Vendor | null>`
-  - `rejectAsync(id: string, reason: string): Promise<Vendor | null>`
-  - `suspendAsync(id: string, reason: string): Promise<Vendor | null>`
-  - `reinstateAsync(id: string): Promise<Vendor | null>`
-  - `readonly useRealApi: boolean`
+**As-built interfaces** (this section originally planned a narrower design; a
+task review caught three real gaps — see "What changed from the original
+plan" below — and the fix round redesigned this file. What's recorded here is
+what actually shipped, not the original draft):
 
-Every existing mock method stays exactly as it is.
+- `refreshAsync(status?: VendorStatus | 'all'): Promise<void>` — request-sequenced (a `refreshRequestId` counter discards a stale response that resolves after a newer one)
+- `getVendorAsync(id: string): Promise<Vendor | null>`
+- `approveAsync(id: string, actor: string): Promise<Vendor | null>`
+- `rejectAsync(id: string, reason: string, actor: string): Promise<Vendor | null>`
+- `suspendAsync(id: string, reason: string, actor: string): Promise<Vendor | null>`
+- `reinstateAsync(id: string, actor: string): Promise<Vendor | null>`
+- `readonly useRealApi: boolean`
+- `readonly queueStats: Signal<VendorQueueStats>` — server counts when present, else the mock-computed `stats`; kept in sync after every decision by a private `adjustServerStats(from, to)`, not just after a refresh
 
-- [ ] **Step 1: Fix the mock's wrong reinstate target**
+**`actor` is real, not vestigial.** All four decision methods are safe to call in *either* mode: `decide()` branches internally on `useRealApi`, exactly like `refreshAsync`/`getVendorAsync` already did — mock mode calls the corresponding pre-existing synchronous method (`approve`/`reject`/`suspend`/`reinstate`, unchanged) and re-reads via `getVendor(id)`; real-API mode calls `VendorAdminApiService` and ignores `actor` (the server derives the actor from the caller's token). Task 7 must pass `this.actor()` (already a private method on `VendorReviewPageComponent`) into all four — see Task 7's Step 3 below, already updated for this.
 
-In `src/app/core/services/vendor-admin.service.ts`, change the mock `reinstate` so both paths agree on what reinstating means:
+**The mock's `reinstate()` now targets `verified`, not `pending`** — matching the server's `Vendor.Reinstate`, which no transition ever produces `pending` from. It also does **not** stamp `verifiedAt` (`transition()` takes an explicit `stampVerifiedAt: boolean`; only `approve()` passes `true`), matching the server's `Reinstate()`, which leaves `VerifiedAt` alone — only `Approve()` sets it.
 
-```ts
-  /**
-   * Lifts a suspension, returning the vendor to verified — matching
-   * `Vendor.Reinstate` on the server. This previously set 'pending', which no
-   * server transition produces; a reinstated vendor went back into the review
-   * queue in mock mode and straight to verified against the real API.
-   */
-  reinstate(id: string, actor: string): boolean {
-    return this.transition(id, 'verified', actor, undefined, 'Vendor reinstated.');
-  }
-```
+**What changed from the original plan, and why** (recorded so later slices don't repeat the gap):
 
-- [ ] **Step 2: Add the API-backed state and methods**
+1. **A live regression, fixed immediately outside this task.** Fixing `reinstate()`'s target status was correct, but until Task 7 lands, `vendor-review.page.html` still had a "Return to Queue" button on **rejected** vendors wired to `reinstate()` — which the server refuses (`reinstate` is `suspended`-only), but the *mock* doesn't validate transitions at all, so it silently succeeded and, post-fix, silently approved a rejected vendor. `useRealApi` is committed `false`, so this was live in the shipped app the moment `6830d0c` landed. Fixed directly, same day, by removing that one button (commit `90167b8`, in `vendor-review.page.html` — not this file).
+2. **No in-flight request sequencing on `refreshAsync`.** Task 6 wires this method to rapid filter-tab clicks; without sequencing, a slow older response can overwrite a fast newer one. Fixed with the `refreshRequestId` counter described above.
+3. **`decide()` didn't keep `queueStats` in sync.** After a decision, the server-side counts sat stale until the next full refresh — approve three pending vendors and the Pending badge doesn't move. Fixed with `adjustServerStats`.
+4. **The decision methods weren't gated by `useRealApi` at all**, unlike `refreshAsync`/`getVendorAsync`. In mock mode they'd have issued a live HTTP call to a backend that might not be running. This is the reason `actor` exists on the public signature — the mock fallback path needs it, the real path doesn't.
 
-Add these imports at the top of the file:
+Full detail, including the independent re-verification of each fix (traced by hand, not just read), is in the SDD ledger for this slice if you need it; it isn't reproduced here.
 
-```ts
-import { environment } from '../../../environments/environment';
-import { VendorAdminApiService } from '../api/services-portal/vendor-admin-api.service';
-import { mapVendorDto } from '../api/services-portal/vendor-dto.mapper';
-import { VendorSummaryDto } from '../api/services-portal/vendor-admin-api.models';
-```
-
-Add these members inside the class, after the existing `stats` computed:
-
-```ts
-  private readonly api = inject(VendorAdminApiService);
-
-  readonly useRealApi = environment.useRealApi;
-
-  /** Server-supplied counts. Null in mock mode, where `stats` computes them. */
-  private readonly serverStatsSignal = signal<VendorQueueStats | null>(null);
-
-  /**
-   * Counts come from the server when it is authoritative: it counts the whole
-   * queue, while the client only holds the current page, so computing them
-   * locally would report "3 pending" when 3 is simply the page size.
-   */
-  readonly queueStats = computed<VendorQueueStats>(
-    () => this.serverStatsSignal() ?? this.stats()
-  );
-
-  /** Replaces the queue from the API. `status` omitted or 'all' fetches every vendor. */
-  async refreshAsync(status?: VendorStatus | 'all'): Promise<void> {
-    if (!this.useRealApi) {
-      this.refresh();
-      return;
-    }
-
-    try {
-      const dto = await firstValueFrom(
-        this.api.queue({
-          status: status && status !== 'all' ? status : undefined,
-          pageSize: 100,
-        })
-      );
-      this.vendorsSignal.set(dto.items.map(item => this.summaryToVendor(item)));
-      this.serverStatsSignal.set({
-        pending: dto.stats.pending,
-        verified: dto.stats.verified,
-        rejected: dto.stats.rejected,
-        suspended: dto.stats.suspended,
-      });
-    } catch {
-      // A 403 here means the signed-in admin lacks ServiceAdmin — show an
-      // empty queue rather than a crashed page, exactly as F2.4 handles the
-      // unverified-vendor 403 on tender browse.
-      this.vendorsSignal.set([]);
-      this.serverStatsSignal.set({ pending: 0, verified: 0, rejected: 0, suspended: 0 });
-      this.toastService.error('Could not load the vendor queue.');
-    }
-  }
-
-  async getVendorAsync(id: string): Promise<Vendor | null> {
-    if (!this.useRealApi) return this.getVendor(id);
-
-    try {
-      return mapVendorDto(await firstValueFrom(this.api.getById(id)));
-    } catch {
-      return null;
-    }
-  }
-
-  approveAsync(id: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.approve(id), 'Vendor approved.');
-  }
-
-  rejectAsync(id: string, reason: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.reject(id, reason), 'Vendor rejected.');
-  }
-
-  suspendAsync(id: string, reason: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.suspend(id, reason), 'Vendor suspended.');
-  }
-
-  reinstateAsync(id: string): Promise<Vendor | null> {
-    return this.decide(id, () => this.api.reinstate(id), 'Vendor reinstated.');
-  }
-
-  /**
-   * Sends one decision and returns the updated vendor.
-   *
-   * A 409 here means the client offered an action the server's transition
-   * rules forbid — `legalVendorActions` exists to make that unreachable, so
-   * seeing this message means the two have drifted apart.
-   */
-  private async decide(
-    id: string,
-    call: () => Observable<VendorDto>,
-    successMessage: string
-  ): Promise<Vendor | null> {
-    try {
-      const vendor = mapVendorDto(await firstValueFrom(call()));
-      this.toastService.success(successMessage);
-      // Keep the queue consistent with the decision without a second read.
-      this.vendorsSignal.update(list =>
-        list.map(v => (v.id === vendor.id ? vendor : v))
-      );
-      return vendor;
-    } catch (error) {
-      const status = (error as { status?: number })?.status;
-      this.toastService.error(
-        status === 409
-          ? 'That action is not allowed for this vendor’s current status.'
-          : 'The decision could not be saved.'
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Queue rows are summaries, not full profiles. The fields the queue renders
-   * are filled from the summary and the rest left empty — the review page
-   * fetches the full profile by id when it opens.
-   */
-  private summaryToVendor(item: VendorSummaryDto): Vendor {
-    return {
-      id: item.id,
-      businessName: item.businessName,
-      businessType: item.businessType,
-      panNumber: '',
-      yearEstablished: 0,
-      primaryContactPerson: item.primaryContactPerson ?? '',
-      designation: '',
-      email: item.email ?? '',
-      phone: item.phone ?? '',
-      registeredAddress: '',
-      city: item.city ?? '',
-      state: item.state ?? '',
-      pinCode: '',
-      serviceCapabilities: item.serviceCapabilities,
-      serviceAreas: [],
-      verificationStatus: item.verificationStatus,
-      documentsUploaded: {},
-      bankDetails: { accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '' },
-      createdAt: new Date(item.createdAt),
-      verifiedAt: item.verifiedAt ? new Date(item.verifiedAt) : undefined,
-      isEmailVerified: false,
-    };
-  }
-```
-
-Add the imports these need to the existing Angular/RxJS import lines: `firstValueFrom` and `Observable` from `rxjs`, and `VendorDto` from `../api/services-portal/vendor-api.models`.
-
-- [ ] **Step 3: Verify it compiles and nothing regressed**
+- [ ] **Step: Verify it compiles and nothing regressed** *(already done — recorded for completeness)*
 
 ```bash
 cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && npx ng build && npx ng test --watch=false --browsers=ChromeHeadless
 ```
 
-Expected: build succeeds; 22/22 specs pass (17 baseline + 5 from Task 3).
-
-- [ ] **Step 4: Commit**
-
-```bash
-cd /Users/admin/Heavenly-agentic/Heavenly-Frontend && git add src/app/core/services/vendor-admin.service.ts && git commit -m "feat: VendorAdminService gains real-API siblings; reinstate targets verified"
-```
+Result: build succeeded; 22/22 specs pass (unchanged — this task added no new spec file, by design; the async paths are exercised end-to-end by Task 8's live verification).
 
 ---
 
