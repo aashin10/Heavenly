@@ -43,7 +43,13 @@ export class VendorQueueComponent implements OnInit {
     // Fire-and-forget: `filteredVendors` is a computed over the service's own
     // signal, so it re-renders when the load lands. Awaiting here would need
     // the component to be async and would gain nothing.
-    void this.vendorAdmin.refreshAsync();
+    //
+    // Pass the current filter ('pending' by default), not an unfiltered
+    // fetch — the real API returns one page, so an unfiltered load followed
+    // by a local 'pending' filter would silently drop pending vendors sitting
+    // past row 100, exactly the failure setFilter's own comment below warns
+    // against. This keeps the initial load consistent with every later one.
+    void this.vendorAdmin.refreshAsync(this.filter());
   }
 
   setFilter(value: VendorFilter): void {
