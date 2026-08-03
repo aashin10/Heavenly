@@ -148,28 +148,23 @@
                 </div>
               } @else {
                 <div class="decision-actions">
-                  @switch (v.verificationStatus) {
-                    @case ('pending') {
-                      <button type="button" class="btn-primary" (click)="approve()">
-                        <app-icon name="circle-check" [size]="16" /> Approve Vendor
-                      </button>
-                      <button type="button" class="btn-outline" (click)="startReject()">Reject</button>
-                    }
-                    @case ('verified') {
-                      <button type="button" class="btn-danger" (click)="startSuspend()">
-                        <app-icon name="ban" [size]="16" /> Suspend Vendor
-                      </button>
-                    }
-                    @case ('rejected') {
-                      <button type="button" class="btn-primary" (click)="approve()">
-                        <app-icon name="circle-check" [size]="16" /> Approve Vendor
-                      </button>
-                    }
-                    @case ('suspended') {
-                      <button type="button" class="btn-primary" (click)="reinstate()">
-                        Reinstate to Queue
-                      </button>
-                    }
+                  @if (can('approve')) {
+                    <button type="button" class="btn-primary" (click)="approve()">
+                      <app-icon name="circle-check" [size]="16" /> Approve Vendor
+                    </button>
+                  }
+                  @if (can('reject')) {
+                    <button type="button" class="btn-outline" (click)="startReject()">Reject</button>
+                  }
+                  @if (can('suspend')) {
+                    <button type="button" class="btn-danger" (click)="startSuspend()">
+                      <app-icon name="ban" [size]="16" /> Suspend Vendor
+                    </button>
+                  }
+                  @if (can('reinstate')) {
+                    <button type="button" class="btn-primary" (click)="reinstate()">
+                      Reinstate Vendor
+                    </button>
                   }
                 </div>
               }

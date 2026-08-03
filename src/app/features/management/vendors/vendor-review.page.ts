@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { VendorAdminService } from '../../../core/services/vendor-admin.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { VendorAction, legalVendorActions } from '../../../core/services/vendor-transitions';
 import {
   Vendor,
   VendorVerificationEvent,
@@ -76,18 +77,13 @@ export class VendorReviewPageComponent implements OnInit {
     return status ? VENDOR_STATUSES[status].description : '';
   });
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
       this.notFound.set(true);
       return;
     }
-    const vendor = this.vendorAdmin.getVendor(id);
-    if (!vendor) {
-      this.notFound.set(true);
-      return;
-    }
-    this.vendor.set(vendor);
+    await this.reload(id);
   }
 
   businessType(): string {
@@ -98,22 +94,40 @@ export class VendorReviewPageComponent implements OnInit {
     return this.authService.user()?.name ?? 'Administrator';
   }
 
-  private reload(id: string): void {
-    this.vendor.set(this.vendorAdmin.getVendor(id));
+  /**
+   * Whether the server would accept this action for the vendor's current
+   * status. The template previously hard-coded a @switch that offered
+   * "Return to Queue" (reinstate) on a rejected vendor — a guaranteed 409,
+   * since the server allows reinstate from `suspended` alone.
+   */
+  can(action: VendorAction): boolean {
+    const status = this.vendor()?.verificationStatus;
+    return status ? legalVendorActions(status).includes(action) : false;
+  }
+
+  private async reload(id: string): Promise<void> {
+    const vendor = await this.vendorAdmin.getVendorAsync(id);
+    if (!vendor) {
+      this.notFound.set(true);
+      return;
+    }
+    this.vendor.set(vendor);
     this.pendingAction.set(null);
     this.reasonText.set('');
   }
 
-  approve(): void {
+  async approve(): Promise<void> {
     const v = this.vendor();
     if (!v) return;
-    if (this.vendorAdmin.approve(v.id, this.actor())) this.reload(v.id);
+    const updated = await this.vendorAdmin.approveAsync(v.id, this.actor());
+    if (updated) this.vendor.set(updated);
   }
 
-  reinstate(): void {
+  async reinstate(): Promise<void> {
     const v = this.vendor();
     if (!v) return;
-    if (this.vendorAdmin.reinstate(v.id, this.actor())) this.reload(v.id);
+    const updated = await this.vendorAdmin.reinstateAsync(v.id, this.actor());
+    if (updated) this.vendor.set(updated);
   }
 
   startReject(): void {
@@ -131,17 +145,20 @@ export class VendorReviewPageComponent implements OnInit {
     this.reasonText.set('');
   }
 
-  confirmReason(): void {
+  async confirmReason(): Promise<void> {
     const v = this.vendor();
     const action = this.pendingAction();
     const reason = this.reasonText().trim();
     if (!v || !action || !reason) return;
 
-    const ok =
+    const updated =
       action === 'reject'
-        ? this.vendorAdmin.reject(v.id, this.actor(), reason)
-        : this.vendorAdmin.suspend(v.id, this.actor(), reason);
-    if (ok) this.reload(v.id);
+        ? await this.vendorAdmin.rejectAsync(v.id, reason, this.actor())
+        : await this.vendorAdmin.suspendAsync(v.id, reason, this.actor());
+
+    if (updated) this.vendor.set(updated);
+    this.pendingAction.set(null);
+    this.reasonText.set('');
   }
 
   eventLabel(status: VendorStatus): string {
