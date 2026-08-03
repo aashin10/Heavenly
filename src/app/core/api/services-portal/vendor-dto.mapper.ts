@@ -66,7 +66,10 @@ export function mapVendorDto(dto: VendorDto): Vendor {
     verificationEvents: dto.verificationEvents.map(e => ({
       status: e.status,
       at: new Date(e.occurredAt),
-      actor: e.actorId ?? undefined,
+      // Prefer the name (admin reads only); fall back to the id so a vendor
+      // reading their own timeline — where actorName is deliberately never
+      // populated — still shows something rather than nothing.
+      actor: e.actorName ?? e.actorId ?? undefined,
       note: e.note ?? undefined,
     })),
   };

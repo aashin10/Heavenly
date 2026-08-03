@@ -42,6 +42,14 @@ export interface VendorVerificationEventDto {
   status: VendorStatus;
   occurredAt: string;
   actorId: string | null;
+  /**
+   * Populated on admin reads only (backend joins it from the acting user's
+   * account at read time — never stored on the event, so it can't go stale).
+   * The vendor's own profile read leaves this null; only the id is visible
+   * there, matching the same admin/vendor visibility split the rest of this
+   * DTO already has for e.g. internal notes.
+   */
+  actorName: string | null;
   note: string | null;
 }
 
