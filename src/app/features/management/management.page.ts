@@ -1,4 +1,4 @@
-import { Component, inject, ElementRef, QueryList, ViewChildren } from '@angular/core';
+import { Component, OnInit, inject, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { Router } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
 import { ManagementService } from './management.service';
@@ -18,7 +18,7 @@ type ManagementTab = 'service-requests' | 'jobs' | 'vendors';
   templateUrl: './management.page.html',
   styleUrl: './management.page.scss'
 })
-export class ManagementPageComponent {
+export class ManagementPageComponent implements OnInit {
   private readonly router = inject(Router);
   protected readonly managementService = inject(ManagementService);
   protected readonly srManagementService = inject(ServiceRequestManagementService);
@@ -44,6 +44,13 @@ export class ManagementPageComponent {
     { value: 'approved', label: 'Approved' },
     { value: 'all', label: 'All Requests' }
   ];
+
+  ngOnInit(): void {
+    // The Vendors tab badge exists to pull an admin toward pending vendors, so
+    // it has to be right before they open the tab. In mock mode this is a
+    // localStorage read; against the API it is one request.
+    void this.vendorAdminService.refreshAsync();
+  }
 
   setActiveTab(tab: ManagementTab): void {
     this.activeTab = tab;

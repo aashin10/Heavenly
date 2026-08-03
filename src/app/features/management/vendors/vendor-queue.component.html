@@ -101,9 +101,11 @@
                 <span class="service-count">{{ vendor.serviceCapabilities.length }} services</span>
               </td>
               <td>
-                <span class="doc-count" [class.doc-count--incomplete]="documentCount(vendor) < 2">
-                  {{ documentCount(vendor) }}/4
-                </span>
+                @if (!vendorAdmin.useRealApi) {
+                  <span class="doc-count" [class.doc-count--incomplete]="documentCount(vendor) < 2">
+                    {{ documentCount(vendor) }}/4
+                  </span>
+                }
               </td>
               <td>
                 <span class="registered-date">{{ vendor.createdAt | appDate }}</span>

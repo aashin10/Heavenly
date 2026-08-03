@@ -17,9 +17,9 @@ type VendorFilter = VendorStatus | 'all';
   styleUrl: './vendor-queue.component.scss',
 })
 export class VendorQueueComponent implements OnInit {
-  private readonly vendorAdmin = inject(VendorAdminService);
+  protected readonly vendorAdmin = inject(VendorAdminService);
 
-  readonly stats = this.vendorAdmin.stats;
+  readonly stats = this.vendorAdmin.queueStats;
 
   readonly filterOptions: { value: VendorFilter; label: string }[] = [
     { value: 'pending', label: 'Pending' },
@@ -40,12 +40,22 @@ export class VendorQueueComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    // A vendor may have registered since this admin last opened the tab.
-    this.vendorAdmin.refresh();
+    // Fire-and-forget: `filteredVendors` is a computed over the service's own
+    // signal, so it re-renders when the load lands. Awaiting here would need
+    // the component to be async and would gain nothing.
+    void this.vendorAdmin.refreshAsync();
   }
 
   setFilter(value: VendorFilter): void {
     this.filter.set(value);
+
+    // Against the real API the client holds one page, so filtering locally
+    // would hide vendors that are simply on another page. Re-query instead;
+    // in mock mode the whole set is already in memory and the computed filter
+    // below is the whole story.
+    if (this.vendorAdmin.useRealApi) {
+      void this.vendorAdmin.refreshAsync(value);
+    }
   }
 
   documentCount(vendor: Vendor): number {
