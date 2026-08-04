@@ -1,6 +1,14 @@
 import { Vendor, VendorDocuments } from '../../models/service.model';
 import { VendorDto } from './vendor-api.models';
 
+/**
+ * The single VendorDto → Vendor mapping.
+ *
+ * Extracted from ServiceAuthService so the admin verification surface maps
+ * identically to the vendor's own profile. Two copies of this would drift the
+ * first time a field is added, and the admin queue would quietly disagree
+ * with the vendor's own view of their account.
+ */
 const DOCUMENT_TYPE_KEYS: Record<string, keyof VendorDocuments> = {
   business_certificate: 'businessCertificate',
   gst_certificate: 'gstCertificate',
