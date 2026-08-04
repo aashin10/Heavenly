@@ -156,9 +156,16 @@ export class VendorReviewPageComponent implements OnInit {
         ? await this.vendorAdmin.rejectAsync(v.id, reason, this.actor())
         : await this.vendorAdmin.suspendAsync(v.id, reason, this.actor());
 
-    if (updated) this.vendor.set(updated);
-    this.pendingAction.set(null);
-    this.reasonText.set('');
+    // Only close the panel on success. The reason is the only feedback the
+    // vendor receives (Vendor.cs's own Reject/Suspend require it for exactly
+    // that reason), and the placeholder asks the admin to be specific — the
+    // one field most likely to hold a paragraph worth not losing on a 409 or
+    // a network blip.
+    if (updated) {
+      this.vendor.set(updated);
+      this.pendingAction.set(null);
+      this.reasonText.set('');
+    }
   }
 
   eventLabel(status: VendorStatus): string {
