@@ -76,7 +76,9 @@
             <th>Business</th>
             <th>Contact</th>
             <th>Services</th>
-            <th>Docs</th>
+            @if (!vendorAdmin.useRealApi) {
+              <th>Docs</th>
+            }
             <th>Registered</th>
             <th>Status</th>
             <th><span class="sr-only">Actions</span></th>
@@ -100,13 +102,13 @@
               <td>
                 <span class="service-count">{{ vendor.serviceCapabilities.length }} services</span>
               </td>
-              <td>
-                @if (!vendorAdmin.useRealApi) {
+              @if (!vendorAdmin.useRealApi) {
+                <td>
                   <span class="doc-count" [class.doc-count--incomplete]="documentCount(vendor) < 2">
                     {{ documentCount(vendor) }}/4
                   </span>
-                }
-              </td>
+                </td>
+              }
               <td>
                 <span class="registered-date">{{ vendor.createdAt | appDate }}</span>
               </td>
