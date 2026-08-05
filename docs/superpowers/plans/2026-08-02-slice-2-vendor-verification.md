@@ -820,14 +820,24 @@ Replace `setFilter` with:
 
 `vendor-queue.component.ts`'s `documentCount()` reads `vendor.documentsUploaded`, which Task 5's `summaryToVendor` sets to `{}` for every row fetched from the real API (the queue endpoint doesn't load each vendor's documents — a deliberate, separate backend concern, not a bug in this task). Left alone, every real-API row would render **"0/4"**, which reads as "checked, none uploaded" rather than "not loaded at this level" — actively wrong on a screen whose job is judging document completeness.
 
-In `src/app/features/management/vendors/vendor-queue.component.html`, lines 104–105, wrap the count in a mode check:
+In `src/app/features/management/vendors/vendor-queue.component.html`, wrap the whole column — not just the count — in a mode check. Angular requires the `<thead>` and `<tbody>` rows to agree on column count, so the `<th>Docs</th>` header needs the identical condition, not just the `<td>`'s contents:
 
 ```html
-                @if (!vendorAdmin.useRealApi) {
-                  <span class="doc-count" [class.doc-count--incomplete]="documentCount(vendor) < 2">
-                    {{ documentCount(vendor) }}/4
-                  </span>
-                }
+<!-- in <thead>, alongside the other <th> elements -->
+@if (!vendorAdmin.useRealApi) {
+  <th>Docs</th>
+}
+```
+
+```html
+<!-- in <tbody>, the whole <td> is conditional, not just its inner <span> -->
+@if (!vendorAdmin.useRealApi) {
+  <td>
+    <span class="doc-count" [class.doc-count--incomplete]="documentCount(vendor) < 2">
+      {{ documentCount(vendor) }}/4
+    </span>
+  </td>
+}
 ```
 
 `vendorAdmin` is already a private field on the component (`private readonly vendorAdmin = inject(VendorAdminService)`) — change it to `protected readonly` so the template can read `useRealApi` off it, matching how `management.page.ts` already exposes its injected services as `protected readonly`.
