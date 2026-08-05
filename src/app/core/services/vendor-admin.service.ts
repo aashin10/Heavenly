@@ -37,7 +37,8 @@ export class VendorAdminService {
 
   readonly vendors = this.vendorsSignal.asReadonly();
 
-  readonly stats = computed<VendorQueueStats>(() => {
+  /** Client-computed from the loaded page only — `queueStats` below is what callers should read. */
+  private readonly stats = computed<VendorQueueStats>(() => {
     const vendors = this.vendorsSignal();
     return {
       pending: vendors.filter(v => v.verificationStatus === 'pending').length,
