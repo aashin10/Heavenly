@@ -25,7 +25,32 @@ export class AuthService {
   
   readonly user = this.userSignal.asReadonly();
   readonly isLoggedIn = computed(() => this.userSignal() !== null);
-  readonly isAdmin = computed(() => this.userSignal()?.userType === 'admin');
+  /**
+   * `roles[]` is authoritative when present (real API — mirrors the backend's
+   * `[Authorize(Roles = "ServiceAdmin,Admin")]` exactly, since a granted
+   * ServiceAdmin's primary `userType` can be anything). Mock-mode users carry
+   * no `roles[]` at all, so `userType` is the only signal there — F16: this
+   * used to check `userType` alone unconditionally, which is correct for the
+   * seeded platform Admin but refuses every ServiceAdmin granted onto a
+   * differently-typed account, the exact case B11's grant endpoint exists to
+   * create.
+   */
+  /**
+   * `roles[]` is authoritative when present (real API — mirrors the backend's
+   * `[Authorize(Roles = "ServiceAdmin,Admin")]` exactly, since a granted
+   * ServiceAdmin's primary `userType` can be anything). Mock-mode users carry
+   * no `roles[]` at all, so `userType` is the only signal there — F16: this
+   * used to check `userType` alone unconditionally, which is correct for the
+   * seeded platform Admin but refuses every ServiceAdmin granted onto a
+   * differently-typed account, the exact case B11's grant endpoint exists to
+   * create.
+   */
+  readonly isAdmin = computed(() => {
+    const user = this.userSignal();
+    if (!user) return false;
+    if (user.roles?.length) return user.roles.includes('admin') || user.roles.includes('service_admin');
+    return user.userType === 'admin';
+  });
 
   constructor() {
     this.loadUserFromStorage();
@@ -89,6 +114,7 @@ export class AuthService {
         email: me.email,
         name: me.name,
         userType: me.userType.toLowerCase() as UserType,
+        roles: me.roles,
         company: me.company ?? undefined,
         acceptedTerms: true,
         createdAt: this.userSignal()?.createdAt ?? new Date().toISOString(),
@@ -259,6 +285,7 @@ export class AuthService {
       email: res.email,
       name: res.name,
       userType: res.userType.toLowerCase() as UserType,
+      roles: res.roles,
       company: res.company ?? undefined,
       acceptedTerms: true,
       createdAt: new Date().toISOString(),

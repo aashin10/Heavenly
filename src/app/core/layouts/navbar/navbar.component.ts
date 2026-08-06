@@ -101,8 +101,13 @@ export class NavbarComponent {
       initials: this.authService.getInitials(jobsUser.name),
       roleLabel: roleLabels[jobsUser.userType] ?? 'Member',
       dashboardLink: '/dashboard',
-      roleLinks:
-        jobsUser.userType === 'admin' ? [{ path: '/management', label: 'Management' }] : [],
+      // Reads the guard's own isAdmin() rather than re-deriving it from
+      // userType — two independent checks answering the same question is
+      // exactly how a ServiceAdmin ended up unable to see this link at all
+      // (F16). One source of truth for "can this session open /management".
+      roleLinks: this.authService.isAdmin()
+        ? [{ path: '/management', label: 'Management' }]
+        : [],
       profileLink: '/profile',
     };
   });
