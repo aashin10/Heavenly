@@ -14,13 +14,13 @@
 
 Every task's requirements implicitly include this section.
 
-- **Repos:** frontend `aashin10/Heavenly` on branch `dev-non-test`; backend `aashin10/Heavenly-Job-Backend` on branch `develop`. Feature branches merge into those, not into `main`.
-- **The local backend checkout is on `main`, which does not contain any ServicesPortal code.** Switching it to `develop` is Task 1 of Slice 1 and must happen before any backend work.
+- **Repos:** frontend `aashin10/Heavenly`, backend `aashin10/Heavenly-Job-Backend`. **Since Slice 1, both repos' integration branch for this roadmap is `dev-agentic`** (user instruction, 2026-08-02) — feature branches cut from and merge into `dev-agentic`, not `dev-non-test`/`develop`/`main`.
+- ~~The local backend checkout is on `main`…~~ **Resolved in Slice 1** — both checkouts have been on `dev-agentic` since.
 - **`useRealApi` stays committed as `false`** until Slice 10. Every wired service keeps its mock path working unchanged so a fresh clone runs with no backend.
 - **Wire format:** `camelCase` JSON; enums as lowercase `snake_case` strings; dates ISO 8601 UTC; money as integer minor units via the `Money` value object; IDs opaque strings.
 - **Errors:** RFC 9457 Problem Details via `GlobalExceptionHandler`. New endpoints throw `ValidationException` / `NotFoundException` / `ForbiddenException` / `ConflictException` / `DomainException` — never return bespoke shapes. `AuthController`'s legacy shapes are out of scope for this roadmap.
-- **Backend tests:** every new endpoint gets integration tests in `tests/Heavenly-Job.IntegrationTests/`, `[Collection(DatabaseCollection.Name)]`, each test seeding uniquely-keyed rows (`UniqueEmail("prefix")`). Run with `dotnet test`. The suite is 193 tests today and must stay green.
-- **Frontend tests:** Karma + Jasmine is already configured (`ng test`) with exactly one spec (`app.component.spec.ts`). New specs go beside the file they cover.
+- **Backend tests:** every new endpoint gets integration tests in `tests/Heavenly-Job.IntegrationTests/`, `[Collection(DatabaseCollection.Name)]`, each test seeding uniquely-keyed rows (`UniqueEmail("prefix")`). Run with `dotnet test`. The suite is **215 tests** as of 2026-08-06 and must stay green.
+- **Frontend tests:** Karma + Jasmine (`ng test`). **40 specs** as of 2026-08-06 (was 1 when this roadmap was written). New specs go beside the file they cover.
 - **Portal modularity:** nothing under `Application/Features/ServicesPortal/` may reference `Job`, `JobApplication`, or `JobDomain` types, and jobs code may not reference ServicesPortal types. `Vendor.UserId → users.id` is the only permitted cross-module FK.
 - **Sealed bidding is structural, not a display rule.** Vendor-facing DTOs must have no field capable of carrying another vendor's figures; a rival's bid is `404`, never `403`.
 - **Frontend service pattern:** each real-API client is a thin typed `*ApiService` in `src/app/core/api/services-portal/` plus a `*-api.models.ts` of wire DTOs. Existing stateful services keep every mock method unchanged and gain `*Async` siblings that branch on `environment.useRealApi`.
@@ -50,9 +50,9 @@ These were open questions; they are now settled and the slices below assume them
 Ordered so that each slice removes a constraint on the ones after it. Ten slices; each ends with a browser-verified deliverable and a `docs/BACKLOG.md` update.
 
 ```
-1  Admin bootstrap + silent refresh      ── unblocks every admin screen & long sessions
-2  Vendor verification queue + review     ── unblocks "a verified vendor exists"
-3  Model divergence fixes                 ── unblocks correct bid wire values
+1  Admin bootstrap + silent refresh      ✅ DONE 2026-08-02  (B11, F1)
+2  Vendor verification queue + review     ✅ DONE 2026-08-03  (F2.5, F9) + post-merge review 08-06 (F16)
+3  Model divergences + async convention   ◀── NEXT  (F5, F10, F12, F17)
 4  Bid submission + my bids
 5  Admin request queue + review
 6  Tender create / publish / clarifications
@@ -61,6 +61,8 @@ Ordered so that each slice removes a constraint on the ones after it. Ten slices
 9  Awards
 10 Flip the flag + full-pipeline pass
 ```
+
+**Status as of 2026-08-06.** Slices 1 and 2 are merged into `dev-agentic` on both repos and pushed. Slice 2 additionally went through a four-reviewer post-merge audit, which found and fixed one Critical (F16 — a granted `ServiceAdmin` could not open `/management` at all, because the frontend guard checked `userType` where the backend checks roles) and logged F17–F19. **One item from Slice 2 remains genuinely unverified: the plan's own Task 8 Step 4 item 7 — "log in as the approved vendor and reach `/vendor-dashboard`" — was never performed.** It is the step the plan calls *the gate*. Slice 4 depends on a verified vendor being able to act, so confirm it before or during Slice 4 rather than assuming it.
 
 ---
 
@@ -98,20 +100,30 @@ Ordered so that each slice removes a constraint on the ones after it. Ten slices
 
 ---
 
-### Slice 3 — Model divergence fixes (F5, F10)
+### Slice 3 — Model divergences (F5, F10) + the async UI convention (F12, F17)
 
-**Files:** `src/app/features/vendor/vendor.model.ts`, `src/app/core/models/service.model.ts`, `src/app/features/management/management.model.ts`, `src/app/features/service-requester-profile/**`, plus every consumer the compiler flags.
+**Plan file:** [`2026-08-06-slice-3-model-divergences.md`](2026-08-06-slice-3-model-divergences.md) — full task detail.
 
-**Why here:** Slice 4 sends and receives `BidStatus` values over the wire. `VendorBid.status` currently redeclares `BidStatus` with hyphens and two statuses the domain does not have (`pending`, `accepted`). Wiring bids before fixing this bakes a translation layer into the API client, which is precisely what the wire-format conventions exist to avoid.
+**Files:** `src/app/features/dashboard/vendor-dashboard/vendor-dashboard.model.ts`, `src/app/core/models/service.model.ts`, `src/app/features/management/management.model.ts`, `src/app/core/services/service-auth.service.ts`, `src/app/core/utils/request-state.ts` *(new)*, the two `features/management/vendors/` screens, plus every consumer the compiler flags.
+
+**Why here:** Slice 4 sends and receives `BidStatus` values over the wire, and adds three more async screens. Wiring bids before fixing the enums bakes a translation layer into the API client — precisely what the wire-format conventions exist to avoid. Adding three screens before the busy/loading/error convention exists means retrofitting five screens later instead of two now.
+
+> ⚠️ **This section was written before Slices 1–2 shipped, and three of its original claims were wrong.** Corrected 2026-08-06 after verifying against the code; the detail and evidence are in the plan file's "Context" section.
+> - `vendor.model.ts`'s `BidStatus` is **already canonical**. The divergent copy is an inline union in `vendor-dashboard.model.ts:23`.
+> - `BudgetVisibility` and `TenderType` are **not duplicated** — they exist only in `management.model.ts`. Only `ServiceCategory` and `RequesterType` are declared twice.
+> - The two `ServiceRequest` types are **not** one concept declared twice. The backend deliberately models three shapes (`ServiceRequestDto`, `ServiceRequestAdminDto`, `ServiceRequestSummaryDto`); two client types is correct, and sharing the bare name is the defect. The slice **renames** rather than merges.
+>
+> It also **missed** a divergence that would have bitten Slice 5: `management.model.ts`'s `ServiceRequestStatus` has a phantom `rejected` (no such server state — the admin actions are start-review/approve/request-changes/close) and is missing `cancelled`, which the server does send.
 
 **Delivers**
-- One canonical `BidStatus` — `draft | submitted | under_review | shortlisted | awarded | rejected | withdrawn` — matching `Domain/Enums/BidStatus.cs`. `VendorBid.status` uses it.
-- One canonical `ServiceRequest` in `core/models`; management screens consume a projection rather than a second declaration.
-- `RequesterType` = `individual | sme | large_organization` everywhere (`'organization'` deleted).
-- `ServiceCategory` and `BudgetVisibility` deduplicated to a single declaration.
-- The requester address field collapses from `address` / `businessAddress` / `registeredAddress` to one `address`, matching what B2.3 returns.
+- `VendorBid.status` uses the canonical `BidStatus`, matching `Domain/Enums/BidStatus.cs`.
+- `ServiceRequestStatus` matches `ServiceRequestStatus.cs` — phantom `rejected` gone, `cancelled` present.
+- Management's request type renamed `AdminServiceRequest`, so an import from the wrong module is a compile error rather than a silent shape mismatch.
+- `ServiceCategory` / `RequesterType` declared once; `'organization'` deleted. `BudgetVisibility` / `TenderType` moved to core for Slice 6.
+- The requester address collapses from `address` / `businessAddress` / `registeredAddress` to one `address`, matching what B2.3 has always returned.
+- **New:** `core/utils/request-state.ts` — the one `{ loading, error, begin/isCurrent/succeed/fail }` primitive, applied to the vendor queue and review screens. Closes F12, and F17's loading/error/409 halves.
 
-**Verification gate:** `npx ng build` clean, and the existing wired screens (profile editing, request wizard, tender browse) still work against the real API — this slice touches types they already use.
+**Verification gate:** `npx ng build` clean, the full spec suite green, the already-wired screens still working against the real API — and two things no unit test can prove: a **stopped backend** produces an error state rather than a fabricated "0 pending / no vendors here", and a **double-clicked Approve** produces exactly one POST.
 
 ---
 
@@ -122,6 +134,7 @@ Ordered so that each slice removes a constraint on the ones after it. Ten slices
 **Files:** create `bid-api.{service,models}.ts`; modify `src/app/features/vendor/vendor.service.ts` and the three pages.
 
 **Notes that will bite if missed**
+- **Use `core/utils/request-state.ts` for all three screens' loading/error/in-flight states** — Slice 3 built it precisely so these three don't each invent their own. A screen that hand-rolls a `loading` boolean here is a review finding, not a style preference.
 - Bid drafts are keyed by `tenderId`, exactly like service-request drafts are keyed by `serviceId`. The same substitution F2.3 used applies: the opaque draft handle in the UI *is* the tender id.
 - Submission is gated server-side on window + eligibility + no-duplicate. `confirmEligibility` is an attestation, not the check — a vendor who ticks it but lacks required insurance still gets refused, and the UI must surface that refusal rather than assuming success.
 - Withdrawal is only legal while the bid window is open; after that the endpoint 409s. Hide the control rather than letting it fail.

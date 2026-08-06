@@ -4,8 +4,8 @@
 
 Single source of "what's left" across both repos. Detail lives in the linked docs; this file is the prioritised index.
 
-- **Frontend:** `aashin10/Heavenly` — branch `dev-non-test` ← feature branches
-- **Backend:** `aashin10/Heavenly-Job-Backend` — `main` ← `develop` ← feature branches
+- **Frontend:** `aashin10/Heavenly` — **`dev-agentic`** ← feature branches (was `dev-non-test`; changed at Slice 1 by user instruction, 2026-08-02)
+- **Backend:** `aashin10/Heavenly-Job-Backend` — **`dev-agentic`** ← feature branches (was `develop`; same change). `main` remains the eventual target for both, untouched by this roadmap.
 
 > The services-portal completion work is tracked as a slice-by-slice roadmap: [`docs/superpowers/plans/2026-08-02-services-portal-roadmap.md`](superpowers/plans/2026-08-02-services-portal-roadmap.md). This file stays the prioritised index; the roadmap has the sequencing, the file-level detail, and the decisions behind it.
 
@@ -23,6 +23,32 @@ Single source of "what's left" across both repos. Detail lives in the linked doc
 | Admin surface | **Unblocked (B11) and in use (F2.5).** A `ServiceAdmin`/`Admin` account can exist, be granted, and now actively verifies vendors through `/management` — every `/api/service-admin/vendors` route live-verified for **both** roles (F16 closed the gap where a granted `ServiceAdmin` specifically couldn't reach the screen at all, live-verified 2026-08-06) |
 | Dependencies | **0 vulnerable packages** (verified 2026-07-26) |
 | Tests | **215 backend integration tests**, Testcontainers-backed, self-contained. **40 frontend specs** (interceptor, token-refresh coordinator, `legalVendorActions`, `VendorAdminService` mock transitions, the vendor queue's conditional columns, the review page's reason panel, `AuthService.isAdmin` role-vs-userType, plus the app-shell specs) |
+
+---
+
+## What's next (reviewed 2026-08-06)
+
+Full inventory taken while planning Slice 3. The roadmap sequences the services-portal work; this is everything open, including what the roadmap does *not* cover.
+
+**Scheduled — Slice 3, planned:** F5 (model divergences), F10 (requester address), F12 (in-flight guard), F17's loading/error/409 halves. → [`plan`](superpowers/plans/2026-08-06-slice-3-model-divergences.md)
+
+**Scheduled — later roadmap slices:** F2.6 bids (Slice 4) · F2.7 admin request queue + D3 tender-draft generator (Slice 5) · F2.8 tenders (Slice 6) · D2 evaluation backend (Slice 7) · evaluation frontend (Slice 8) · awards (Slice 9) · flip `useRealApi` (Slice 10).
+
+**Open, unscheduled, and worth a decision before Slice 10 flips the flag:**
+
+| Item | Why it matters now |
+|---|---|
+| 🟠 **F3** collapse the two auth stores | F11 cannot be fixed without it, and F16's fix — while live-verified — is a *second* place admin identity is decided. The longer two stores exist, the more places learn to consult the wrong one. |
+| 🟠 **F11** interceptor's session-clear is incomplete | Dormant only because `useRealApi` is `false`. On a failed refresh a jobs-portal user enters a redirect loop. **This becomes live the moment Slice 10 flips the flag** — it is the single most important thing to fix before then. |
+| 🟠 **B3** password reset endpoints | No self-service recovery exists. Every forgotten password is a manual DB action today. |
+| 🟡 **F18** queue truncates at 100 | Silent, and beside a total that contradicts it. Bites the first time a real deployment has >100 pending vendors. |
+| 🟡 **F14** `getVendorAsync` can't tell 404 from 403/500 | Slice 3 may close this incidentally via the 409 work — verify rather than assume. |
+| 🟡 **B7** email verification / 🟡 **B8** rate limiting | Both are launch-blockers rather than roadmap items: `EmailVerified` is never set true, and auth endpoints are unthrottled (brute-force + enumeration exposure). |
+| 🟢 **B10** file upload (GCS signed URLs) | Blocks the vendor documents section, which currently explains itself rather than persisting. Also blocks B13's document count being meaningful. |
+| 🟡 **B5** `/register` returns tokens · 🟡 **B6** Problem Details tail · 🟢 **B9** don't auto-migrate prod · 🟢 **B13** queue document count | Small, independent, no dependencies. |
+| 🟡 **F4** simplify login · 🟡 **F6** design-system consolidation · 🟢 **F7** settings page · 🟢 **F8** skeleton loaders · 🟢 **F15**/🟢 **F19** | UI polish and small correctness items; none blocks anything. |
+
+**Not a backlog item but the most urgent thing on this page:** the 🔴 credential rotation under **NEEDS YOU** — still outstanding.
 
 ---
 
@@ -197,7 +223,7 @@ Three decisions before credentials (portal → role → login/signup). With role
 ### ✅ F9. Vendor status transitions are unguarded on the client — **DONE 2026-08-03**
 What was actually wrong turned out narrower and more specific than this entry originally assumed: not a general "any status from any other," but two concrete divergences — the mock's `reinstate()` set `pending` where the server sets `verified`, and the review screen offered a "Return to Queue" action on rejected vendors that the server refuses with 409 every time. Both fixed under F2.5, above. `legalVendorActions()` now mirrors `Domain/Entities/Vendor.cs`'s transition rules exactly, has its own spec, and every button on the review page is verified — in both directions, for all four statuses — to offer exactly what the server allows: no dead-end button, no hidden legal action. One narrower tail remains (a UI race, not a wrong rule) — see F12.
 
-### 🟡 F10. Requester address field has three names
+### 🟡 F10. Requester address field has three names — **planned as Slice 3**
 The `ServiceRequester` union calls one field `address` (individual), `businessAddress` (SME) and `registeredAddress` (large org). It is one concept — where the requester is — and the API returns it as `address` (B2.3). Collapse the three on the client.
 
 ### 🟠 F11. `authInterceptor`'s session-clear is incomplete for the jobs portal
@@ -205,7 +231,7 @@ Found in F1's final review (2026-08-02). On a failed refresh, `authInterceptor`'
 
 This is **pre-existing behavior** (the old interceptor had the same two lines) and is **dormant today** because `useRealApi` is committed `false`. It stops being dormant the moment any real-API session hits it — F1's own live verification didn't catch it because that pass ran as a vendor through `ServiceAuthService`, which `guestGuard` doesn't gate the same way. Don't band-aid this in isolation: the real fix is F3 (collapse the two auth stores into one), which removes the two independent pieces of state this bug lives in the gap between. Close F3 before or alongside flipping `useRealApi` on for real (roadmap Slice 10), not after.
 
-### 🟡 F12. Vendor review decision buttons have no in-flight guard
+### 🟡 F12. Vendor review decision buttons have no in-flight guard — **planned as Slice 3**
 Found in F2.5/F9's review (2026-08-03). `vendor-review.page.ts`'s four decision methods (`approve`, `reject`, `suspend`, `reinstate`) await the API with the triggering button still enabled — `can(action)` keeps returning `true` until the vendor signal updates, and nothing disables the button meanwhile. A fast double-click fires the request twice: the first succeeds, the second gets a genuine 409 from the server (refused — the vendor is no longer in the status that made the action legal) and toasts "not allowed for this vendor's current status," on top of a decision that actually went through.
 
 Not unique to this screen — no `busy`/`submitting`/`loading` pattern exists anywhere in `features/management/vendors/`, so a one-screen patch would just move the gap. This is the one remaining way F9's defect class (a client action the server refuses) can still surface on this screen, now down to a UI timing race rather than a wrong transition rule.
@@ -230,14 +256,14 @@ Found in Slice 2's post-merge review (2026-08-06). `/management` was gated by `a
 **Verified live** against the running stack, not on reasoning alone: registered a fresh employer account, granted it `service_admin` through the real admin API, logged in as that account fresh (so the JWT carries the new role claim), and confirmed the Management link renders, `/management` loads ("Management Dashboard"), and `GET /api/service-admin/vendors` returns a genuine 200 with 7 real vendor rows and correct stats — proving the frontend guard *and* the backend authorization pass together for this role, not just routing.
 → branch `dev-agentic` (direct commit, post-merge fix) · related: [F3](#-f3-collapse-the-two-auth-stores-c1) · B11
 
-### 🟡 F17. Real-API mode has no error, loading, or 409-reconciliation states
+### 🟡 F17. Real-API mode has no error, loading, or 409-reconciliation states — **loading/error/409 planned as Slice 3**
 Found in Slice 2's post-merge review (2026-08-06); all dormant while `useRealApi` is `false`, all live the moment it flips, so they belong to whichever slice does that. Four related gaps in `vendor-admin.service.ts` / the two management screens:
 - **A failed queue load asserts an empty queue.** The catch sets `vendorsSignal` to `[]` *and* `serverStatsSignal` to all-zeros (`:97-105`), so a 403 or 500 renders four stat cards reading 0, "Vendors (0)", and the empty state's *"Vendors matching this filter will appear here"* — every one a confident false claim, with only a transient toast to contradict it. Worse, a fast-failing request can win the sequencing race over a slower successful one, discarding a correct list in favour of fabricated zeros.
 - **No loading state.** `setFilter` sets the filter synchronously then re-queries, so for the whole in-flight window the list renders "No vendors here" while the stat card above it says e.g. "Verified 40". The screen contradicts itself.
 - **Nothing reconciles after a 409.** A 409 *by definition* means the client's status is stale, yet `decide()` returns `null` and every caller is `if (updated)`, so the page keeps the stale badge and the same now-impossible button. Clicking again 409s forever; only a manual reload escapes.
 - **`adjustServerStats`' `from` bucket is guessed** from a possibly-stale queue row (`:185`) rather than the freshly-fetched profile the admin actually acted on, so counts drift permanently when another admin acted first, or when the vendor is outside the loaded page.
 
-The first three want one shared convention (`loading` / `loadError` signals plus a refetch on 409), which is also where F12's in-flight guard belongs — implement them together rather than four times.
+The first three want one shared convention (`loading` / `loadError` signals plus a refetch on 409), which is also where F12's in-flight guard belongs — implement them together rather than four times. **Slice 3 does exactly that** via `core/utils/request-state.ts`, closing the loading, error and 409 bullets. The fourth bullet — `adjustServerStats` guessing its `from` bucket from a possibly-stale queue row — is *not* in Slice 3's scope and stays open here.
 
 ### 🟡 F18. The queue silently stops at 100 vendors, next to a total that says otherwise
 Found in Slice 2's post-merge review (2026-08-06). `refreshAsync` requests `pageSize: 100`, exactly the server's `MaxPageSize` clamp, and nothing reads the `totalCount`/`totalPages` the response already carries (declared in `vendor-admin-api.models.ts:44-45`, referenced nowhere). There is no pagination control and no search box, so with 137 pending vendors the stat card correctly reads **137** while the list beside it reads **Vendors (100)** and simply ends — and the 37 newest are unreachable by any route through the UI. The server's `search` parameter is implemented and never sent. Dormant behind `useRealApi`.
@@ -245,11 +271,14 @@ Found in Slice 2's post-merge review (2026-08-06). `refreshAsync` requests `page
 ### 🟢 F19. The admin review screen renders mapper fallbacks as if they were data
 Found in Slice 2's post-merge review (2026-08-06). The wire DTO is honestly nullable but the domain `Vendor` interface declares these fields required, so `vendor-dto.mapper.ts:36-46` invents values: `yearEstablished ?? 0` renders as **"Year Established: 0"**, and `registeredAddress/city/state/pinCode ?? ''` render the address line as **", ,"**, and `designation ?? ''` as **"Jane Doe ()"**. The verification queue is by definition full of incomplete profiles, so this is the common case on the one screen whose whole job is judging completeness — an admin cannot tell "not supplied" from "supplied as zero". `gstNumber` already does this correctly with `|| '—'`. Also: the rejection-reason textarea has no `maxlength` against a server limit of 1000 (`ReviewVendorCommand.cs:46`), and a 400 from exceeding it surfaces as the generic "The decision could not be saved."
 
-### 🟡 F5. Model divergences
-- `RequesterType`: `'large_organization'` (signup) vs `'organization'` (management) — **genuinely disagree**; canonical is `large_organization`
-- `VendorBid.status` redeclares `BidStatus` with hyphens + two statuses that don't exist
-- `ServiceRequest` declared twice with different shapes
-→ [UI_ISSUES.md §3](UI_ISSUES.md)
+### 🟡 F5. Model divergences — **planned as Slice 3**
+Re-verified against the code 2026-08-06 while planning Slice 3. Two of this entry's three bullets were imprecise, and it missed one:
+- ✅ **Correct as written:** `RequesterType` is `'large_organization'` (signup, core, and the API) vs `'organization'` (`management.model.ts:50`) — they genuinely disagree; canonical is `large_organization`.
+- ⚠️ **Wrong file:** `vendor.model.ts:74`'s `BidStatus` is **already canonical** and matches `BidStatus.cs`. The hyphenated union with the two phantom values (`pending`, `accepted`) is an inline declaration in `features/dashboard/vendor-dashboard/vendor-dashboard.model.ts:23`.
+- ⚠️ **Not a duplicate to merge:** `ServiceRequest` is declared twice with *deliberately* different shapes — the backend models three (`ServiceRequestDto`, `ServiceRequestAdminDto`, `ServiceRequestSummaryDto`), and the admin one carries joined contact details and `internalNotes` that must never reach a requester. Two client types is correct; **sharing the bare name is the defect**, because an import from the wrong module type-checks silently. Slice 3 renames the admin one to `AdminServiceRequest`.
+- ➕ **Missed entirely, and it would have bitten Slice 5:** `management.model.ts`'s `ServiceRequestStatus` carries a **`rejected`** value no server state maps to (the admin actions are start-review / approve / request-changes / close) and is **missing `cancelled`**, which the server does send. `service-request-management.service.ts:196` already writes the phantom value.
+- ➕ Also noted: `BudgetVisibility` and `TenderType` are **not** duplicated — they exist only in `management.model.ts`. Slice 3 moves them to core for Slice 6's benefit, which is a relocation, not a dedupe.
+→ plan: [`2026-08-06-slice-3-model-divergences.md`](superpowers/plans/2026-08-06-slice-3-model-divergences.md) · [UI_ISSUES.md §3](UI_ISSUES.md)
 
 ### 🟡 F6. Design-system consolidation (A6 remainder)
 Card, form-field, modal and table are still styled per-screen. Buttons, status-badge, empty-state and tokens are done.
@@ -292,6 +321,12 @@ The two portals are being kept **separable** for a future split into independent
 **Supabase (temporary), Seoul session pooler.** Cloud SQL / Firebase are on hold. Migrations applied and the full auth lifecycle verified against it. Connection is in user-secrets (`ConnectionStrings:DefaultConnection`), with the local Docker string retained as `ConnectionStrings:LocalDocker` to switch back offline. Session pooler port 5432 — **not** transaction pooler 6543, which lacks the session state EF migrations need.
 
 🔴 **Rotate the Supabase DB password — now exposed twice, not just once.** Originally shared in a chat session archived to the private `heavenly-session-archive` repo; on 2026-08-02, printed a second time into a coding-assistant session transcript via an unfiltered `dotnet user-secrets list` (the command itself is now avoided — check presence with `grep -c`, never list values). Still not rotated as of this writing — deliberately not done autonomously since it's a shared resource other things depend on. Supabase dashboard → Settings → Database → Reset password, then re-run the `dotnet user-secrets set` command. The same session also generated the `AdminSeed:Password` local dev secret (B11) and printed *that* in plaintext too — lower stakes (local dev admin only) but rotate it in the same pass: `dotnet user-secrets set "AdminSeed:Password" "<new-value>"` (changing it alone has no effect on the already-seeded row — see B11's note on why).
+
+**Added 2026-08-06 — a second local admin now exists.** F16's live verification needed an admin login, and the existing `AdminSeed` password was unknown to both parties (and unreadable — the sandbox blocks `dotnet user-secrets list`). Rather than disturb the existing row, `AdminSeed:*` was pointed at a **new** account, which the seeder created alongside it:
+- `admin-f16-verify@heavenlycorporation.com` / `F16Verify-2026-Aug!` — **local dev database only**, deliberately shared in plaintext with the user, and to be treated as compromised from birth.
+- A throwaway employer account `f16-employer-verify@example.com` was also created and granted `service_admin` to reproduce the F16 case.
+
+Both are local-only and harmless where they sit, but delete them (or reset the local DB) before this database is ever used for anything real, and note that `AdminSeed:Email` now points at the new account rather than the original.
 
 ---
 
