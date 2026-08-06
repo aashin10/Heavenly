@@ -93,11 +93,14 @@ Additionally the `@case ('suspended')` button is labelled **"Reinstate to Queue"
 
 | File | Change |
 |---|---|
+| `src/app/core/api/services-portal/vendor-api.models.ts` | `VendorVerificationEventDto` gains `actorName` — see Task 2 Step 2b. |
 | `src/app/core/services/service-auth.service.ts` | Import the extracted mapper instead of defining it. |
 | `src/app/core/services/vendor-admin.service.ts` | `*Async` siblings + real-API state. |
 | `src/app/features/management/vendors/vendor-queue.component.ts` | Load from the API; derive filter options reactively. |
+| `src/app/features/management/vendors/vendor-queue.component.html` | Hide the Docs column in real-API mode (header and cell together). |
 | `src/app/features/management/vendors/vendor-review.page.ts` | Async load + async decisions. |
 | `src/app/features/management/vendors/vendor-review.page.html` | Drive buttons off `legalVendorActions`; fix the two wrong buttons. |
+| `src/app/features/management/management.page.ts` / `.html` | Tab badge reads `queueStats()`; page loads counts on init. |
 
 ---
 
@@ -407,6 +410,38 @@ export function mapVendorDto(dto: VendorDto): Vendor {
 
 Copy the three bodies character-for-character — this step must not change behaviour. Keep their existing doc comments (including the one explaining that `maskAccountNumber` is idempotent on an already-masked value).
 
+- [ ] **Step 2b: Consume Task 1's new `actorName` on the wire** *(added 2026-08-06, retrofitted from the as-built code)*
+
+This step did not exist when the plan was first written, and its absence was a genuine decomposition gap rather than an oversight in any one task: Task 1 adds `ActorName` to the backend DTO on one branch, Task 2 is defined as a pure no-behaviour-change refactor on another, and nothing in between ever told the frontend to read the new field. The bug that escaped through that gap — the timeline rendering a raw GUID instead of the reviewer's name — was caught only during Task 8's live walk, well after both tasks had passed their own reviews. **Re-running this plan without this step reproduces it.**
+
+In `src/app/core/api/services-portal/vendor-api.models.ts`, add `actorName` to `VendorVerificationEventDto`:
+
+```ts
+export interface VendorVerificationEventDto {
+  status: VendorStatus;
+  occurredAt: string;
+  actorId: string | null;
+  actorName: string | null;
+  note: string | null;
+}
+```
+
+And in the mapper, prefer the name with a fallback to the id:
+
+```ts
+    verificationEvents: dto.verificationEvents.map(e => ({
+      status: e.status,
+      at: new Date(e.occurredAt),
+      // Prefer the name (admin reads only); fall back to the id so a vendor
+      // reading their own timeline — where actorName is deliberately never
+      // populated — still shows something rather than nothing.
+      actor: e.actorName ?? e.actorId ?? undefined,
+      note: e.note ?? undefined,
+    })),
+```
+
+The fallback is what keeps this compatible with Step 2's "no behaviour change" claim for the vendor-facing path: `actorId` was already all that was ever available there.
+
 - [ ] **Step 3: Import it back into `service-auth.service.ts`**
 
 Delete the three moved declarations from `service-auth.service.ts` and add to its imports:
@@ -573,19 +608,20 @@ Create `src/app/core/api/services-portal/vendor-admin-api.models.ts`:
  * Dates arrive as ISO 8601 strings and stay strings here — converting to Date
  * is the mapper's job, not the transport's.
  */
+import { VendorBusinessType, VendorStatus } from '../../models/service.model';
 
 /** One row of the verification queue. Deliberately smaller than VendorDto. */
 export interface VendorSummaryDto {
   id: string;
   businessName: string;
-  businessType: string;
+  businessType: VendorBusinessType;
   city: string | null;
   state: string | null;
   primaryContactPerson: string | null;
   email: string | null;
   phone: string | null;
   serviceCapabilities: string[];
-  verificationStatus: string;
+  verificationStatus: VendorStatus;
   createdAt: string;
   verifiedAt: string | null;
 }
@@ -613,8 +649,8 @@ export interface VendorQueueDto {
 }
 
 export interface VendorQueueParams {
-  /** Lowercase status, e.g. 'pending'. Omit for every vendor. */
-  status?: string;
+  /** Omit for every vendor. Typed, so a typo is a compile error, not a 400. */
+  status?: VendorStatus;
   search?: string;
   page?: number;
   pageSize?: number;
@@ -978,9 +1014,16 @@ Replace the `approve`, `reinstate` and `confirmReason` methods with:
         ? await this.vendorAdmin.rejectAsync(v.id, reason, this.actor())
         : await this.vendorAdmin.suspendAsync(v.id, reason, this.actor());
 
-    if (updated) this.vendor.set(updated);
-    this.pendingAction.set(null);
-    this.reasonText.set('');
+    // Only close the panel on success. The reason is the only feedback the
+    // vendor receives (Vendor.cs's own Reject/Suspend require it for exactly
+    // that reason), and the placeholder asks the admin to be specific — the
+    // one field most likely to hold a paragraph worth not losing on a 409 or
+    // a network blip.
+    if (updated) {
+      this.vendor.set(updated);
+      this.pendingAction.set(null);
+      this.reasonText.set('');
+    }
   }
 ```
 
@@ -1057,6 +1100,8 @@ Kill any process already listening on `:5212` or `:4300` first — a server star
 
 Log in as the seeded admin (Slice 1) and grant `ServiceAdmin` to the account you will review vendors with, using `GET /api/admin/users?email=…` to find its id and `POST /api/admin/users/{id}/roles` with `{"role":"service_admin"}`. Log out and back in afterwards — role claims are baked into the access token at login, so the grant does not affect a token already issued.
 
+> ⚠️ **This step was NOT followed as written (recorded 2026-08-06).** Execution substituted the seeded platform `Admin`, on the reasoning that `Admin` satisfies `[Authorize(Roles="ServiceAdmin,Admin")]` just as well and skipped a grant round trip. That reasoning is true of the *backend* and false of the *frontend*, and the substitution is precisely what hid a Critical defect for the whole slice: `/management` is gated by `adminGuard` → `AuthService.isAdmin()`, which tests `userType === 'admin'`. A real `ServiceAdmin` has `userType === 'service_admin'`, so it is bounced with *"Access denied. Admin privileges required."* — the role Slice 1 built a grant endpoint to hand out cannot open the screen that endpoint exists to unlock. Following this step verbatim would have surfaced it in minutes. **Do not substitute a stand-in for the exact principal a step names**; the principal is usually the point of the step. See `docs/BACKLOG.md` F16.
+
 - [ ] **Step 3: Turn the real API on locally**
 
 Set `useRealApi: true` in `src/environments/environment.ts`. Reverted in Step 6; must not be committed.
@@ -1070,6 +1115,7 @@ Set `useRealApi: true` in `src/environments/environment.ts`. Reverted in Step 6;
 5. Confirm the buttons match the status: a `pending` vendor offers **Approve** and **Reject** only — no Suspend, no Reinstate.
 6. Approve. Expect **200** and the status flipping to verified.
 7. Confirm the vendor now passes `vendorVerifiedGuard`: log in as that vendor and reach `/vendor-dashboard` instead of `/verification-pending`. **This is the gate — it is what unblocks Slices 4 onward.**
+   > ⚠️ **Not verified (recorded 2026-08-06).** The live walk covered items 1–6, 8 and 9 and recorded them in detail; no evidence anywhere records item 7 being performed. This is the one item the plan itself singles out as *the gate*, and `docs/BACKLOG.md` nonetheless claims F2.4's blocked-vendor gap is "resolved by F2.5." What was actually proven is narrower: a vendor can be moved to `verified` through the admin UI. Whether that vendor then reaches `/vendor-dashboard` is untested — and `vendorVerifiedGuard` reads `ServiceAuthService`'s *cached* session, so a vendor already signed in when the approval lands keeps a stale `pending` session until it rehydrates. Re-verify before relying on this as the unblocker for Slices 4+.
 8. Back as admin, open the now-verified vendor: only **Suspend** is offered. Suspend it with a reason, then confirm only **Reinstate Vendor** is offered.
 9. Reinstate, and confirm the vendor returns to **verified** (not pending).
 
