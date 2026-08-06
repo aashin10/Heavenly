@@ -8,6 +8,7 @@ import { VendorSummaryDto } from '../api/services-portal/vendor-admin-api.models
 import { VendorDto } from '../api/services-portal/vendor-api.models';
 import { mapVendorDto } from '../api/services-portal/vendor-dto.mapper';
 import { Vendor, VendorStatus } from '../models/service.model';
+import { VendorAction, legalVendorActions } from './vendor-transitions';
 
 /**
  * Admin-side view of the vendor pool. Reads and writes the same
@@ -174,11 +175,10 @@ export class VendorAdminService {
     successMessage: string
   ): Promise<Vendor | null> {
     if (!this.useRealApi) {
-      if (!mockCall()) {
-        this.toastService.error('That vendor could not be found.');
-        return null;
-      }
-      return this.getVendor(id);
+      // `mockCall` reports its own failure. It can tell a missing vendor from
+      // an illegal transition; this level cannot, and a single message here
+      // would have to be wrong about one of them.
+      return mockCall() ? this.getVendor(id) : null;
     }
 
     try {
@@ -259,15 +259,15 @@ export class VendorAdminService {
   }
 
   approve(id: string, actor: string): boolean {
-    return this.transition(id, 'verified', actor, undefined, 'Vendor approved.', true);
+    return this.transition(id, 'approve', 'verified', actor, undefined, 'Vendor approved.', true);
   }
 
   reject(id: string, actor: string, reason: string): boolean {
-    return this.transition(id, 'rejected', actor, reason, 'Vendor rejected.', false);
+    return this.transition(id, 'reject', 'rejected', actor, reason, 'Vendor rejected.', false);
   }
 
   suspend(id: string, actor: string, reason: string): boolean {
-    return this.transition(id, 'suspended', actor, reason, 'Vendor suspended.', false);
+    return this.transition(id, 'suspend', 'suspended', actor, reason, 'Vendor suspended.', false);
   }
 
   /**
@@ -281,23 +281,54 @@ export class VendorAdminService {
    * suspend/reinstate round trip.
    */
   reinstate(id: string, actor: string): boolean {
-    return this.transition(id, 'verified', actor, undefined, 'Vendor reinstated.', false);
+    // 'Reinstated' matches what the server records as the event note, so the
+    // mock timeline distinguishes a reinstatement from an approval — both land
+    // on `verified`, and without a note the two are indistinguishable in the
+    // history the admin reads.
+    return this.transition(
+      id,
+      'reinstate',
+      'verified',
+      actor,
+      undefined,
+      'Vendor reinstated.',
+      false,
+      'Reinstated'
+    );
   }
 
   private transition(
     id: string,
+    action: VendorAction,
     status: VendorStatus,
     actor: string,
     reason: string | undefined,
     successMessage: string,
-    stampVerifiedAt: boolean
+    stampVerifiedAt: boolean,
+    note = reason
   ): boolean {
     const vendors = this.readVendors();
     const index = vendors.findIndex(v => v.id === id);
-    if (index === -1) return false;
+    if (index === -1) {
+      this.toastService.error('That vendor could not be found.');
+      return false;
+    }
 
     const now = new Date();
     const current = vendors[index];
+
+    // The mock had no transition rules at all, so it performed whatever the
+    // template offered. That is exactly how F9's "Return to Queue on a rejected
+    // vendor" bug stayed invisible: the server refuses it with a 409, but mock
+    // mode — the mode that actually ships, since `useRealApi` is committed
+    // false — carried it out, so nothing ever surfaced the divergence.
+    // Enforcing the same rule here makes the mock a faithful stand-in, and
+    // turns any future template/rule drift into a visible failure locally.
+    if (!legalVendorActions(current.verificationStatus).includes(action)) {
+      this.toastService.error('That action is not allowed for this vendor’s current status.');
+      return false;
+    }
+
     // Seed the registration event the first time an admin acts, so the history
     // reads from the start rather than beginning at the admin's decision.
     const priorEvents = current.verificationEvents?.length
@@ -309,7 +340,7 @@ export class VendorAdminService {
       verifiedAt: stampVerifiedAt ? now : current.verifiedAt,
       rejectionReason: reason,
       reviewedBy: actor,
-      verificationEvents: [...priorEvents, { status, at: now, actor, note: reason }],
+      verificationEvents: [...priorEvents, { status, at: now, actor, note }],
     };
 
     this.writeVendors(vendors);
