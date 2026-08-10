@@ -13,6 +13,7 @@ import {
   VendorBid,
   VendorDashboardStats,
 } from './vendor-dashboard.model';
+import { BidStatus } from '../../vendor/vendor.model';
 
 @Component({
   selector: 'app-vendor-dashboard-page',
@@ -155,7 +156,7 @@ export class VendorDashboardPageComponent implements OnInit {
         tenderTitle: 'Warehouse Security System',
         category: 'technical',
         bidAmount: 2500,
-        status: 'under-review',
+        status: 'under_review',
         submittedAt: new Date('2024-01-15'),
       },
       {
@@ -164,7 +165,7 @@ export class VendorDashboardPageComponent implements OnInit {
         tenderTitle: 'Restaurant Kitchen Plumbing',
         category: 'mid_complexity',
         bidAmount: 850,
-        status: 'accepted',
+        status: 'awarded',
         submittedAt: new Date('2024-01-12'),
       },
       {
@@ -173,7 +174,7 @@ export class VendorDashboardPageComponent implements OnInit {
         tenderTitle: 'Corporate Catering Service',
         category: 'quick_service',
         bidAmount: 1200,
-        status: 'pending',
+        status: 'submitted',
         submittedAt: new Date('2024-01-10'),
       },
     ]);
@@ -189,24 +190,30 @@ export class VendorDashboardPageComponent implements OnInit {
     return labels[category] || category;
   }
 
-  getBidStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      pending: 'Pending',
-      'under-review': 'Under Review',
-      accepted: 'Accepted',
-      rejected: 'Rejected',
+  getBidStatusLabel(status: BidStatus): string {
+    const labels: Record<BidStatus, string> = {
+      draft: 'Draft',
+      submitted: 'Submitted',
+      under_review: 'Under Review',
+      shortlisted: 'Shortlisted',
+      awarded: 'Awarded',
+      rejected: 'Not Selected',
+      withdrawn: 'Withdrawn',
     };
-    return labels[status] || status;
+    return labels[status];
   }
 
-  getBidStatusClass(status: string): string {
-    const classes: Record<string, string> = {
-      pending: 'status-pending',
-      'under-review': 'status-review',
-      accepted: 'status-accepted',
+  getBidStatusClass(status: BidStatus): string {
+    const classes: Record<BidStatus, string> = {
+      draft: 'status-draft',
+      submitted: 'status-submitted',
+      under_review: 'status-review',
+      shortlisted: 'status-shortlisted',
+      awarded: 'status-accepted',
       rejected: 'status-rejected',
+      withdrawn: 'status-withdrawn',
     };
-    return classes[status] || '';
+    return classes[status];
   }
 
   /** Human label for a tender deadline; never renders a negative count. */

@@ -1,4 +1,5 @@
 import { ServiceCategory } from '../../../core/models/service.model';
+import { BidStatus } from '../../vendor/vendor.model';
 
 // Tender opportunity
 export interface TenderOpportunity {
@@ -20,7 +21,11 @@ export interface VendorBid {
   tenderTitle: string;
   category: ServiceCategory;
   bidAmount: number;
-  status: 'pending' | 'under-review' | 'accepted' | 'rejected';
+  // Canonical BidStatus, matching BidStatus.cs. This was an inline union with
+  // hyphens and two values the domain has never had (`pending`, `accepted`),
+  // which Slice 4 would have had to translate at the API boundary — exactly
+  // the translation layer the wire-format conventions exist to avoid.
+  status: BidStatus;
   submittedAt: Date;
 }
 
