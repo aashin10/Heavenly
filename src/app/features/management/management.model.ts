@@ -46,10 +46,31 @@ export type ServiceRequestFilter =
   | 'approved'
   | 'published';
 
-export type ServiceCategory = 'technical' | 'mid_complexity' | 'quick_service';
-export type RequesterType = 'individual' | 'sme' | 'organization';
-export type BudgetVisibility = 'show_exact' | 'show_range' | 'hide';
-export type TenderType = 'open' | 'limited' | 'single';
+// These four are declared once, in core/models/service.model.ts, and re-exported
+// here so this file stays the single import for management screens.
+//
+// `RequesterType` is the reason this matters rather than being tidiness: the
+// copy that used to live here said `'organization'` where the canonical type
+// (and the server, and the signup flow) say `'large_organization'`. Any
+// management screen that compared against it was comparing against a value the
+// API never sends.
+//
+// `export type {...} from '...'` alone re-exports these names but does not
+// bind them into this file's own scope, and the interfaces below (ServiceRequest,
+// TenderDocument, ReviewFormData) reference them locally. So they're imported
+// here too, not just re-exported.
+import type {
+  ServiceCategory,
+  RequesterType,
+  BudgetVisibility,
+  TenderType,
+} from '../../core/models/service.model';
+export type {
+  ServiceCategory,
+  RequesterType,
+  BudgetVisibility,
+  TenderType,
+} from '../../core/models/service.model';
 
 export interface ServiceRequest {
   id: string;

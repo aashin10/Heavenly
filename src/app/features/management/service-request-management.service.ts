@@ -553,7 +553,7 @@ export class ServiceRequestManagementService {
         requesterName: 'Kerala Industries Ltd',
         requesterEmail: 'procurement@keralaindustries.com',
         requesterPhone: '+91 484 2345678',
-        requesterType: 'organization',
+        requesterType: 'large_organization',
         location: 'Thrissur, Kerala',
         address: '789 Industrial Estate',
         city: 'Thrissur',

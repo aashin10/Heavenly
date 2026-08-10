@@ -28,6 +28,18 @@ export type VendorBusinessType =
 /** Service categories mapping to form complexity */
 export type ServiceCategory = 'quick_service' | 'mid_complexity' | 'technical';
 
+/**
+ * Whether a tender shows vendors the budget. Mirrors `BudgetVisibility.cs`.
+ *
+ * This is an access rule, not a display hint — the vendor-facing tender DTOs
+ * have no field capable of carrying a withheld figure, so `hide` is enforced
+ * by the shape of the payload rather than by remembering to blank a field.
+ */
+export type BudgetVisibility = 'show_exact' | 'show_range' | 'hide';
+
+/** How a tender selects its bidders. Mirrors `TenderType.cs`. */
+export type TenderType = 'open' | 'limited' | 'single';
+
 /** Service category metadata */
 export interface ServiceCategoryInfo {
   id: ServiceCategory;
