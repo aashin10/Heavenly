@@ -596,10 +596,7 @@ export class ServiceAuthService {
       city: merged.city,
       phone: (merged['phone'] as string) || undefined,
       fullName: type === 'individual' ? (merged['fullName'] as string) : undefined,
-      address:
-        type === 'individual' ? (merged['address'] as string | undefined) :
-        type === 'sme' ? (merged['businessAddress'] as string | undefined) :
-        (merged['registeredAddress'] as string | undefined),
+      address: merged.address,
       organizationName: type !== 'individual' ? (merged['organizationName'] as string) : undefined,
       gstNumber: type !== 'individual' ? (merged['gstNumber'] as string | undefined) : undefined,
       authorizedPersonName: type !== 'individual' ? (merged['authorizedPersonName'] as string) : undefined,

@@ -88,6 +88,11 @@ export class ServiceRequesterProfilePageComponent implements OnInit {
       // Organization (SME + large org)
       organizationName: [this.orgField(r, 'organizationName'), this.reqOrg(r)],
       gstNumber: [this.orgField(r, 'gstNumber'), gstValidators],
+      // businessAddress/registeredAddress are separate controls only so the
+      // template can label + show one of them per requester type (see the
+      // @if's in the .html); the model has a single `address` field (F10),
+      // so both controls read from and write back to r.address / v.address's
+      // counterpart in save() below — not a typo, and not two model fields.
       businessAddress: [r.requesterType === 'sme' ? r.address : ''],
       registeredAddress: [r.requesterType === 'large_organization' ? r.address : ''],
       authorizedPersonName: [this.orgField(r, 'authorizedPersonName'), this.reqOrg(r)],
