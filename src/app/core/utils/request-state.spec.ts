@@ -56,6 +56,16 @@ describe('createRequestState', () => {
     expect(state.loading()).toBe(false);
   });
 
+  it('sequences each instance independently', () => {
+    const a = createRequestState();
+    const b = createRequestState();
+    const idA = a.begin();
+    b.begin();                        // must not supersede a's request
+    expect(a.isCurrent(idA)).toBe(true);
+    a.succeed(idA);
+    expect(a.loading()).toBe(false);
+  });
+
   it('ignores a stale failure — it must not overwrite a newer success', () => {
     // The subtler half, and a real bug this replaces: VendorAdminService
     // guarded its success path with a request id but the failure path could
