@@ -806,7 +806,9 @@ Replace everything from `const requestId = ++this.refreshRequestId;` to the end 
     }
 ```
 
-Note the failure path is now guarded too — `fail()` no-ops if superseded — which the old code did not do for its *error* branch, so a fast-failing request could clobber a slower successful one.
+**Correction (2026-08-06, caught in Task 6's review, before this section was ever dispatched):** the sentence that used to stand here claimed "the old code did not [guard the error branch]." That's wrong for the code as it exists *now* — `vendor-admin.service.ts:99` already has `if (requestId !== this.refreshRequestId) return;` on the catch, added in Slice 2's Task 5 fix round (commit `396757b`), well before this plan was written. The bug that sentence described was real, but historical: it existed only between `6830d0c` (which introduced the unguarded catch) and `396757b` (which fixed it) — both in Slice 2, both already on `dev-agentic`. `request-state.ts`'s own doc comment correctly uses past tense ("used to") for exactly this reason.
+
+What this step actually changes, then, is narrower than "add a missing guard": it's a **refactor** — replacing the hand-rolled `refreshRequestId` counter with `createRequestState()`, so this call site uses the shared primitive instead of duplicating its logic locally. The guard behavior itself (both success and failure paths already correctly sequenced) doesn't change; what changes is where that sequencing logic lives.
 
 - [ ] **Step 3: Expose them on the component**
 
