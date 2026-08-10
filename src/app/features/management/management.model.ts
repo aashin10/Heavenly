@@ -66,7 +66,7 @@ export type ServiceRequestFilter =
 // API never sends.
 //
 // `export type {...} from '...'` alone re-exports these names but does not
-// bind them into this file's own scope, and the interfaces below (ServiceRequest,
+// bind them into this file's own scope, and the interfaces below (AdminServiceRequest,
 // TenderDocument, ReviewFormData) reference them locally. So they're imported
 // here too, not just re-exported.
 import type {
@@ -82,7 +82,16 @@ export type {
   TenderType,
 } from '../../core/models/service.model';
 
-export interface ServiceRequest {
+/**
+ * The admin's view of a service request — mirrors `ServiceRequestAdminDto`.
+ *
+ * Deliberately *not* the same type as `ServiceRequest` in
+ * `core/models/service.model.ts`, which is the requester's own view. This one
+ * carries joined requester contact details, warnings, and `internalNotes`,
+ * which must never reach a requester. Naming both `ServiceRequest` meant an
+ * import from the wrong module type-checked against the wrong shape in silence.
+ */
+export interface AdminServiceRequest {
   id: string;
   requestNumber: string;
   serviceId: string;

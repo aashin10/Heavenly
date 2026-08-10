@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { TitleCasePipe } from '@angular/common';
 import { ServiceRequestManagementService } from '../service-request-management.service';
-import { ServiceRequest, AIGeneratedDraft, ReviewFormData } from '../management.model';
+import { AdminServiceRequest, AIGeneratedDraft, ReviewFormData } from '../management.model';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 import { CollapsibleSectionComponent } from '../../../shared/components/collapsible-section/collapsible-section.component';
 import { ToastService } from '../../../core/services/toast.service';
@@ -25,7 +25,7 @@ export class ServiceRequestReviewPageComponent implements OnInit {
   private readonly toastService = inject(ToastService);
 
   requestId = '';
-  request = signal<ServiceRequest | null>(null);
+  request = signal<AdminServiceRequest | null>(null);
   aiDraft = signal<AIGeneratedDraft | null>(null);
   loading = signal(false);
 

@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 
 import { ServiceRequestManagementService } from '../service-request-management.service';
-import { ServiceRequest, TenderDocument, PublishSettings } from '../management.model';
+import { AdminServiceRequest, TenderDocument, PublishSettings } from '../management.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
@@ -24,7 +24,7 @@ export class TenderPublishPageComponent implements OnInit {
   private readonly toastService = inject(ToastService);
 
   requestId = '';
-  request = signal<ServiceRequest | null>(null);
+  request = signal<AdminServiceRequest | null>(null);
   tender = signal<TenderDocument | null>(null);
 
   publishSettings!: FormGroup;

@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { TitleCasePipe } from '@angular/common';
 import { ManagementService } from './management.service';
 import { ServiceRequestManagementService } from './service-request-management.service';
-import { JobFilter, ServiceRequest, ServiceRequestFilter } from './management.model';
+import { JobFilter, AdminServiceRequest, ServiceRequestFilter } from './management.model';
 import { VendorAdminService } from '../../core/services/vendor-admin.service';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -72,11 +72,11 @@ export class ManagementPageComponent implements OnInit {
     this.managementService.updateJobStatus(jobId, 'rejected');
   }
 
-  reviewRequest(request: ServiceRequest): void {
+  reviewRequest(request: AdminServiceRequest): void {
     this.router.navigate(['/management/review', request.id]);
   }
 
-  quickApprove(request: ServiceRequest): void {
+  quickApprove(request: AdminServiceRequest): void {
     const defaultReviewData = {
       tenderTitle: `${request.serviceName} - ${request.city}`,
       scopeSummary: request.description,
@@ -99,7 +99,7 @@ export class ManagementPageComponent implements OnInit {
     this.srManagementService.approveRequest(request.id, defaultReviewData);
   }
 
-  publishTender(request: ServiceRequest): void {
+  publishTender(request: AdminServiceRequest): void {
     this.router.navigate(['/management/publish', request.id]);
   }
 

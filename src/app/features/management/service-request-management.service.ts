@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { 
-  ServiceRequest, 
+  AdminServiceRequest, 
   ServiceRequestStatus, 
   ServiceRequestFilter, 
   ServiceRequestDashboardStats,
@@ -26,7 +26,7 @@ export class ServiceRequestManagementService {
   private readonly toastService = inject(ToastService);
 
   // Signals
-  private readonly requestsSignal = signal<ServiceRequest[]>([]);
+  private readonly requestsSignal = signal<AdminServiceRequest[]>([]);
   private readonly tendersSignal = signal<TenderDocument[]>([]);
   private readonly clarificationsSignal = signal<Clarification[]>([]);
   private readonly filterSignal = signal<ServiceRequestFilter>('pending');
@@ -161,7 +161,7 @@ export class ServiceRequestManagementService {
   }
 
   // ==================== REQUEST OPERATIONS ====================
-  getRequest(requestId: string): ServiceRequest | undefined {
+  getRequest(requestId: string): AdminServiceRequest | undefined {
     return this.requestsSignal().find(r => r.id === requestId);
   }
 
@@ -258,11 +258,11 @@ export class ServiceRequestManagementService {
     };
   }
 
-  private generateScopeSummary(request: ServiceRequest): string {
+  private generateScopeSummary(request: AdminServiceRequest): string {
     return `${request.description || 'Service request'}\n\nLocation: ${request.address}, ${request.city}, ${request.state} - ${request.pincode}\n\nUrgency: ${request.urgency}`;
   }
 
-  private generateCommercialStructure(request: ServiceRequest): string {
+  private generateCommercialStructure(request: AdminServiceRequest): string {
     if (request.budgetMin && request.budgetMax) {
       return `Budget Range: ${request.budgetCurrency} ${request.budgetMin.toLocaleString()} - ${request.budgetMax.toLocaleString()}\n\nPayment Terms: ${request.preferredPaymentTerms || 'Standard terms apply'}`;
     }
@@ -278,7 +278,7 @@ export class ServiceRequestManagementService {
     }
   }
 
-  private calculateRisk(request: ServiceRequest): 'low' | 'medium' | 'high' {
+  private calculateRisk(request: AdminServiceRequest): 'low' | 'medium' | 'high' {
     if (request.urgency === 'urgent' || request.hasWarnings) return 'high';
     if (request.urgency === 'high') return 'medium';
     return 'low';
@@ -293,7 +293,7 @@ export class ServiceRequestManagementService {
     }
   }
 
-  private identifyGaps(request: ServiceRequest): string[] {
+  private identifyGaps(request: AdminServiceRequest): string[] {
     const gaps: string[] = [];
     if (!request.attachments?.length) {
       gaps.push('No supporting documents or images uploaded');
@@ -310,7 +310,7 @@ export class ServiceRequestManagementService {
     return gaps;
   }
 
-  private calculateClarityScore(request: ServiceRequest): number {
+  private calculateClarityScore(request: AdminServiceRequest): number {
     let score = 50; // Base score
     
     if (request.description && request.description.length > 100) score += 15;
@@ -467,7 +467,7 @@ export class ServiceRequestManagementService {
   }
 
   // ==================== MOCK DATA ====================
-  private getMockRequests(): ServiceRequest[] {
+  private getMockRequests(): AdminServiceRequest[] {
     return [
       {
         id: 'REQ-001',
