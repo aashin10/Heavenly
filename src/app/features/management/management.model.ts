@@ -26,14 +26,24 @@ export interface JobStatistics {
 }
 
 // ==================== SERVICE REQUEST MANAGEMENT ====================
-export type ServiceRequestStatus = 
-  | 'submitted' 
-  | 'under_review' 
-  | 'changes_required' 
-  | 'approved' 
-  | 'published' 
+/**
+ * The statuses an admin can see on a service request. Mirrors
+ * `ServiceRequestStatus.cs` minus `Draft` — a draft lives in its own table and
+ * never reaches the admin queue.
+ *
+ * `rejected` used to be here and is not a server state: the admin actions are
+ * start-review, approve, request-changes and close. A request that will not
+ * proceed is *closed*. `cancelled` was missing and is real — a requester can
+ * cancel their own request.
+ */
+export type ServiceRequestStatus =
+  | 'submitted'
+  | 'under_review'
+  | 'changes_required'
+  | 'approved'
+  | 'published'
   | 'closed'
-  | 'rejected';
+  | 'cancelled';
 
 export type ServiceRequestFilter = 
   | 'all' 

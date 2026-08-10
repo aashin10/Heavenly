@@ -190,7 +190,7 @@ export class ServiceRequestReviewPageComponent implements OnInit {
 
     const { reason, customReason, message } = this.rejectForm.value;
     const finalReason = reason === 'other' ? customReason : reason;
-    this.srService.rejectRequest(this.requestId, finalReason, message);
+    this.srService.closeRequest(this.requestId, finalReason, message);
     this.showRejectModal.set(false);
     this.router.navigate(['/management']);
   }

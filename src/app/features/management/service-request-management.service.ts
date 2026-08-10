@@ -191,9 +191,12 @@ export class ServiceRequestManagementService {
     this.toastService.success('Clarification request sent to the requester');
   }
 
-  rejectRequest(requestId: string, reason: string, message?: string): void {
+  closeRequest(requestId: string, reason: string, message?: string): void {
     const fullReason = message ? `Rejected: ${reason} - ${message}` : `Rejected: ${reason}`;
-    this.updateRequestStatus(requestId, 'rejected', fullReason);
+    // `closed`, not `rejected`: the server has no reject action for service
+    // requests, and never had. The reason is still recorded — closing with a
+    // reason is exactly what the admin "reject" button always meant.
+    this.updateRequestStatus(requestId, 'closed', fullReason);
     this.toastService.info('Request has been rejected');
   }
 
