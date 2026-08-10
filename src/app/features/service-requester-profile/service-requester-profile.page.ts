@@ -88,8 +88,8 @@ export class ServiceRequesterProfilePageComponent implements OnInit {
       // Organization (SME + large org)
       organizationName: [this.orgField(r, 'organizationName'), this.reqOrg(r)],
       gstNumber: [this.orgField(r, 'gstNumber'), gstValidators],
-      businessAddress: [r.requesterType === 'sme' ? r.businessAddress : ''],
-      registeredAddress: [r.requesterType === 'large_organization' ? r.registeredAddress : ''],
+      businessAddress: [r.requesterType === 'sme' ? r.address : ''],
+      registeredAddress: [r.requesterType === 'large_organization' ? r.address : ''],
       authorizedPersonName: [this.orgField(r, 'authorizedPersonName'), this.reqOrg(r)],
       designation: [this.orgField(r, 'designation'), this.reqOrg(r)],
       department: [r.requesterType === 'large_organization' ? (r.department ?? '') : ''],
@@ -136,9 +136,9 @@ export class ServiceRequesterProfilePageComponent implements OnInit {
       typed['authorizedPersonName'] = v.authorizedPersonName;
       typed['designation'] = v.designation;
       if (r.requesterType === 'sme') {
-        typed['businessAddress'] = v.businessAddress;
+        typed['address'] = v.businessAddress;
       } else {
-        typed['registeredAddress'] = v.registeredAddress;
+        typed['address'] = v.registeredAddress;
         typed['department'] = v.department;
       }
     }

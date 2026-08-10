@@ -225,7 +225,7 @@ export class ServiceAuthService {
           requesterType: 'individual',
           fullName: formData.step2.fullName,
           city: formData.step3Individual?.city || '',
-          address: formData.step3Individual?.address
+          address: formData.step3Individual?.address || ''
         };
         break;
       case 'sme':
@@ -234,7 +234,7 @@ export class ServiceAuthService {
           requesterType: 'sme',
           organizationName: formData.step3SME?.organizationName || '',
           gstNumber: formData.step3SME?.gstNumber,
-          businessAddress: formData.step3SME?.businessAddress || '',
+          address: formData.step3SME?.businessAddress || '',
           city: formData.step3SME?.city || '',
           authorizedPersonName: formData.step3SME?.authorizedPersonName || '',
           designation: formData.step3SME?.designation || ''
@@ -246,7 +246,7 @@ export class ServiceAuthService {
           requesterType: 'large_organization',
           organizationName: formData.step3LargeOrg?.organizationName || '',
           gstNumber: formData.step3LargeOrg?.gstNumber || '',
-          registeredAddress: formData.step3LargeOrg?.registeredAddress || '',
+          address: formData.step3LargeOrg?.registeredAddress || '',
           city: formData.step3LargeOrg?.city || '',
           authorizedPersonName: formData.step3LargeOrg?.authorizedPersonName || '',
           designation: formData.step3LargeOrg?.designation || '',
@@ -845,7 +845,7 @@ function mapRequesterDto(dto: ServiceRequesterDto): ServiceRequester {
         ...base,
         requesterType: 'individual',
         fullName: dto.fullName ?? '',
-        address: dto.address ?? undefined,
+        address: dto.address ?? '',
       };
     case 'sme':
       return {
@@ -853,9 +853,7 @@ function mapRequesterDto(dto: ServiceRequesterDto): ServiceRequester {
         requesterType: 'sme',
         organizationName: dto.organizationName ?? '',
         gstNumber: dto.gstNumber ?? undefined,
-        // The API stores one `address` field for all three requester types
-        // (frontend item F10) — the mapper is what narrows it back per branch.
-        businessAddress: dto.address ?? '',
+        address: dto.address ?? '',
         authorizedPersonName: dto.authorizedPersonName ?? '',
         designation: dto.designation ?? '',
       };
@@ -865,7 +863,7 @@ function mapRequesterDto(dto: ServiceRequesterDto): ServiceRequester {
         requesterType: 'large_organization',
         organizationName: dto.organizationName ?? '',
         gstNumber: dto.gstNumber ?? '',
-        registeredAddress: dto.address ?? '',
+        address: dto.address ?? '',
         authorizedPersonName: dto.authorizedPersonName ?? '',
         designation: dto.designation ?? '',
         department: dto.department ?? undefined,

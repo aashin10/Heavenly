@@ -6,10 +6,10 @@ import { RequesterType } from '../../models/service.model';
 
 /**
  * The API's canonical requester shape — one type with a discriminator, not the
- * frontend's three-branch union. `address` is the single field the API uses
- * for what the frontend's union calls `address` / `businessAddress` /
- * `registeredAddress` depending on branch (frontend item F10); the mapper is
- * what does the narrowing.
+ * frontend's three-branch union. `address` is the single field the API uses;
+ * the frontend union used to split this into `address` / `businessAddress` /
+ * `registeredAddress` per branch, but now mirrors the API with one `address`
+ * field on `ServiceRequesterBase` (frontend item F10).
  */
 export interface ServiceRequesterDto {
   id: string;

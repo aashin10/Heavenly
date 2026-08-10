@@ -369,6 +369,12 @@ export interface ServiceRequesterBase {
   email: string;
   phone: string;
   requesterType: RequesterType;
+  /**
+   * Where the requester is. One field for all three branches: this was
+   * `address?` / `businessAddress` / `registeredAddress`, one concept under
+   * three names, and the API has only ever returned one `address` (B2.3).
+   */
+  address: string;
   city: string;
   createdAt: Date;
   isEmailVerified: boolean;
@@ -378,7 +384,6 @@ export interface ServiceRequesterBase {
 export interface IndividualRequester extends ServiceRequesterBase {
   requesterType: 'individual';
   fullName: string;
-  address?: string;
 }
 
 /** SME service requester */
@@ -386,7 +391,6 @@ export interface SMERequester extends ServiceRequesterBase {
   requesterType: 'sme';
   organizationName: string;
   gstNumber?: string;
-  businessAddress: string;
   authorizedPersonName: string;
   designation: string;
 }
@@ -396,7 +400,6 @@ export interface LargeOrgRequester extends ServiceRequesterBase {
   requesterType: 'large_organization';
   organizationName: string;
   gstNumber: string;
-  registeredAddress: string;
   authorizedPersonName: string;
   designation: string;
   department?: string;
