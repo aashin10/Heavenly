@@ -63,7 +63,16 @@
     <h2 class="section-title">Vendors ({{ filteredVendors().length }})</h2>
   </div>
 
-  @if (filteredVendors().length === 0) {
+  @if (loadError()) {
+    <!-- Before the empty state, deliberately. "No vendors here" is a claim
+         about the queue; after a failed request we have no basis for it. -->
+    <app-empty-state
+      icon="circle-x"
+      title="Couldn't load the queue"
+      [message]="loadError()!" />
+  } @else if (loading() && filteredVendors().length === 0) {
+    <app-empty-state icon="clock" title="Loading vendors…" message="" />
+  } @else if (filteredVendors().length === 0) {
     <app-empty-state
       icon="handshake"
       title="No vendors here"

@@ -9,6 +9,7 @@ import { VendorDto } from '../api/services-portal/vendor-api.models';
 import { mapVendorDto } from '../api/services-portal/vendor-dto.mapper';
 import { Vendor, VendorStatus } from '../models/service.model';
 import { VendorAction, legalVendorActions } from './vendor-transitions';
+import { createRequestState } from '../utils/request-state';
 
 /**
  * Admin-side view of the vendor pool. Reads and writes the same
@@ -65,7 +66,13 @@ export class VendorAdminService {
     () => this.serverStatsSignal() ?? this.stats()
   );
 
-  private refreshRequestId = 0;
+  private readonly queueRequest = createRequestState();
+
+  /** True while a queue fetch is in flight — the queue renders a loading state. */
+  readonly queueLoading = this.queueRequest.loading;
+
+  /** Set when the last queue fetch failed; cleared when the next one begins. */
+  readonly queueError = this.queueRequest.error;
 
   /** Replaces the queue from the API. `status` omitted or 'all' fetches every vendor. */
   async refreshAsync(status?: VendorStatus | 'all'): Promise<void> {
@@ -78,7 +85,7 @@ export class VendorAdminService {
     // clicks. Only the response matching the most recently *issued* call may
     // update state; an older one that resolves late is discarded rather than
     // overwriting a fresher result.
-    const requestId = ++this.refreshRequestId;
+    const requestId = this.queueRequest.begin();
 
     try {
       const dto = await firstValueFrom(
@@ -87,7 +94,7 @@ export class VendorAdminService {
           pageSize: 100,
         })
       );
-      if (requestId !== this.refreshRequestId) return;
+      if (!this.queueRequest.isCurrent(requestId)) return;
       this.vendorsSignal.set(dto.items.map(item => this.summaryToVendor(item)));
       this.serverStatsSignal.set({
         pending: dto.stats.pending,
@@ -95,13 +102,14 @@ export class VendorAdminService {
         rejected: dto.stats.rejected,
         suspended: dto.stats.suspended,
       });
+      this.queueRequest.succeed(requestId);
     } catch {
-      if (requestId !== this.refreshRequestId) return;
-      // A 403 here means the signed-in admin lacks ServiceAdmin — show an
-      // empty queue rather than a crashed page, exactly as F2.4 handles the
-      // unverified-vendor 403 on tender browse.
-      this.vendorsSignal.set([]);
-      this.serverStatsSignal.set({ pending: 0, verified: 0, rejected: 0, suspended: 0 });
+      // Deliberately does NOT write an empty list or zero counts. Those are
+      // assertions about the queue, and a failed request is no evidence for
+      // them — writing them rendered a 403 as a confident "0 pending, no
+      // vendors here". The last good data stays on screen behind an error
+      // state, which is both truer and more useful than a fabricated empty.
+      this.queueRequest.fail(requestId, 'Could not load the vendor queue.');
       this.toastService.error('Could not load the vendor queue.');
     }
   }

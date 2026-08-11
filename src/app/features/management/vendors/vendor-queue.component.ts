@@ -20,6 +20,8 @@ export class VendorQueueComponent implements OnInit {
   protected readonly vendorAdmin = inject(VendorAdminService);
 
   readonly stats = this.vendorAdmin.queueStats;
+  readonly loading = this.vendorAdmin.queueLoading;
+  readonly loadError = this.vendorAdmin.queueError;
 
   readonly filterOptions: { value: VendorFilter; label: string }[] = [
     { value: 'pending', label: 'Pending' },

@@ -43,12 +43,18 @@ const NO_STATS: VendorQueueStats = { pending: 0, verified: 0, rejected: 0, suspe
  * and that branch is the one no human has ever looked at, since the flag ships
  * committed `false`.
  */
-async function renderQueue(useRealApi: boolean, vendors: Vendor[]) {
+async function renderQueue(
+  useRealApi: boolean,
+  vendors: Vendor[],
+  opts: { error?: string; loading?: boolean } = {}
+) {
   const stub = {
     vendors: signal<Vendor[]>(vendors),
     queueStats: signal<VendorQueueStats>(NO_STATS),
     useRealApi,
     refreshAsync: () => Promise.resolve(),
+    queueLoading: signal(opts.loading ?? false),
+    queueError: signal<string | null>(opts.error ?? null),
   };
 
   TestBed.resetTestingModule();
@@ -109,5 +115,14 @@ describe('VendorQueueComponent table columns', () => {
       h.textContent?.trim()
     );
     expect(realHeaders).not.toContain('Docs');
+  });
+});
+
+describe('VendorQueueComponent load states', () => {
+  it('shows an error state, not "no vendors", when the load failed', async () => {
+    const el = await renderQueue(true, [], { error: 'Could not load the vendor queue.' });
+
+    expect(el.textContent).toContain("Couldn't load the queue");
+    expect(el.textContent).not.toContain('No vendors here');
   });
 });
