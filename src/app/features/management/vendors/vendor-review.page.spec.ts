@@ -111,6 +111,27 @@ describe('VendorReviewPageComponent reason panel', () => {
     expect(page.reasonText()).toBe('Trade licence has expired; please re-upload a current one.');
   });
 
+  it('keeps the typed reason when a 409 reloads the vendor without the action landing', async () => {
+    // `VendorAdminService.decide()` responds to a 409 by re-reading the vendor
+    // and handing back that (truthy) fresh copy instead of `null` — so a bare
+    // `if (updated)` would wrongly treat this as success and wipe the panel.
+    // Here the reload comes back still 'pending', proving the reject never
+    // actually landed.
+    const { page } = await makePageWith({
+      rejectAsync: () => Promise.resolve(makeVendor({ verificationStatus: 'pending' })),
+    });
+
+    page.startReject();
+    page.reasonText.set('Trade licence has expired; please re-upload a current one.');
+    await page.confirmReason();
+
+    expect(page.pendingAction()).toBe('reject');
+    expect(page.reasonText()).toBe('Trade licence has expired; please re-upload a current one.');
+    // The displayed vendor still refreshes — that's the point of the 409
+    // reload — even though the panel itself stays open.
+    expect(page.vendor()?.verificationStatus).toBe('pending');
+  });
+
   it('clears the panel when the decision succeeds', async () => {
     const { page } = await makePage(makeVendor({ verificationStatus: 'rejected' }));
 

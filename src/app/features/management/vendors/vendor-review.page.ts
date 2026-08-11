@@ -177,15 +177,23 @@ export class VendorReviewPageComponent implements OnInit {
           ? await this.vendorAdmin.rejectAsync(v.id, reason, this.actor())
           : await this.vendorAdmin.suspendAsync(v.id, reason, this.actor());
 
-      // Only close the panel on success. The reason is the only feedback the
-      // vendor receives (Vendor.cs's own Reject/Suspend require it for exactly
-      // that reason), and the placeholder asks the admin to be specific — the
-      // one field most likely to hold a paragraph worth not losing on a 409 or
-      // a network blip.
+      // Only close the panel once the decision actually landed as intended.
+      // `updated` alone isn't enough: a 409 also returns a (freshly re-fetched)
+      // truthy vendor, but one whose status is whatever it already was on the
+      // server, not the target this action was trying to reach. The reason is
+      // the only feedback the vendor receives (Vendor.cs's own Reject/Suspend
+      // require it for exactly that reason), and the placeholder asks the
+      // admin to be specific — the one field most likely to hold a paragraph
+      // worth not losing on a 409 or a network blip. Refresh the displayed
+      // vendor either way, since that's what lets the buttons re-derive from
+      // the real status.
       if (updated) {
         this.vendor.set(updated);
-        this.pendingAction.set(null);
-        this.reasonText.set('');
+        const target: VendorStatus = action === 'reject' ? 'rejected' : 'suspended';
+        if (updated.verificationStatus === target) {
+          this.pendingAction.set(null);
+          this.reasonText.set('');
+        }
       }
     } finally {
       this.deciding.set(false);

@@ -173,9 +173,11 @@ export class VendorAdminService {
    * this way. Every *Async method is therefore safe to call regardless of
    * `useRealApi`; nothing at a call site needs to know which mode is active.
    *
-   * A 409 in real-API mode means the client offered an action the server's
-   * transition rules forbid — `legalVendorActions` exists to make that
-   * unreachable, so seeing this message means the two have drifted apart.
+   * A 409 in real-API mode is normal concurrency, not a bug: the client's
+   * copy of the vendor is stale — another admin acted first, or this tab has
+   * been open a while — and the server refused the transition because of it.
+   * `legalVendorActions` filters the buttons the *current* client-side state
+   * offers, so it can't prevent this; only a fresh read can. See below.
    */
   private async decide(
     id: string,
@@ -208,7 +210,17 @@ export class VendorAdminService {
         // response that leaves the screen true; returning null alone left the
         // stale badge and the same impossible button on screen forever.
         this.toastService.error('That vendor’s status changed. Reloading it.');
-        return await this.getVendorAsync(id);
+        const fresh = await this.getVendorAsync(id);
+        // `getVendorAsync` swallows its own failures to `null`. Without this,
+        // a reload that itself fails leaves the "Reloading it." toast as an
+        // unfulfilled promise — worse than the old single terminal message,
+        // since it actively claims a follow-up that never happens.
+        if (!fresh) {
+          this.toastService.error(
+            'That vendor’s status changed and could not be reloaded. Refresh the page.'
+          );
+        }
+        return fresh;
       }
       this.toastService.error('The decision could not be saved.');
       return null;
