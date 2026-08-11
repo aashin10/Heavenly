@@ -1,9 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { Subject } from 'rxjs';
 import { VendorAdminService } from './vendor-admin.service';
 import { ToastService } from './toast.service';
 import { Vendor, VendorStatus } from '../models/service.model';
+import { environment } from '../../../environments/environment';
+import { VendorAdminApiService } from '../api/services-portal/vendor-admin-api.service';
+import { VendorQueueDto } from '../api/services-portal/vendor-admin-api.models';
 
 const VENDORS_KEY = 'heavenly_vendors';
 
@@ -121,5 +125,90 @@ describe('VendorAdminService mock transitions', () => {
     // admin which one happened. The server records "Reinstated" here.
     const events = service.getVendor('v1')?.verificationEvents ?? [];
     expect(events[events.length - 1].note).toBe('Reinstated');
+  });
+});
+
+function fakeQueueDto(overrides: Partial<VendorQueueDto> = {}): VendorQueueDto {
+  return {
+    items: [],
+    stats: { pending: 0, verified: 0, rejected: 0, suspended: 0, total: 0 },
+    page: 1,
+    pageSize: 100,
+    totalCount: 0,
+    totalPages: 0,
+    ...overrides,
+  };
+}
+
+/**
+ * `refreshAsync`'s real-API branch, exercised against a stubbed
+ * `VendorAdminApiService` rather than `HttpTestingController` — resolution
+ * order is the whole point of these specs, and a `Subject` per call lets each
+ * test settle requests in whatever order it needs, including out of order.
+ */
+describe('VendorAdminService.refreshAsync real-API sequencing', () => {
+  afterEach(() => {
+    environment.useRealApi = false;
+  });
+
+  function makeRealApiService() {
+    const errors: string[] = [];
+    const responses: Subject<VendorQueueDto>[] = [];
+    const queueSpy = jasmine.createSpy('queue').and.callFake(() => {
+      const subject = new Subject<VendorQueueDto>();
+      responses.push(subject);
+      return subject;
+    });
+
+    environment.useRealApi = true;
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: VendorAdminApiService, useValue: { queue: queueSpy } },
+        {
+          provide: ToastService,
+          useValue: {
+            error: (m: string) => errors.push(m),
+            success: () => undefined,
+          },
+        },
+      ],
+    });
+
+    return { service: TestBed.inject(VendorAdminService), errors, responses };
+  }
+
+  // The regression this pins: before the Task 6 refactor, the catch opened
+  // with `if (requestId !== this.refreshRequestId) return;`, which guarded
+  // every side effect below it, toast included. `createRequestState()`'s
+  // `fail()` re-guards the signal writes internally, but a bare call to it
+  // is not itself an early return — so without a guard ahead of it, a stale
+  // failure still reaches the toast even though it can no longer touch state.
+  it('does not toast for a request that fails after a newer one already succeeded', async () => {
+    const { service, errors, responses } = makeRealApiService();
+
+    const stale = service.refreshAsync('pending'); // request 1, issued first
+    const fresh = service.refreshAsync('verified'); // request 2, issued second — the current one
+
+    responses[1].next(fakeQueueDto()); // request 2 resolves first and succeeds
+    responses[1].complete();
+    await fresh;
+
+    responses[0].error(new Error('boom')); // request 1 resolves late and fails
+    await stale;
+
+    expect(errors).toEqual([]);
+  });
+
+  it('still toasts when the only outstanding request fails', async () => {
+    const { service, errors, responses } = makeRealApiService();
+
+    const only = service.refreshAsync('pending');
+    responses[0].error(new Error('boom'));
+    await only;
+
+    expect(errors).toEqual(['Could not load the vendor queue.']);
   });
 });

@@ -104,6 +104,7 @@ export class VendorAdminService {
       });
       this.queueRequest.succeed(requestId);
     } catch {
+      if (!this.queueRequest.isCurrent(requestId)) return;
       // Deliberately does NOT write an empty list or zero counts. Those are
       // assertions about the queue, and a failed request is no evidence for
       // them — writing them rendered a 403 as a confident "0 pending, no
