@@ -883,7 +883,7 @@ Give `renderQueue` a third parameter `opts: { error?: string; loading?: boolean 
 Temporarily revert Step 1's catch to the old zero-writing version, run the suite, and confirm the new spec fails. Restore it and confirm it passes. A test that has only ever passed proves nothing.
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 49 SUCCESS`
+Expected: `TOTAL: 50 SUCCESS` **(corrected 2026-08-06 — this said 49 when first written, before Task 6's real fix round added a test the plan didn't anticipate at write-time, shifting Task 6's actual final baseline from 48 to 49. 49 (Task 6's real baseline) + 1 (this task's own new spec) = 50.)**
 
 - [ ] **Step 7: Commit**
 
@@ -1043,7 +1043,7 @@ Refactor the existing `makePage(decisionResult)` into `makePageWith(overrides)` 
 Comment out the `deciding` guards, run the suite, confirm both new specs fail. Restore them and confirm they pass.
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 51 SUCCESS`
+Expected: `TOTAL: 52 SUCCESS` **(corrected 2026-08-06, same off-by-one as Task 7's count — see that task's note. Task 7's real baseline is 50, not the plan's originally-assumed 49; this task adds its own 2 new specs, so 50 + 2 = 52.)**
 
 - [ ] **Step 6: Build and commit**
 
