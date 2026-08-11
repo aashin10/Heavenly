@@ -1043,7 +1043,7 @@ Refactor the existing `makePage(decisionResult)` into `makePageWith(overrides)` 
 Comment out the `deciding` guards, run the suite, confirm both new specs fail. Restore them and confirm they pass.
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 52 SUCCESS` **(corrected 2026-08-06, same off-by-one as Task 7's count — see that task's note. Task 7's real baseline is 50, not the plan's originally-assumed 49; this task adds its own 2 new specs, so 50 + 2 = 52.)**
+Expected: `TOTAL: 54 SUCCESS` **(corrected again, 2026-08-06 — the second correction of this same number. Task 7 also needed a real fix round (a genuine Important finding: its refactor silently dropped a toast guard), and that fix round added 2 more tests, so Task 7's actual final baseline is 52, not the 50 assumed in the prior correction. This task adds its own 2 new specs: 52 + 2 = 54. If a task ahead of this one in the chain needs a fix round of its own, re-verify this number against the actual running suite — `npx ng test --watch=false --browsers=ChromeHeadless` — rather than trusting this document, which has now been wrong twice for the same reason: fix rounds are inherently unpredictable at plan-write time.)**
 
 - [ ] **Step 6: Build and commit**
 
