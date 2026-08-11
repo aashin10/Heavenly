@@ -45,6 +45,14 @@ export class VendorReviewPageComponent implements OnInit {
   pendingAction = signal<PendingAction>(null);
   reasonText = signal('');
 
+  /**
+   * True while any decision is in flight. Guards all five controls, Cancel
+   * included: cancelling only hides the panel, it cannot recall a request
+   * already sent, so leaving Cancel live let an admin dismiss the panel and
+   * then act again on a vendor whose decision had already landed.
+   */
+  deciding = signal(false);
+
   readonly documentLabels = DOCUMENT_LABELS;
 
   documents = computed(() => {
@@ -118,16 +126,26 @@ export class VendorReviewPageComponent implements OnInit {
 
   async approve(): Promise<void> {
     const v = this.vendor();
-    if (!v) return;
-    const updated = await this.vendorAdmin.approveAsync(v.id, this.actor());
-    if (updated) this.vendor.set(updated);
+    if (!v || this.deciding()) return;
+    this.deciding.set(true);
+    try {
+      const updated = await this.vendorAdmin.approveAsync(v.id, this.actor());
+      if (updated) this.vendor.set(updated);
+    } finally {
+      this.deciding.set(false);
+    }
   }
 
   async reinstate(): Promise<void> {
     const v = this.vendor();
-    if (!v) return;
-    const updated = await this.vendorAdmin.reinstateAsync(v.id, this.actor());
-    if (updated) this.vendor.set(updated);
+    if (!v || this.deciding()) return;
+    this.deciding.set(true);
+    try {
+      const updated = await this.vendorAdmin.reinstateAsync(v.id, this.actor());
+      if (updated) this.vendor.set(updated);
+    } finally {
+      this.deciding.set(false);
+    }
   }
 
   startReject(): void {
@@ -141,6 +159,7 @@ export class VendorReviewPageComponent implements OnInit {
   }
 
   cancelReason(): void {
+    if (this.deciding()) return;
     this.pendingAction.set(null);
     this.reasonText.set('');
   }
@@ -149,22 +168,27 @@ export class VendorReviewPageComponent implements OnInit {
     const v = this.vendor();
     const action = this.pendingAction();
     const reason = this.reasonText().trim();
-    if (!v || !action || !reason) return;
+    if (!v || !action || !reason || this.deciding()) return;
 
-    const updated =
-      action === 'reject'
-        ? await this.vendorAdmin.rejectAsync(v.id, reason, this.actor())
-        : await this.vendorAdmin.suspendAsync(v.id, reason, this.actor());
+    this.deciding.set(true);
+    try {
+      const updated =
+        action === 'reject'
+          ? await this.vendorAdmin.rejectAsync(v.id, reason, this.actor())
+          : await this.vendorAdmin.suspendAsync(v.id, reason, this.actor());
 
-    // Only close the panel on success. The reason is the only feedback the
-    // vendor receives (Vendor.cs's own Reject/Suspend require it for exactly
-    // that reason), and the placeholder asks the admin to be specific — the
-    // one field most likely to hold a paragraph worth not losing on a 409 or
-    // a network blip.
-    if (updated) {
-      this.vendor.set(updated);
-      this.pendingAction.set(null);
-      this.reasonText.set('');
+      // Only close the panel on success. The reason is the only feedback the
+      // vendor receives (Vendor.cs's own Reject/Suspend require it for exactly
+      // that reason), and the placeholder asks the admin to be specific — the
+      // one field most likely to hold a paragraph worth not losing on a 409 or
+      // a network blip.
+      if (updated) {
+        this.vendor.set(updated);
+        this.pendingAction.set(null);
+        this.reasonText.set('');
+      }
+    } finally {
+      this.deciding.set(false);
     }
   }
 

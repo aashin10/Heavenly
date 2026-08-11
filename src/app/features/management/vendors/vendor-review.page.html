@@ -140,8 +140,8 @@
                     placeholder="The vendor sees this, so be specific about what to fix."
                   ></textarea>
                   <div class="reason-actions">
-                    <button type="button" class="btn-ghost" (click)="cancelReason()">Cancel</button>
-                    <button type="button" class="btn-danger" [disabled]="!reasonText().trim()" (click)="confirmReason()">
+                    <button type="button" class="btn-ghost" [disabled]="deciding()" (click)="cancelReason()">Cancel</button>
+                    <button type="button" class="btn-danger" [disabled]="!reasonText().trim() || deciding()" (click)="confirmReason()">
                       {{ action === 'reject' ? 'Confirm Rejection' : 'Confirm Suspension' }}
                     </button>
                   </div>
@@ -149,20 +149,20 @@
               } @else {
                 <div class="decision-actions">
                   @if (can('approve')) {
-                    <button type="button" class="btn-primary" (click)="approve()">
+                    <button type="button" class="btn-primary" [disabled]="deciding()" (click)="approve()">
                       <app-icon name="circle-check" [size]="16" /> Approve Vendor
                     </button>
                   }
                   @if (can('reject')) {
-                    <button type="button" class="btn-outline" (click)="startReject()">Reject</button>
+                    <button type="button" class="btn-outline" [disabled]="deciding()" (click)="startReject()">Reject</button>
                   }
                   @if (can('suspend')) {
-                    <button type="button" class="btn-danger" (click)="startSuspend()">
+                    <button type="button" class="btn-danger" [disabled]="deciding()" (click)="startSuspend()">
                       <app-icon name="ban" [size]="16" /> Suspend Vendor
                     </button>
                   }
                   @if (can('reinstate')) {
-                    <button type="button" class="btn-primary" (click)="reinstate()">
+                    <button type="button" class="btn-primary" [disabled]="deciding()" (click)="reinstate()">
                       Reinstate Vendor
                     </button>
                   }

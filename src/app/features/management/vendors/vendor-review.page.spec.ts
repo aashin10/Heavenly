@@ -35,24 +35,33 @@ function makeVendor(overrides: Partial<Vendor> = {}): Vendor {
 }
 
 /**
- * Builds the page with a stubbed service whose reject/suspend outcome is
- * chosen per test. `null` is how `VendorAdminService` reports a refused or
- * failed decision — it toasts internally and hands back nothing.
+ * Builds the page with a stubbed service. Each of the four decision methods
+ * can be overridden individually — the default resolves to `null`, how
+ * `VendorAdminService` reports a refused or failed decision (it toasts
+ * internally and hands back nothing).
  */
-async function makePage(decisionResult: Vendor | null) {
+async function makePageWith(
+  overrides: Partial<{
+    getVendorAsync: () => Promise<Vendor | null>;
+    rejectAsync: (id: string, reason: string, actor: string) => Promise<Vendor | null>;
+    suspendAsync: (id: string, reason: string, actor: string) => Promise<Vendor | null>;
+    approveAsync: (id: string, actor: string) => Promise<Vendor | null>;
+    reinstateAsync: (id: string, actor: string) => Promise<Vendor | null>;
+  }> = {}
+) {
   const calls: { reason: string }[] = [];
   const stub = {
-    getVendorAsync: () => Promise.resolve(makeVendor()),
-    rejectAsync: (_id: string, reason: string) => {
+    getVendorAsync: overrides.getVendorAsync ?? (() => Promise.resolve(makeVendor())),
+    rejectAsync: (id: string, reason: string, actor: string) => {
       calls.push({ reason });
-      return Promise.resolve(decisionResult);
+      return (overrides.rejectAsync ?? (() => Promise.resolve(null)))(id, reason, actor);
     },
-    suspendAsync: (_id: string, reason: string) => {
+    suspendAsync: (id: string, reason: string, actor: string) => {
       calls.push({ reason });
-      return Promise.resolve(decisionResult);
+      return (overrides.suspendAsync ?? (() => Promise.resolve(null)))(id, reason, actor);
     },
-    approveAsync: () => Promise.resolve(decisionResult),
-    reinstateAsync: () => Promise.resolve(decisionResult),
+    approveAsync: overrides.approveAsync ?? (() => Promise.resolve(null)),
+    reinstateAsync: overrides.reinstateAsync ?? (() => Promise.resolve(null)),
   };
 
   TestBed.resetTestingModule();
@@ -71,6 +80,19 @@ async function makePage(decisionResult: Vendor | null) {
   const page = fixture.componentInstance;
   await page.ngOnInit();
   return { page, calls };
+}
+
+/**
+ * The original shape: every decision method resolves to the same fixed
+ * result, kept for the specs that don't need per-method control.
+ */
+async function makePage(decisionResult: Vendor | null) {
+  return makePageWith({
+    rejectAsync: () => Promise.resolve(decisionResult),
+    suspendAsync: () => Promise.resolve(decisionResult),
+    approveAsync: () => Promise.resolve(decisionResult),
+    reinstateAsync: () => Promise.resolve(decisionResult),
+  });
 }
 
 describe('VendorReviewPageComponent reason panel', () => {
@@ -112,5 +134,45 @@ describe('VendorReviewPageComponent reason panel', () => {
     page.reasonText.set('  Repeated no-shows.  ');
     await page.confirmReason();
     expect(calls).toEqual([{ reason: 'Repeated no-shows.' }]);
+  });
+});
+
+describe('VendorReviewPageComponent in-flight guard', () => {
+  it('ignores a second decision while the first is in flight', async () => {
+    let resolve!: (v: Vendor | null) => void;
+    const pending = new Promise<Vendor | null>(r => (resolve = r));
+    let calls = 0;
+
+    const { page } = await makePageWith({
+      approveAsync: () => {
+        calls++;
+        return pending;
+      },
+    });
+
+    const first = page.approve();
+    void page.approve(); // the double-click
+    expect(calls).toBe(1);
+
+    resolve(makeVendor({ verificationStatus: 'verified' }));
+    await first;
+    expect(page.deciding()).toBe(false);
+  });
+
+  it('will not cancel the reason panel while a decision is in flight', async () => {
+    let resolve!: (v: Vendor | null) => void;
+    const pending = new Promise<Vendor | null>(r => (resolve = r));
+
+    const { page } = await makePageWith({ rejectAsync: () => pending });
+
+    page.startReject();
+    page.reasonText.set('Docs missing.');
+    const run = page.confirmReason();
+
+    page.cancelReason();
+    expect(page.pendingAction()).toBe('reject');
+
+    resolve(makeVendor({ verificationStatus: 'rejected' }));
+    await run;
   });
 });

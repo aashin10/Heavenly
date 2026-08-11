@@ -202,11 +202,15 @@ export class VendorAdminService {
       return vendor;
     } catch (error) {
       const status = (error as { status?: number })?.status;
-      this.toastService.error(
-        status === 409
-          ? 'That action is not allowed for this vendor’s current status.'
-          : 'The decision could not be saved.'
-      );
+      if (status === 409) {
+        // A 409 *is* the server telling us our copy is stale — another admin
+        // acted, or this tab has been open a while. Re-reading is the only
+        // response that leaves the screen true; returning null alone left the
+        // stale badge and the same impossible button on screen forever.
+        this.toastService.error('That vendor’s status changed. Reloading it.');
+        return await this.getVendorAsync(id);
+      }
+      this.toastService.error('The decision could not be saved.');
       return null;
     }
   }
