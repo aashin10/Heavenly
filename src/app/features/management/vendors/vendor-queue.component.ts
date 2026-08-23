@@ -22,6 +22,8 @@ export class VendorQueueComponent implements OnInit {
   readonly stats = this.vendorAdmin.queueStats;
   readonly loading = this.vendorAdmin.queueLoading;
   readonly loadError = this.vendorAdmin.queueError;
+  /** True when there's no server-confirmed count yet — the stat cards render a placeholder instead of a number. */
+  readonly noConfirmedStats = this.vendorAdmin.noConfirmedStats;
 
   readonly filterOptions: { value: VendorFilter; label: string }[] = [
     { value: 'pending', label: 'Pending' },

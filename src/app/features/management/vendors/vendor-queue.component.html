@@ -3,7 +3,7 @@
   <div class="stat-card">
     <div class="stat-content">
       <p class="stat-label">Pending Verification</p>
-      <p class="stat-value stat-value--yellow">{{ stats().pending }}</p>
+      <p class="stat-value stat-value--yellow">{{ noConfirmedStats() ? '—' : stats().pending }}</p>
     </div>
     <div class="stat-icon stat-icon--yellow" aria-hidden="true">
       <app-icon name="clock" [size]="40" />
@@ -13,7 +13,7 @@
   <div class="stat-card">
     <div class="stat-content">
       <p class="stat-label">Verified</p>
-      <p class="stat-value stat-value--green">{{ stats().verified }}</p>
+      <p class="stat-value stat-value--green">{{ noConfirmedStats() ? '—' : stats().verified }}</p>
     </div>
     <div class="stat-icon stat-icon--green" aria-hidden="true">
       <app-icon name="circle-check" [size]="40" />
@@ -23,7 +23,7 @@
   <div class="stat-card">
     <div class="stat-content">
       <p class="stat-label">Rejected</p>
-      <p class="stat-value stat-value--red">{{ stats().rejected }}</p>
+      <p class="stat-value stat-value--red">{{ noConfirmedStats() ? '—' : stats().rejected }}</p>
     </div>
     <div class="stat-icon stat-icon--red" aria-hidden="true">
       <app-icon name="circle-x" [size]="40" />
@@ -33,7 +33,7 @@
   <div class="stat-card">
     <div class="stat-content">
       <p class="stat-label">Suspended</p>
-      <p class="stat-value stat-value--red">{{ stats().suspended }}</p>
+      <p class="stat-value stat-value--red">{{ noConfirmedStats() ? '—' : stats().suspended }}</p>
     </div>
     <div class="stat-icon stat-icon--red" aria-hidden="true">
       <app-icon name="ban" [size]="40" />

@@ -46,7 +46,7 @@ const NO_STATS: VendorQueueStats = { pending: 0, verified: 0, rejected: 0, suspe
 async function renderQueue(
   useRealApi: boolean,
   vendors: Vendor[],
-  opts: { error?: string; loading?: boolean } = {}
+  opts: { error?: string; loading?: boolean; noConfirmedStats?: boolean } = {}
 ) {
   const stub = {
     vendors: signal<Vendor[]>(vendors),
@@ -55,6 +55,7 @@ async function renderQueue(
     refreshAsync: () => Promise.resolve(),
     queueLoading: signal(opts.loading ?? false),
     queueError: signal<string | null>(opts.error ?? null),
+    noConfirmedStats: signal(opts.noConfirmedStats ?? false),
   };
 
   TestBed.resetTestingModule();
@@ -124,5 +125,21 @@ describe('VendorQueueComponent load states', () => {
 
     expect(el.textContent).toContain("Couldn't load the queue");
     expect(el.textContent).not.toContain('No vendors here');
+  });
+
+  it('shows a placeholder, not a fabricated zero, in real-API mode before any load has succeeded', async () => {
+    // Concrete bug this replaces: before the first queue fetch ever succeeds,
+    // `serverStatsSignal()` is null, so the stat cards fell back to computing
+    // from whatever happened to be in `vendorsSignal` — 0 on a fresh browser,
+    // or leftover mock data from earlier local testing. Either way the number
+    // has no server confirmation behind it, and is worse than useless beside
+    // an error state that already says the queue couldn't be loaded.
+    const el = await renderQueue(true, [], {
+      error: 'Could not load the vendor queue.',
+      noConfirmedStats: true,
+    });
+
+    const values = Array.from(el.querySelectorAll('.stat-value')).map(v => v.textContent?.trim());
+    expect(values).toEqual(['—', '—', '—', '—']);
   });
 });

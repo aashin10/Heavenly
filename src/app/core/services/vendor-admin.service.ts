@@ -66,6 +66,17 @@ export class VendorAdminService {
     () => this.serverStatsSignal() ?? this.stats()
   );
 
+  /**
+   * True when running against the real API and no queue fetch has ever
+   * succeeded — `queueStats` has nothing server-confirmed behind it yet, only
+   * whatever `vendorsSignal` happens to hold (empty on a fresh browser, or
+   * stale mock data left over from local testing). A screen reading this
+   * should render a placeholder rather than a specific number it has no
+   * basis for. Always false in mock mode, where `vendorsSignal` *is* the
+   * data and `stats()` computing from it is correct.
+   */
+  readonly noConfirmedStats = computed(() => this.useRealApi && this.serverStatsSignal() === null);
+
   private readonly queueRequest = createRequestState();
 
   /** True while a queue fetch is in flight — the queue renders a loading state. */
