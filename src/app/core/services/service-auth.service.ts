@@ -173,10 +173,27 @@ export class ServiceAuthService {
     }
   }
 
+  /**
+   * A record written before this branch's Task 5 (which collapsed
+   * `businessAddress`/`registeredAddress`/`address` into one `address`
+   * field) has no `address` at all — a bare `JSON.parse` would give
+   * `address === undefined`, and the profile page would silently drop it on
+   * the requester's next save. Normalizing here, once, on read, keeps every
+   * mock path working unchanged on old data, matching the plan's global
+   * constraint that `useRealApi: false` mock paths never regress.
+   */
   private getServiceRequesters(): ServiceRequester[] {
     if (!isPlatformBrowser(this.platformId)) return [];
     const data = localStorage.getItem(SERVICE_USERS_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    const parsed = JSON.parse(data) as (ServiceRequester & {
+      businessAddress?: string;
+      registeredAddress?: string;
+    })[];
+    return parsed.map(r => ({
+      ...r,
+      address: r.address ?? r.businessAddress ?? r.registeredAddress ?? '',
+    }));
   }
 
   private saveServiceRequesters(requesters: ServiceRequester[]): void {
