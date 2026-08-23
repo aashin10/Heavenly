@@ -235,7 +235,18 @@ export class VendorAdminService {
           this.toastService.error(
             'That vendor’s status changed and could not be reloaded. Refresh the page.'
           );
+          return fresh;
         }
+        // Sync the queue's cached row too, matching the success path above —
+        // otherwise an admin who navigates back to the queue without a fresh
+        // mount-triggered refetch still sees the pre-409 stale status there.
+        // Deliberately no `adjustServerStats` call: a 409 means we don't
+        // reliably know what the *previous* status was to adjust from (F17's
+        // `adjustServerStats` bullet already tracks that separately) — this
+        // only syncs the row, not the counts.
+        this.vendorsSignal.update(list =>
+          list.map(v => (v.id === fresh.id ? fresh : v))
+        );
         return fresh;
       }
       this.toastService.error('The decision could not be saved.');
