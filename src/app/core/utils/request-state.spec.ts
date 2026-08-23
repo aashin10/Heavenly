@@ -81,4 +81,37 @@ describe('createRequestState', () => {
     expect(state.error()).toBeNull();
     expect(state.loading()).toBe(false);
   });
+
+  it('reports whether succeed actually took effect', () => {
+    const state = createRequestState();
+    const first = state.begin();
+    const second = state.begin();
+
+    // A stale call is a no-op — callers need to know that to decide whether
+    // their own side effects (a toast, writing other signals) should proceed.
+    expect(state.succeed(first)).toBe(false);
+    expect(state.succeed(second)).toBe(true);
+  });
+
+  it('reports whether fail actually took effect', () => {
+    const state = createRequestState();
+    const first = state.begin();
+    const second = state.begin();
+
+    state.succeed(second);
+    // `first` is now stale — a no-op, and fail() must say so.
+    expect(state.fail(first, 'late failure')).toBe(false);
+
+    const third = state.begin();
+    expect(state.fail(third, 'boom')).toBe(true);
+  });
+
+  it('never reports id 0 as current, even on a fresh instance', () => {
+    // A fresh instance's internal counter starts at 0, so `isCurrent(0)` was
+    // reachable by accident: the exact pattern this primitive replaces
+    // (`private requestId = 0`) makes a stray `0` argument plausible, and a
+    // caller passing one in by mistake must not be told it's current.
+    const state = createRequestState();
+    expect(state.isCurrent(0)).toBe(false);
+  });
 });
