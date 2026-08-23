@@ -1,6 +1,6 @@
 # Heavenly — Consolidated Backlog
 
-**Last updated:** 2026-08-11 · **Maintained on the go** — updated after every coding iteration, not retroactively.
+**Last updated:** 2026-08-23 · **Maintained on the go** — updated after every coding iteration, not retroactively.
 
 Single source of "what's left" across both repos. Detail lives in the linked docs; this file is the prioritised index.
 
@@ -280,7 +280,12 @@ Found in Slice 2's post-merge review (2026-08-06). `refreshAsync` requests `page
 Found in Slice 2's post-merge review (2026-08-06). The wire DTO is honestly nullable but the domain `Vendor` interface declares these fields required, so `vendor-dto.mapper.ts:36-46` invents values: `yearEstablished ?? 0` renders as **"Year Established: 0"**, and `registeredAddress/city/state/pinCode ?? ''` render the address line as **", ,"**, and `designation ?? ''` as **"Jane Doe ()"**. The verification queue is by definition full of incomplete profiles, so this is the common case on the one screen whose whole job is judging completeness — an admin cannot tell "not supplied" from "supplied as zero". `gstNumber` already does this correctly with `|| '—'`. Also: the rejection-reason textarea has no `maxlength` against a server limit of 1000 (`ReviewVendorCommand.cs:46`), and a 400 from exceeding it surfaces as the generic "The decision could not be saved."
 
 ### 🟢 F20. Three CSS custom properties are referenced but never defined
-Found in Slice 3's Task 4 review (2026-08-11). `--yellow-50`, `--green-50`, and `--green-500` are referenced by badge/pill classes (`.status-review`/`.status-accepted` in `vendor-dashboard.page.scss`; at least 6 more sites in `service-requester-dashboard.page.scss`) but `styles.css` only defines the `-100` variants of those tokens — so those badges render with no pill background today. Already worked around locally in one place (`tender-detail.page.scss`, via `var(--yellow-50, var(--warning-bg))`) — someone hit this before and patched around it rather than fixing `styles.css`. One-line fix: add the two missing token values to `styles.css`.
+Found in Slice 3's Task 4 review (2026-08-11). `--yellow-50`, `--green-50`, and `--green-500` are referenced by badge/pill classes (`.status-review`/`.status-accepted` in `vendor-dashboard.page.scss`; at least 6 more sites in `service-requester-dashboard.page.scss`) but `styles.css` only defines the `-100` variants of those tokens — so those badges render with no pill background today. Already worked around locally in one place (`tender-detail.page.scss`, via `var(--yellow-50, var(--warning-bg))`) — someone hit this before and patched around it rather than fixing `styles.css`. Fix: add all three missing token values to `styles.css`.
+
+### 🟢 F21. Two more same-class model divergences, untouched by Slice 3
+Found in the final whole-branch review of `feature/model-divergences` (2026-08-23), right after F5 (below) closed on the exact same class of defect. Neither is fixed here — this is tracking only, matching how F5 itself was first logged.
+- `src/app/features/vendor/vendor.model.ts:10` — `TenderCategory = 'quick_service' | 'mid_complexity' | 'technical'` is a byte-identical duplicate of `ServiceCategory` (`src/app/core/models/service.model.ts:29`, same literal union). Already found and deferred as a Minor during this slice's own Task 1 review, but never given its own tracking item — only a ledger mention.
+- `src/app/features/management/evaluation/evaluation.model.ts` — `BidEvaluation.status: 'submitted' | 'under_review' | 'shortlisted' | 'awarded' | 'rejected'` is an inline union duplicating the concept of `BidStatus` (`src/app/features/vendor/vendor.model.ts:81`), but missing `draft` and `withdrawn` — the same defect pattern `vendor-dashboard.model.ts`'s old inline bid-status union had before Slice 3's Task 4 fixed it (see F5 below). Dormant today (the evaluation feature isn't wired until Slices 7-8), but exactly the kind of thing that bites later if left untracked.
 
 ### ✅ F5. Model divergences — **DONE 2026-08-11 (Slice 3)**
 Re-verified against the code 2026-08-06 while planning Slice 3; two of the original entry's three bullets were imprecise and it missed one — both corrected below, then closed once Slice 3 shipped:
