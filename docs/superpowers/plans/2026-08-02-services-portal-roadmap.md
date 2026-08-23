@@ -20,7 +20,7 @@ Every task's requirements implicitly include this section.
 - **Wire format:** `camelCase` JSON; enums as lowercase `snake_case` strings; dates ISO 8601 UTC; money as integer minor units via the `Money` value object; IDs opaque strings.
 - **Errors:** RFC 9457 Problem Details via `GlobalExceptionHandler`. New endpoints throw `ValidationException` / `NotFoundException` / `ForbiddenException` / `ConflictException` / `DomainException` — never return bespoke shapes. `AuthController`'s legacy shapes are out of scope for this roadmap.
 - **Backend tests:** every new endpoint gets integration tests in `tests/Heavenly-Job.IntegrationTests/`, `[Collection(DatabaseCollection.Name)]`, each test seeding uniquely-keyed rows (`UniqueEmail("prefix")`). Run with `dotnet test`. The suite is **215 tests** as of 2026-08-06 and must stay green.
-- **Frontend tests:** Karma + Jasmine (`ng test`). **40 specs** as of 2026-08-06 (was 1 when this roadmap was written). New specs go beside the file they cover.
+- **Frontend tests:** Karma + Jasmine (`ng test`). **55 specs** as of 2026-08-11 (was 1 when this roadmap was written). New specs go beside the file they cover.
 - **Portal modularity:** nothing under `Application/Features/ServicesPortal/` may reference `Job`, `JobApplication`, or `JobDomain` types, and jobs code may not reference ServicesPortal types. `Vendor.UserId → users.id` is the only permitted cross-module FK.
 - **Sealed bidding is structural, not a display rule.** Vendor-facing DTOs must have no field capable of carrying another vendor's figures; a rival's bid is `404`, never `403`.
 - **Frontend service pattern:** each real-API client is a thin typed `*ApiService` in `src/app/core/api/services-portal/` plus a `*-api.models.ts` of wire DTOs. Existing stateful services keep every mock method unchanged and gain `*Async` siblings that branch on `environment.useRealApi`.
@@ -52,8 +52,8 @@ Ordered so that each slice removes a constraint on the ones after it. Ten slices
 ```
 1  Admin bootstrap + silent refresh      ✅ DONE 2026-08-02  (B11, F1)
 2  Vendor verification queue + review     ✅ DONE 2026-08-03  (F2.5, F9) + post-merge review 08-06 (F16)
-3  Model divergences + async convention   ◀── NEXT  (F5, F10, F12, F17)
-4  Bid submission + my bids
+3  Model divergences + async convention   ✅ DONE 2026-08-11  (F5, F10, F12, F17 loading/error/409)
+4  Bid submission + my bids                ◀── NEXT
 5  Admin request queue + review
 6  Tender create / publish / clarifications
 7  Evaluation scoring backend
@@ -62,7 +62,9 @@ Ordered so that each slice removes a constraint on the ones after it. Ten slices
 10 Flip the flag + full-pipeline pass
 ```
 
-**Status as of 2026-08-06.** Slices 1 and 2 are merged into `dev-agentic` on both repos and pushed. Slice 2 additionally went through a four-reviewer post-merge audit, which found and fixed one Critical (F16 — a granted `ServiceAdmin` could not open `/management` at all, because the frontend guard checked `userType` where the backend checks roles) and logged F17–F19. **One item from Slice 2 remains genuinely unverified: the plan's own Task 8 Step 4 item 7 — "log in as the approved vendor and reach `/vendor-dashboard`" — was never performed.** It is the step the plan calls *the gate*. Slice 4 depends on a verified vendor being able to act, so confirm it before or during Slice 4 rather than assuming it.
+**Status as of 2026-08-11.** Slices 1–3 are merged into `dev-agentic` on the frontend repo (Slice 3 is frontend-only — no backend changes). Slice 2 went through a four-reviewer post-merge audit, which found and fixed one Critical (F16 — a granted `ServiceAdmin` could not open `/management` at all, because the frontend guard checked `userType` where the backend checks roles) and logged F17–F19. **One item from Slice 2 is still genuinely unverified** — the plan's own Task 8 Step 4 item 7, "log in as the approved vendor and reach `/vendor-dashboard`" — Slice 3's own verification gate didn't re-touch it either (its Step 3 checks the vendor *queue* and *review* screens, not a fresh approve-then-log-in-as-that-vendor pass). Still worth confirming before or during Slice 4 rather than assuming it.
+
+Slice 3 (model divergences + the async UI convention) shipped 2026-08-11: closes F5, F10, and F12, plus F17's loading/error/409 halves via the new `core/utils/request-state.ts` primitive. F17's `adjustServerStats` bullet and F14 were explicitly re-checked against the final code and confirmed to remain open — not touched by this slice. Detail: [`docs/BACKLOG.md`](../../BACKLOG.md)'s F5/F10/F12/F14/F17 entries and the [plan file](2026-08-06-slice-3-model-divergences.md)'s SDD ledger.
 
 ---
 
