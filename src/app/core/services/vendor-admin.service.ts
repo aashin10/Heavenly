@@ -119,8 +119,13 @@ export class VendorAdminService {
       // Deliberately does NOT write an empty list or zero counts. Those are
       // assertions about the queue, and a failed request is no evidence for
       // them — writing them rendered a 403 as a confident "0 pending, no
-      // vendors here". The last good data stays on screen behind an error
-      // state, which is both truer and more useful than a fabricated empty.
+      // vendors here". Leaving `vendorsSignal`/`serverStatsSignal` alone
+      // doesn't mean the table stays on screen behind the error, though: the
+      // template's `@if (loadError())` branch is first and unconditional, so
+      // a failed *refresh* still replaces an already-populated table with the
+      // error empty-state. What actually survives is narrower — the stat
+      // cards (via `noConfirmedStats`, which only trips before the *first*
+      // success) and the stale "Vendors (N)" header count — not the rows.
       this.queueRequest.fail(requestId, 'Could not load the vendor queue.');
       this.toastService.error('Could not load the vendor queue.');
     }
