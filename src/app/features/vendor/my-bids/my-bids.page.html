@@ -15,19 +15,19 @@
   <!-- Stats Cards -->
   <div class="stats-grid">
     <button class="stat-card" [class.active]="selectedFilter() === 'all'" (click)="setFilter('all')" type="button">
-      <span class="stat-value">{{ stats().total }}</span>
+      <span class="stat-value">{{ statValue(stats().total) }}</span>
       <span class="stat-label">Total Bids</span>
     </button>
     <button class="stat-card" [class.active]="selectedFilter() === 'under_review'" (click)="setFilter('under_review')" type="button">
-      <span class="stat-value">{{ stats().underReview }}</span>
+      <span class="stat-value">{{ statValue(stats().underReview) }}</span>
       <span class="stat-label">Under Review</span>
     </button>
     <button class="stat-card" [class.active]="selectedFilter() === 'shortlisted'" (click)="setFilter('shortlisted')" type="button">
-      <span class="stat-value">{{ stats().shortlisted }}</span>
+      <span class="stat-value">{{ statValue(stats().shortlisted) }}</span>
       <span class="stat-label">Shortlisted</span>
     </button>
     <button class="stat-card success" [class.active]="selectedFilter() === 'awarded'" (click)="setFilter('awarded')" type="button">
-      <span class="stat-value">{{ stats().awarded }}</span>
+      <span class="stat-value">{{ statValue(stats().awarded) }}</span>
       <span class="stat-label">Awarded</span>
     </button>
   </div>
@@ -60,7 +60,13 @@
   
   <!-- Bids List -->
   <div class="bids-list">
-    @if (filteredBids().length === 0) {
+    @if (loadError()) {
+      <!-- Before the empty state, deliberately. "No bids yet" is a claim about
+           this vendor's bids; a failed request is no evidence for it. -->
+      <app-empty-state icon="circle-x" title="Couldn't load your bids" [message]="loadError()!" />
+    } @else if (loading() && bids().length === 0) {
+      <app-empty-state icon="clock" title="Loading your bids…" message="" />
+    } @else if (filteredBids().length === 0) {
       @if (selectedFilter() !== 'all' || searchQuery()) {
         <app-empty-state
           icon="clipboard-list"
@@ -81,20 +87,25 @@
         </app-empty-state>
       }
     } @else {
+      @if (truncated(); as t) {
+        <p class="list-note">
+          Showing your {{ t.shown }} most recent bids of {{ t.total }}.
+        </p>
+      }
       @for (bid of filteredBids(); track bid.bidId) {
-        <article 
-          class="bid-card" 
+        <article
+          class="bid-card"
           (click)="viewBidDetail(bid.bidId)"
           (keydown.enter)="viewBidDetail(bid.bidId)">
-          <button class="card-action-overlay" (click)="viewBidDetail(bid.bidId)" [attr.aria-label]="'View details for bid ' + bid.bidId"></button>
+          <button class="card-action-overlay" (click)="viewBidDetail(bid.bidId)" [attr.aria-label]="'View details for bid ' + bid.bidNumber"></button>
           <div class="bid-header">
             <div class="bid-info">
-              <span class="bid-id">{{ bid.bidId }}</span>
+              <span class="bid-id">{{ bid.bidNumber }}</span>
               <h3 class="tender-title">{{ bid.tenderTitle }}</h3>
             </div>
             <app-status-badge [status]="bid.status" [label]="getStatusLabel(bid.status)" />
           </div>
-          
+
           <div class="bid-details">
             <div class="detail-item">
               <span class="detail-label">Bid Amount</span>
@@ -109,7 +120,7 @@
               <span class="detail-value">{{ bid.tenderClosingDate | appDate }}</span>
             </div>
           </div>
-          
+
           @if (bid.status === 'shortlisted' || bid.status === 'awarded') {
             <div class="bid-footer success">
               @if (bid.status === 'awarded') {
@@ -119,13 +130,13 @@
               }
             </div>
           }
-          
+
           @if (bid.status === 'rejected') {
             <div class="bid-footer rejected">
               <span class="rejection-notice">Your bid was not selected. You can view feedback if available.</span>
             </div>
           }
-          
+
           <div class="bid-actions">
             <button class="btn-action" (click)="$event.stopPropagation(); viewTender(bid.tenderId)">
               View Tender

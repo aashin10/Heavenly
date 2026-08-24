@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { VendorTenderService } from '../vendor.service';
-import { Bid, BidStatus } from '../vendor.model';
+import { BidStatus } from '../vendor.model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
@@ -20,7 +20,17 @@ export class MyBidsPageComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly vendorService = inject(VendorTenderService);
 
-  bids = signal<Bid[]>([]);
+  /**
+   * Read from the service's own signal, not snapshotted in ngOnInit. A
+   * one-time read landed before the fetch resolved and never updated — the
+   * same race fixed three times in F2.1–F2.4.
+   */
+  readonly bids = this.vendorService.bids;
+  readonly loading = this.vendorService.bidsLoading;
+  readonly loadError = this.vendorService.bidsError;
+  readonly truncated = this.vendorService.bidsTruncated;
+  readonly noConfirmedBids = this.vendorService.noConfirmedBids;
+
   selectedFilter = signal<string>('all');
   searchQuery = signal('');
 
@@ -45,9 +55,9 @@ export class MyBidsPageComponent implements OnInit {
 
     // Filter by search query
     if (query) {
-      result = result.filter(bid => 
+      result = result.filter(bid =>
         bid.tenderTitle.toLowerCase().includes(query) ||
-        bid.bidId.toLowerCase().includes(query)
+        bid.bidNumber.toLowerCase().includes(query)
       );
     }
 
@@ -70,12 +80,19 @@ export class MyBidsPageComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadBids();
+    // Fire-and-forget: `filteredBids` is a computed over the service's signal,
+    // so it re-renders when the load lands. Same pattern as the vendor queue.
+    void this.vendorService.refreshBidsAsync();
   }
 
-  private loadBids(): void {
-    const bids = this.vendorService.getMyBids();
-    this.bids.set(bids);
+  /**
+   * A count over the rows we hold. That is the whole truth in mock mode and
+   * whenever the list fits one page; when it doesn't, or before any load has
+   * succeeded, there is no number we can honestly print here — no per-status
+   * count endpoint exists — so print a placeholder instead of a wrong number.
+   */
+  statValue(count: number): string {
+    return this.noConfirmedBids() || this.truncated() ? '—' : String(count);
   }
 
   setFilter(filter: string): void {
