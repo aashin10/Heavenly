@@ -82,7 +82,11 @@ export class TenderDetailPageComponent implements OnInit {
       this.showEligibilityModal.set(true);
       return;
     }
-    this.router.navigate(['/vendor/bid/submit', this.tenderId]);
+    // Was '/vendor/bid/submit', which no route declares — it hit the `**`
+    // catch-all and served the 404 page. The route is `vendor/tenders/:id/bid`
+    // (vendor.routes.ts), and `bid-submission.page.ts` reads the tender id
+    // from `params['id']` accordingly.
+    this.router.navigate(['/vendor/tenders', this.tenderId, 'bid']);
   }
 
   viewMyBid(): void {

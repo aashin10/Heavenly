@@ -764,8 +764,7 @@ export class VendorTenderService {
   // has no endpoints for them (confirmed against TendersController).
   // saveTenderForLater/removeSavedTender/isTenderSaved/markTenderNotInterested
   // stay exactly as they are above, client-side only, regardless of
-  // useRealApi. getMyBidStatus stays mocked here too — it belongs to the Bid
-  // API, and Task 9 is what gives per-tender bid status its own real path.
+  // useRealApi.
 
   /** Replaces the mock-seeded tender list with the vendor's real matched tenders. */
   private async refreshTendersAsync(): Promise<void> {
@@ -787,7 +786,12 @@ export class VendorTenderService {
    */
   async getTenderDetailBundleAsync(
     tenderId: string
-  ): Promise<{ tender: PublishedTender; clarifications: TenderClarification[]; eligibility: EligibilityResult } | null> {
+  ): Promise<{
+    tender: PublishedTender;
+    clarifications: TenderClarification[];
+    eligibility: EligibilityResult;
+    bidStatus: BidStatusResult;
+  } | null> {
     if (!environment.useRealApi) {
       const tender = this.getTenderDetail(tenderId);
       if (!tender) return null;
@@ -795,6 +799,7 @@ export class VendorTenderService {
         tender,
         clarifications: this.getTenderClarifications(tenderId),
         eligibility: this.checkTenderEligibility(tenderId),
+        bidStatus: this.getMyBidStatus(tenderId),
       };
     }
 
@@ -811,6 +816,14 @@ export class VendorTenderService {
           // reasons — nothing here to split it back into.
           missingRequirements: [],
         },
+        bidStatus: dto.myBid
+          ? {
+              submitted: true,
+              status: dto.myBid.status,
+              bidId: dto.myBid.id,
+              bidNumber: dto.myBid.bidNumber,
+            }
+          : { submitted: false },
       };
     } catch {
       return null;

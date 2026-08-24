@@ -474,15 +474,43 @@
             <input type="checkbox" id="finalConfirmation" [checked]="finalConfirmation()" (change)="finalConfirmation.set(!finalConfirmation())">
             <span class="checkbox-mark"></span>
             <span class="checkbox-label">
-              I confirm that all information provided is accurate and I agree to the 
+              I confirm that all information provided is accurate and I agree to the
               <a href="/terms" target="_blank">Terms &amp; Conditions</a>
             </span>
           </label>
         </div>
+
+        @if (submitRefusal(); as refusal) {
+          <div class="submit-refusal" role="alert">
+            @switch (refusal.kind) {
+              @case ('ineligible') {
+                <h3>This bid was not accepted</h3>
+                <p>The tender's requirements are checked when you submit, not when you tick the box:</p>
+                <ul>
+                  @for (reason of refusal.reasons; track reason) {
+                    <li>{{ reason }}</li>
+                  }
+                </ul>
+              }
+              @case ('validation') {
+                <h3>Some answers need fixing</h3>
+                <ul>
+                  @for (message of refusal.messages; track message) {
+                    <li>{{ message }}</li>
+                  }
+                </ul>
+              }
+              @default {
+                <h3>This bid was not accepted</h3>
+                <p>{{ refusal.message }}</p>
+              }
+            }
+          </div>
+        }
       </div>
     }
   </form>
-  
+
   <!-- Navigation Buttons -->
   <div class="form-actions">
     @if (currentStep() > 1) {
@@ -490,22 +518,22 @@
     } @else {
       <div></div>
     }
-    
+
     <button type="button" class="btn btn-link" (click)="saveDraftAndExit()">
       Save & Exit
     </button>
-    
+
     @if (currentStep() < totalSteps) {
       <button type="button" class="btn btn-primary" (click)="nextStep()">
         Next <app-icon name="arrow-right" [size]="16" />
       </button>
     } @else {
-      <button 
-        type="button" 
-        class="btn btn-primary btn-lg" 
-        (click)="submitBid()"
-        [disabled]="!finalConfirmation() || bidForm.invalid">
-        Submit Bid
+      <button
+        class="btn btn-primary"
+        type="button"
+        [disabled]="submitting() || biddingClosed()"
+        (click)="submitBid()">
+        {{ submitting() ? 'Submitting…' : 'Submit Bid' }}
       </button>
     }
   </div>
