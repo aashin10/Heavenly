@@ -4,17 +4,16 @@
 // re-exported so vendor.service.ts's `import { BudgetVisibility } from
 // './vendor.model'` keeps working — `export type {...} from '...'` alone
 // re-exports a name without binding it into this file's own scope.
-import type { BidStatus, BudgetVisibility } from '../../core/models/service.model';
-export type { BidStatus, BudgetVisibility } from '../../core/models/service.model';
+import type { BidStatus, BudgetVisibility, ServiceCategory } from '../../core/models/service.model';
+export type { BidStatus, BudgetVisibility, ServiceCategory } from '../../core/models/service.model';
 
-export type TenderCategory = 'quick_service' | 'mid_complexity' | 'technical';
 export type TenderStatus = 'published' | 'closed' | 'cancelled' | 'awarded';
 
 export interface PublishedTender {
   id: string;
   tenderId: string;
   title: string;
-  category: TenderCategory;
+  category: ServiceCategory;
   categoryLabel: string;
   
   // Location
@@ -99,25 +98,63 @@ export interface CommercialProposal {
   amcPricing: string;
 }
 
-export interface Bid {
+/** One status change on a bid — append-only. This is the real history; nothing derives it from the current status. */
+export interface BidEvent {
+  fromStatus?: BidStatus;
+  toStatus: BidStatus;
+  note?: string;
+  occurredAt: string;
+}
+
+/**
+ * One row of `/vendor/bids`.
+ *
+ * Deliberately **not** a `Bid` with blank proposals. `GET /api/bids/mine`
+ * carries no proposal — the detail route does — and a blank-filled `Bid` would
+ * let the detail page render an empty Technical Proposal as though the vendor
+ * had submitted one. Two shapes is correct; sharing the name would be the
+ * defect (the same call Slice 3 made for `AdminServiceRequest`).
+ */
+export interface BidSummary {
+  /** Opaque server id. This is the route key for `/vendor/bids/:id`. */
   bidId: string;
+  /** Human reference, e.g. `BID-2026-00231`. This is what the UI shows. */
+  bidNumber: string;
   tenderId: string;
+  tenderNumber: string;
   tenderTitle: string;
+  /**
+   * Only `GET /api/bids/mine` carries a category — `GET /api/bids/{id}` does
+   * not. Optional rather than defaulted, because a made-up 'quick_service' on
+   * a detail-sourced bid is exactly the fabricated data this codebase keeps
+   * removing. Nothing in Slice 4 renders it; it is here because the list
+   * endpoint sends it and Slice 8 will want it.
+   */
+  category?: ServiceCategory;
+  status: BidStatus;
+  bidAmount: number;
+  /** '' when the tender has no closing date, so the date pipe renders nothing rather than "Invalid Date". */
   tenderClosingDate: string;
+  submittedAt: string;
+}
+
+/** A bid in full — `GET /api/bids/{id}`. */
+export interface Bid extends BidSummary {
   vendorId: string;
-  
-  // Proposals
   technicalProposal: TechnicalProposal;
   commercialProposal: CommercialProposal;
-  bidAmount: number;
-  
-  // Status
-  status: BidStatus;
-  submittedAt: string;
   updatedAt?: string;
-  
-  // Rejection reason (if applicable)
+  /** The only feedback an unsuccessful vendor receives. */
   rejectionReason?: string;
+  /**
+   * Whether a withdraw would be accepted right now. Server-computed: it is
+   * status **and** an open bid window, and an admin can close a tender early.
+   * Never derive this from `status` — that is what makes the control honest.
+   */
+  canWithdraw: boolean;
+  /** Still in contention. */
+  isLive: boolean;
+  events: BidEvent[];
 }
 
 export interface WorkReference {
@@ -144,6 +181,8 @@ export interface BidDraft {
   tenderId: string;
   formData: Partial<BidFormData>;
   currentStep: number;
+  /** Required by `PUT /api/bids/drafts/{tenderId}`, which validates 1..20 and `currentStep <= totalSteps`. */
+  totalSteps: number;
   lastSaved: string;
 }
 
@@ -223,5 +262,8 @@ export interface EligibilityResult {
 export interface BidStatusResult {
   submitted: boolean;
   status?: BidStatus;
+  /** Opaque id — used to route to `/vendor/bids/:id`. */
   bidId?: string;
+  /** Human reference, for display. */
+  bidNumber?: string;
 }

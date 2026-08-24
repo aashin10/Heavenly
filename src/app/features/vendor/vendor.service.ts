@@ -359,14 +359,19 @@ export class VendorTenderService {
   submitBid(bidData: BidFormData, tenderId: string): { bidId: string } {
     const tender = this.getTenderDetail(tenderId);
     const bidId = `BID-${Date.now()}`;
-    
+
     const newBid: Bid = {
       bidId,
+      // The mock has no number generator; the id doubles as the reference, which
+      // is what it already displayed everywhere before the two were separated.
+      bidNumber: bidId,
       tenderId,
+      tenderNumber: tender?.tenderId ?? '',
       tenderTitle: tender?.title || 'Unknown Tender',
+      category: tender?.category ?? 'quick_service',
       tenderClosingDate: tender?.bidWindowEnd || new Date().toISOString(),
       vendorId: 'current-vendor', // Would come from auth service
-      
+
       // Technical Proposal
       technicalProposal: {
         companyProfile: bidData.companyProfile,
@@ -378,7 +383,7 @@ export class VendorTenderService {
         deliveryTimeline: bidData.deliveryTimeline,
         deviations: bidData.deviations
       },
-      
+
       // Commercial Proposal
       commercialProposal: {
         totalPrice: bidData.totalPrice,
@@ -389,12 +394,15 @@ export class VendorTenderService {
         warrantyPricing: bidData.warrantyPricing,
         amcPricing: bidData.amcPricing
       },
-      
+
       bidAmount: bidData.totalPrice,
       status: 'submitted',
-      submittedAt: new Date().toISOString()
+      submittedAt: new Date().toISOString(),
+      canWithdraw: true,
+      isLive: true,
+      events: [{ toStatus: 'submitted', note: 'Submitted', occurredAt: new Date().toISOString() }]
     };
-    
+
     const bids = [...this.bidsSignal(), newBid];
     this.bidsSignal.set(bids);
     this.saveBids();
@@ -420,8 +428,11 @@ export class VendorTenderService {
   }
 
   withdrawBid(bidId: string): boolean {
-    const bids = this.bidsSignal().map(b => 
-      b.bidId === bidId ? { ...b, status: 'withdrawn' as BidStatus, updatedAt: new Date().toISOString() } : b
+    const bids = this.bidsSignal().map(b =>
+      b.bidId === bidId
+        ? { ...b, status: 'withdrawn' as BidStatus, canWithdraw: false, isLive: false,
+            updatedAt: new Date().toISOString() }
+        : b
     );
     this.bidsSignal.set(bids);
     this.saveBids();

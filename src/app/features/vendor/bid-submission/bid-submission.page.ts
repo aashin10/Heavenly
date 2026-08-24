@@ -207,6 +207,7 @@ export class BidSubmissionPageComponent implements OnInit, OnDestroy {
       tenderId: this.tenderId,
       formData: this.bidForm.value,
       currentStep: this.currentStep(),
+      totalSteps: this.totalSteps,
       lastSaved: new Date().toISOString()
     };
     
