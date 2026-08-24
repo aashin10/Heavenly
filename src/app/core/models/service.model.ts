@@ -40,6 +40,23 @@ export type BudgetVisibility = 'show_exact' | 'show_range' | 'hide';
 /** How a tender selects its bidders. Mirrors `TenderType.cs`. */
 export type TenderType = 'open' | 'limited' | 'single';
 
+/**
+ * Where a bid sits in the evaluation pipeline. Mirrors `BidStatus.cs` exactly.
+ *
+ * `draft` is only ever a `BidDraft`'s state — a persisted bid row never carries
+ * it, which is why `COUNT(*)` over bids is always the number of real bids.
+ * Lives here rather than in `features/vendor/` so `core/api/` can name it
+ * without importing upward, the same move Slice 3 made for `BudgetVisibility`.
+ */
+export type BidStatus =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'shortlisted'
+  | 'awarded'
+  | 'rejected'
+  | 'withdrawn';
+
 /** Service category metadata */
 export interface ServiceCategoryInfo {
   id: ServiceCategory;

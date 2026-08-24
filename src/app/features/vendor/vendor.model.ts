@@ -4,8 +4,8 @@
 // re-exported so vendor.service.ts's `import { BudgetVisibility } from
 // './vendor.model'` keeps working — `export type {...} from '...'` alone
 // re-exports a name without binding it into this file's own scope.
-import type { BudgetVisibility } from '../../core/models/service.model';
-export type { BudgetVisibility } from '../../core/models/service.model';
+import type { BidStatus, BudgetVisibility } from '../../core/models/service.model';
+export type { BidStatus, BudgetVisibility } from '../../core/models/service.model';
 
 export type TenderCategory = 'quick_service' | 'mid_complexity' | 'technical';
 export type TenderStatus = 'published' | 'closed' | 'cancelled' | 'awarded';
@@ -78,15 +78,6 @@ export interface TenderClarification {
 }
 
 // ==================== BID MODELS ====================
-export type BidStatus = 
-  | 'draft' 
-  | 'submitted' 
-  | 'under_review' 
-  | 'shortlisted' 
-  | 'awarded' 
-  | 'rejected' 
-  | 'withdrawn';
-
 export interface TechnicalProposal {
   companyProfile: string;
   relevantExperience: string;

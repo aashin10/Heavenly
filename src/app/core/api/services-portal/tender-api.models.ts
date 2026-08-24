@@ -1,7 +1,7 @@
 /**
  * Wire types for the .NET vendor-facing tender API (backend B2.5).
  */
-import { ServiceCategory } from '../../models/service.model';
+import { BidStatus, ServiceCategory } from '../../models/service.model';
 
 /**
  * The budget as a vendor is allowed to see it. Under `hide` this whole object
@@ -52,6 +52,19 @@ export interface TenderEligibilityResultDto {
   reasons: string[];
 }
 
+/**
+ * The caller's own bid on this tender, from `GET /api/tenders/{id}`.
+ *
+ * Present whatever its status, **withdrawn included** — a withdrawn bid still
+ * spends the vendor's one slot (unique index on tender+vendor), so treating it
+ * as "no bid" would offer a Submit button the server refuses with 409.
+ */
+export interface MyBidSummaryDto {
+  id: string;
+  bidNumber: string;
+  status: BidStatus;
+}
+
 /** One tender in full, as a vendor sees it — `GET /api/tenders/{id}`. */
 export interface VendorTenderDto {
   id: string;
@@ -83,6 +96,7 @@ export interface VendorTenderDto {
   attachments: TenderAttachmentDto[];
   clarifications: TenderClarificationDto[];
   publishedAt: string | null;
+  myBid: MyBidSummaryDto | null;
 }
 
 /** One row of the vendor's tender browse — `GET /api/tenders`. */
