@@ -6,9 +6,13 @@ import {
   PublishedTender,
   Bid,
   BidDraft,
+  BidDraftSaveResult,
   BidFormData,
+  BidSubmitResult,
+  BidSummary,
   TenderClarification,
   VendorDashboardStats,
+  VendorBidStats,
   ProfileCompletion,
   UrgentAction,
   FilterOptions,
@@ -19,9 +23,11 @@ import {
   BudgetVisibility,
   TenderStatus
 } from './vendor.model';
+import { mapBidDraftDto, mapBidDto, mapBidSummaryDto, toBidSummary, toSubmitBidRequest } from './bid-dto.mapper';
 import { ToastService } from '../../core/services/toast.service';
 import { environment } from '../../../environments/environment';
 import { TenderApiService } from '../../core/api/services-portal/tender-api.service';
+import { BidApiService } from '../../core/api/services-portal/bid-api.service';
 import {
   TenderBudgetDto,
   TenderClarificationDto,
@@ -29,6 +35,8 @@ import {
   VendorTenderDto,
   TenderOpportunityDto,
 } from '../../core/api/services-portal/tender-api.models';
+import { createRequestState } from '../../core/utils/request-state';
+import { problemDetail, problemStatus, problemFieldErrors, problemMessages } from '../../core/utils/problem-details';
 
 const TENDERS_KEY = 'heavenly_published_tenders';
 const BIDS_KEY = 'heavenly_vendor_bids';
@@ -43,10 +51,14 @@ export class VendorTenderService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly toastService = inject(ToastService);
   private readonly tenderApi = inject(TenderApiService);
+  private readonly bidApi = inject(BidApiService);
+
+  readonly useRealApi = environment.useRealApi;
 
   // Signals
   private readonly tendersSignal = signal<PublishedTender[]>([]);
-  private readonly bidsSignal = signal<Bid[]>([]);
+  /** The mock's full-bid store — `loadBids`/`saveBids` read and write `BIDS_KEY` here. Empty in real-API mode. */
+  private readonly mockBidsSignal = signal<Bid[]>([]);
   private readonly draftsSignal = signal<BidDraft[]>([]);
   private readonly savedTendersSignal = signal<string[]>([]);
   private readonly clarificationsSignal = signal<TenderClarification[]>([]);
@@ -58,9 +70,41 @@ export class VendorTenderService {
     searchQuery: ''
   });
 
+  /** Real-API list rows. Empty in mock mode, where `mockBidsSignal` is the data. */
+  private readonly remoteBidsSignal = signal<BidSummary[]>([]);
+
+  /**
+   * The bid list, whichever mode is running.
+   *
+   * A computed over two private sources rather than one signal both write to:
+   * the mock has to keep full `Bid`s (it is also the detail store), the API
+   * sends `BidSummary` rows, and a single signal would need synchronising code
+   * that could get out of step. Screens read this and never learn which mode
+   * they are in.
+   */
+  readonly bids = computed<BidSummary[]>(() =>
+    this.useRealApi ? this.remoteBidsSignal() : this.mockBidsSignal().map(toBidSummary)
+  );
+
+  private readonly bidsRequest = createRequestState();
+  readonly bidsLoading = this.bidsRequest.loading;
+  readonly bidsError = this.bidsRequest.error;
+
+  /** Set when the server holds more bids than the single page we fetched. Null when it doesn't. */
+  private readonly bidsTruncatedSignal = signal<{ shown: number; total: number } | null>(null);
+  readonly bidsTruncated = this.bidsTruncatedSignal.asReadonly();
+
+  /**
+   * True in real-API mode until a bid fetch has succeeded at least once. A
+   * screen reading this shows a placeholder rather than "0 bids", which is a
+   * claim it has no evidence for — the same rule `noConfirmedStats` enforces
+   * on the vendor queue.
+   */
+  private readonly bidsLoadedSignal = signal(false);
+  readonly noConfirmedBids = computed(() => this.useRealApi && !this.bidsLoadedSignal());
+
   // Public readonly signals
   readonly tenders = this.tendersSignal.asReadonly();
-  readonly bids = this.bidsSignal.asReadonly();
   readonly savedTenders = this.savedTendersSignal.asReadonly();
   readonly filters = this.filtersSignal.asReadonly();
 
@@ -111,13 +155,13 @@ export class VendorTenderService {
   });
 
   readonly activeBids = computed(() => {
-    return this.bidsSignal().filter(b => 
+    return this.bids().filter(b =>
       b.status === 'submitted' || b.status === 'under_review' || b.status === 'shortlisted'
     );
   });
 
   readonly stats = computed<VendorDashboardStats>(() => {
-    const bids = this.bidsSignal();
+    const bids = this.bids();
     const tenders = this.tendersSignal().filter(t => t.status === 'published');
     
     return {
@@ -170,9 +214,9 @@ export class VendorTenderService {
     const saved = localStorage.getItem(BIDS_KEY);
     if (saved) {
       try {
-        this.bidsSignal.set(JSON.parse(saved));
+        this.mockBidsSignal.set(JSON.parse(saved));
       } catch {
-        this.bidsSignal.set([]);
+        this.mockBidsSignal.set([]);
       }
     }
   }
@@ -219,7 +263,7 @@ export class VendorTenderService {
 
   private saveBids(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    localStorage.setItem(BIDS_KEY, JSON.stringify(this.bidsSignal()));
+    localStorage.setItem(BIDS_KEY, JSON.stringify(this.mockBidsSignal()));
   }
 
   private saveDrafts(): void {
@@ -324,7 +368,7 @@ export class VendorTenderService {
   }
 
   getMyBidStatus(tenderId: string): BidStatusResult {
-    const bid = this.bidsSignal().find(b => b.tenderId === tenderId);
+    const bid = this.mockBidsSignal().find(b => b.tenderId === tenderId);
     if (!bid) {
       return { submitted: false };
     }
@@ -403,8 +447,8 @@ export class VendorTenderService {
       events: [{ toStatus: 'submitted', note: 'Submitted', occurredAt: new Date().toISOString() }]
     };
 
-    const bids = [...this.bidsSignal(), newBid];
-    this.bidsSignal.set(bids);
+    const bids = [...this.mockBidsSignal(), newBid];
+    this.mockBidsSignal.set(bids);
     this.saveBids();
     
     // Clear draft
@@ -415,26 +459,26 @@ export class VendorTenderService {
   }
 
   getMyBids(): Bid[] {
-    return this.bidsSignal();
+    return this.mockBidsSignal();
   }
 
   getMyBidsFiltered(status?: BidStatus): Bid[] {
-    if (!status || status === 'draft') return this.bidsSignal();
-    return this.bidsSignal().filter(b => b.status === status);
+    if (!status || status === 'draft') return this.mockBidsSignal();
+    return this.mockBidsSignal().filter(b => b.status === status);
   }
 
   getBidDetail(bidId: string): Bid | undefined {
-    return this.bidsSignal().find(b => b.bidId === bidId);
+    return this.mockBidsSignal().find(b => b.bidId === bidId);
   }
 
   withdrawBid(bidId: string): boolean {
-    const bids = this.bidsSignal().map(b =>
+    const bids = this.mockBidsSignal().map(b =>
       b.bidId === bidId
         ? { ...b, status: 'withdrawn' as BidStatus, canWithdraw: false, isLive: false,
             updatedAt: new Date().toISOString() }
         : b
     );
-    this.bidsSignal.set(bids);
+    this.mockBidsSignal.set(bids);
     this.saveBids();
     this.toastService.success('Bid withdrawn successfully');
     return true;
@@ -716,12 +760,12 @@ export class VendorTenderService {
 
   // ==================== real API (behind environment.useRealApi) ====================
   //
-  // Saved tenders, "not interested", and per-tender bid status have no
-  // backend counterpart — the API has no endpoints for them (confirmed
-  // against TendersController; bid status genuinely belongs to the Bid API,
-  // out of scope here). saveTenderForLater/removeSavedTender/isTenderSaved/
-  // markTenderNotInterested/getMyBidStatus stay exactly as they are above,
-  // client-side only, regardless of useRealApi.
+  // Saved tenders and "not interested" have no backend counterpart — the API
+  // has no endpoints for them (confirmed against TendersController).
+  // saveTenderForLater/removeSavedTender/isTenderSaved/markTenderNotInterested
+  // stay exactly as they are above, client-side only, regardless of
+  // useRealApi. getMyBidStatus stays mocked here too — it belongs to the Bid
+  // API, and Task 9 is what gives per-tender bid status its own real path.
 
   /** Replaces the mock-seeded tender list with the vendor's real matched tenders. */
   private async refreshTendersAsync(): Promise<void> {
@@ -791,6 +835,209 @@ export class VendorTenderService {
       return mapClarificationDto(dto, tenderId);
     } catch {
       this.toastService.error('Could not submit your question. Please try again.');
+      return null;
+    }
+  }
+
+  /**
+   * Replaces the bid list from `GET /api/bids/mine`.
+   *
+   * Fetched unfiltered at the server's maximum page size and filtered on the
+   * client, because the status tabs sit beside stat cards that count *across*
+   * statuses and there is no per-status count endpoint. That caps us at 100 —
+   * so when there are more, `bidsTruncated` records it and the screen says so.
+   * F18 is on the backlog because the vendor queue truncates *silently*.
+   */
+  async refreshBidsAsync(): Promise<void> {
+    if (!this.useRealApi) return;
+
+    const requestId = this.bidsRequest.begin();
+
+    try {
+      const page = await firstValueFrom(this.bidApi.mine({ pageSize: 100 }));
+      if (!this.bidsRequest.isCurrent(requestId)) return;
+
+      this.remoteBidsSignal.set(page.items.map(mapBidSummaryDto));
+      this.bidsTruncatedSignal.set(
+        page.totalCount > page.items.length
+          ? { shown: page.items.length, total: page.totalCount }
+          : null
+      );
+      this.bidsLoadedSignal.set(true);
+      this.bidsRequest.succeed(requestId);
+    } catch (error) {
+      if (!this.bidsRequest.isCurrent(requestId)) return;
+      // Deliberately writes neither an empty list nor a zeroed count: both are
+      // assertions about the vendor's bids, and a failed request is no
+      // evidence for either. `request-state.ts`'s rule 2.
+      const message = problemDetail(error, 'Could not load your bids.');
+      this.bidsRequest.fail(requestId, message);
+      this.toastService.error(message);
+    }
+  }
+
+  /** One bid in full. Mock mode reads the local store; real mode always fetches — a list row has no proposal. */
+  async getBidDetailAsync(bidId: string): Promise<Bid | null> {
+    if (!this.useRealApi) return this.getBidDetail(bidId) ?? null;
+
+    try {
+      return mapBidDto(await firstValueFrom(this.bidApi.getById(bidId)));
+    } catch {
+      // Another vendor's bid is a 404 here, never a 403 — the API refuses to
+      // confirm it exists, and this must not either.
+      return null;
+    }
+  }
+
+  /**
+   * Withdraws a bid.
+   *
+   * A 409 means the window shut between the page rendering and the click. Like
+   * Slice 3's `decide()`, the only honest response is a fresh read: returning
+   * null would leave a Withdraw button on screen that can never work.
+   */
+  async withdrawBidAsync(bidId: string, reason?: string): Promise<Bid | null> {
+    if (!this.useRealApi) return this.withdrawBid(bidId) ? this.getBidDetail(bidId) ?? null : null;
+
+    try {
+      const bid = mapBidDto(await firstValueFrom(this.bidApi.withdraw(bidId, reason)));
+      this.toastService.success('Bid withdrawn.');
+      this.remoteBidsSignal.update(list =>
+        list.map(row => (row.bidId === bid.bidId ? { ...row, status: bid.status } : row))
+      );
+      return bid;
+    } catch (error) {
+      if (problemStatus(error) === 409) {
+        this.toastService.error(problemDetail(error, 'Bidding has closed.'));
+        const fresh = await this.getBidDetailAsync(bidId);
+        if (!fresh) {
+          this.toastService.error('That bid could not be reloaded. Refresh the page.');
+        }
+        return fresh;
+      }
+      this.toastService.error(problemDetail(error, 'The bid could not be withdrawn.'));
+      return null;
+    }
+  }
+
+  /**
+   * The caller's draft for a tender, or null when there isn't one.
+   *
+   * **A 404 is the normal first visit**, not a failure — the endpoint has no
+   * "empty draft" response. Treating it as an error would put a banner on a
+   * blank form every time a vendor opens one for the first time.
+   */
+  async getBidDraftAsync(tenderId: string): Promise<BidDraft | null> {
+    if (!this.useRealApi) return this.getBidDraft(tenderId);
+
+    try {
+      return mapBidDraftDto(await firstValueFrom(this.bidApi.getDraft(tenderId)));
+    } catch (error) {
+      if (problemStatus(error) === 404) return null;
+      this.toastService.error(problemDetail(error, 'Could not load your saved draft.'));
+      return null;
+    }
+  }
+
+  /**
+   * Saves a draft. Returns `closed` on the 409 the server sends once a tender
+   * stops accepting bids, so an autosave loop can stop rather than toast every
+   * thirty seconds about a tender that is not coming back.
+   */
+  async saveBidDraftAsync(draft: BidDraft): Promise<BidDraftSaveResult> {
+    if (!this.useRealApi) {
+      this.saveBidDraft(draft);
+      return 'saved';
+    }
+
+    try {
+      await firstValueFrom(
+        this.bidApi.saveDraft(draft.tenderId, {
+          currentStep: draft.currentStep,
+          totalSteps: draft.totalSteps,
+          formData: draft.formData as Record<string, unknown>,
+        })
+      );
+      return 'saved';
+    } catch (error) {
+      return problemStatus(error) === 409 ? 'closed' : 'failed';
+    }
+  }
+
+  /**
+   * Submits a bid.
+   *
+   * Every refusal is classified rather than collapsed: the server is the only
+   * thing that knows whether the vendor is ineligible, has already bid, or
+   * mistyped a price, and each of those needs a different screen. The draft is
+   * deleted server-side in the same transaction — do **not** follow a success
+   * with a draft-delete call, which is the exact shape of the F2.3 bug where a
+   * redundant cleanup 404'd and reported a successful submit as a failure.
+   */
+  async submitBidAsync(bidData: BidFormData, tenderId: string): Promise<BidSubmitResult> {
+    if (!this.useRealApi) {
+      const { bidId } = this.submitBid(bidData, tenderId);
+      return { ok: true, bidId, bidNumber: bidId };
+    }
+
+    try {
+      const dto = await firstValueFrom(
+        this.bidApi.submit(tenderId, toSubmitBidRequest(bidData))
+      );
+      this.toastService.success('Bid submitted successfully!');
+      // Drop the local draft copy too: the server already deleted its own, and
+      // leaving ours offers "resume your draft" for a bid already submitted.
+      this.clearBidDraft(tenderId);
+      return { ok: true, bidId: dto.id, bidNumber: dto.bidNumber };
+    } catch (error) {
+      switch (problemStatus(error)) {
+        case 403:
+          return {
+            ok: false,
+            kind: 'ineligible',
+            // The server lists every failure in one sentence, on purpose — a
+            // vendor told only about insurance fixes that, retries, and is then
+            // told about experience. Split it back into lines to show them.
+            reasons: splitEligibilityReasons(
+              problemDetail(error, 'You do not meet this tender’s requirements.')
+            ),
+          };
+        case 400:
+          return {
+            ok: false,
+            kind: 'validation',
+            fieldErrors: problemFieldErrors(error),
+            messages: problemMessages(error),
+          };
+        case 409:
+          return {
+            ok: false,
+            kind: 'conflict',
+            message: problemDetail(error, 'This tender is no longer accepting bids.'),
+          };
+        default:
+          return {
+            ok: false,
+            kind: 'failed',
+            message: problemDetail(error, 'The bid could not be submitted.'),
+          };
+      }
+    }
+  }
+
+  /** `GET /api/bids/mine/stats`. Null on failure — the caller shows a placeholder, never a zero. */
+  async getVendorBidStatsAsync(): Promise<VendorBidStats | null> {
+    if (!this.useRealApi) return null;
+
+    try {
+      const dto = await firstValueFrom(this.bidApi.myStats());
+      return {
+        openTenders: dto.openTenders,
+        myBids: dto.myBids,
+        wonBids: dto.wonBids,
+        activeProjects: dto.activeProjects,
+      };
+    } catch {
       return null;
     }
   }
@@ -945,4 +1192,18 @@ function mapClarificationDto(dto: TenderClarificationDto, tenderId: string): Ten
     answer: dto.answer ?? undefined,
     answeredAt: dto.answeredAt ?? undefined,
   };
+}
+
+/**
+ * `ForbiddenException` joins every eligibility failure into one sentence after
+ * a "requirements:" prefix. Each failure is itself a full sentence ending in a
+ * period, so splitting on that boundary recovers the list the server built.
+ * Falls back to the whole string, which is never worse than what a toast
+ * would have shown.
+ */
+function splitEligibilityReasons(detail: string): string[] {
+  const [, listed] = detail.split(/requirements:\s*/);
+  const source = listed ?? detail;
+  const parts = source.split(/(?<=\.)\s+/).map(s => s.trim()).filter(Boolean);
+  return parts.length ? parts : [detail];
 }

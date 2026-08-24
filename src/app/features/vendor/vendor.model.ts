@@ -267,3 +267,35 @@ export interface BidStatusResult {
   /** Human reference, for display. */
   bidNumber?: string;
 }
+
+// ==================== BID SUBMISSION RESULTS ====================
+/**
+ * What a submit attempt actually did.
+ *
+ * A discriminated union rather than `{ bidId } | null`, because the four ways
+ * a submit is refused need four different screens: a 403 lists requirements
+ * the vendor can go and fix, a 400 binds to fields, a 409 means the tender or
+ * the slot is gone and the page must stop offering Submit. `confirmEligibility`
+ * is an attestation the server re-checks, so "the box was ticked" is never
+ * evidence the bid was accepted.
+ */
+export type BidSubmitResult =
+  | { ok: true; bidId: string; bidNumber: string }
+  /** 403 — `FindEligibilityFailures` returned every reason, not just the first. */
+  | { ok: false; kind: 'ineligible'; reasons: string[] }
+  /** 400 — `fieldErrors` keys are form-control names, ready to bind. */
+  | { ok: false; kind: 'validation'; fieldErrors: Record<string, string[]>; messages: string[] }
+  /** 409 — already bid on this tender, or the window shut. Either way, Submit must go away. */
+  | { ok: false; kind: 'conflict'; message: string }
+  | { ok: false; kind: 'failed'; message: string };
+
+/** Why a draft save didn't land. `closed` means the tender stopped accepting bids — stop autosaving. */
+export type BidDraftSaveResult = 'saved' | 'closed' | 'failed';
+
+/** `GET /api/bids/mine/stats`. `openTenders` is matched to this vendor, not a global count. */
+export interface VendorBidStats {
+  openTenders: number;
+  myBids: number;
+  wonBids: number;
+  activeProjects: number;
+}
