@@ -2047,7 +2047,7 @@ function splitEligibilityReasons(detail: string): string[] {
 - [ ] **Step 6: Run the tests**
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 79 SUCCESS` (72 + 7).
+Expected: `TOTAL: 80 SUCCESS` (72 + 8 — this task's spec file has 8 `it()` cases across two `describe` blocks, not 7; corrected after Task 5 shipped and was independently verified against the committed file).
 
 - [ ] **Step 7: Build**
 
@@ -2543,7 +2543,7 @@ Add matching styles to `bid-submission.page.scss` using the existing design toke
 - [ ] **Step 9: Run the tests and build**
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 82 SUCCESS` (79 + 3).
+Expected: `TOTAL: 83 SUCCESS` (80 + 3 — baseline corrected from Task 5's actual 80, not the originally-predicted 79).
 
 Run: `npx ng build`
 Expected: clean.
@@ -2753,7 +2753,7 @@ with, in the component:
 - [ ] **Step 5: Run the tests and build**
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 85 SUCCESS` (82 + 3).
+Expected: `TOTAL: 86 SUCCESS` (83 + 3).
 
 Run: `npx ng build`
 Expected: clean.
@@ -3045,7 +3045,7 @@ Style `.withdraw-panel` in `bid-detail.page.scss` with the existing tokens — n
 - [ ] **Step 7: Run the tests and build**
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 88 SUCCESS` (85 + 3).
+Expected: `TOTAL: 89 SUCCESS` (86 + 3).
 
 Run: `npx ng build`
 Expected: clean.
@@ -3166,7 +3166,7 @@ The mock tender-opportunity and bid lists lower down the dashboard are **out of 
 - [ ] **Step 4: Run the tests and build**
 
 Run: `npx ng test --watch=false --browsers=ChromeHeadless`
-Expected: `TOTAL: 88 SUCCESS` — unchanged. This task rewires two pages onto data that already exists; it adds no specs of its own.
+Expected: `TOTAL: 89 SUCCESS` — unchanged. This task rewires two pages onto data that already exists; it adds no specs of its own.
 
 Run: `npx ng build`
 Expected: clean.
@@ -3241,7 +3241,7 @@ npx ng build
 cd ../Heavenly-Job-Backend && dotnet test
 ```
 
-Expected: 88 frontend specs green, a clean build, 218 backend tests green. **Write down the numbers you actually saw.** If they differ from this plan, the plan is stale — correct it here and use the real numbers in Step 5. Three separate commits in Slice 3's history exist only to fix a test count asserted from memory.
+Expected: 89 frontend specs green, a clean build, 218 backend tests green. **Write down the numbers you actually saw.** If they differ from this plan, the plan is stale — correct it here and use the real numbers in Step 5. Three separate commits in Slice 3's history exist only to fix a test count asserted from memory — Task 5 of this very plan added a fourth (the plan predicted 79, the actual was 80, an 8-case spec block miscounted as 7).
 
 - [ ] **Step 5: Update the documentation**
 
