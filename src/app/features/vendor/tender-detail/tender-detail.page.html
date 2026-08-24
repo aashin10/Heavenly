@@ -114,19 +114,29 @@
       <!-- Actions -->
       <div class="action-buttons">
         @if (!bidStatus().submitted) {
-          <button 
-            class="btn btn-primary btn-lg btn-block" 
+          <button
+            class="btn btn-primary btn-lg btn-block"
             (click)="startBidSubmission()"
             [disabled]="isBidWindowClosed()">
             Submit Bid Now
           </button>
         } @else {
-          <button 
+          <button
             class="btn btn-outline btn-block"
             (click)="viewMyBid()">
             View Your Bid
           </button>
-          <div class="bid-submitted-notice"><app-icon name="check" [size]="16" /> Bid submitted on {{ bidStatus().bidId }}</div>
+          @if (bidStatus().status === 'withdrawn') {
+            <div class="bid-submitted-notice">
+              <app-icon name="info" [size]="16" />
+              You withdrew bid {{ bidStatus().bidNumber }}. This tender cannot be bid on again.
+            </div>
+          } @else {
+            <div class="bid-submitted-notice">
+              <app-icon name="check" [size]="16" />
+              Bid {{ bidStatus().bidNumber }} submitted
+            </div>
+          }
         }
         
         <button class="btn btn-secondary btn-block" (click)="saveForLater()">

@@ -35,7 +35,7 @@
             <app-icon name="clipboard" [size]="24" />
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ stats().openTenders }}</span>
+            <span class="stat-value">{{ statValue('openTenders') }}</span>
             <span class="stat-label">Open Tenders</span>
           </div>
         </div>
@@ -45,7 +45,7 @@
             <app-icon name="file-text" [size]="24" />
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ stats().myBids }}</span>
+            <span class="stat-value">{{ statValue('myBids') }}</span>
             <span class="stat-label">My Bids</span>
           </div>
         </div>
@@ -55,7 +55,7 @@
             <app-icon name="circle-check" [size]="24" />
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ stats().wonBids }}</span>
+            <span class="stat-value">{{ statValue('wonBids') }}</span>
             <span class="stat-label">Won Bids</span>
           </div>
         </div>
@@ -65,7 +65,7 @@
             <app-icon name="clock" [size]="24" />
           </div>
           <div class="stat-content">
-            <span class="stat-value">{{ stats().activeProjects }}</span>
+            <span class="stat-value">{{ statValue('activeProjects') }}</span>
             <span class="stat-label">Active Projects</span>
           </div>
         </div>

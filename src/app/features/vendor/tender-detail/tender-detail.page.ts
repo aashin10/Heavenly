@@ -67,9 +67,9 @@ export class TenderDetailPageComponent implements OnInit {
     this.tender.set(bundle.tender);
     this.clarifications.set(bundle.clarifications);
     this.eligibility.set(bundle.eligibility);
-    // No backend endpoint for either: bid status belongs to the (separate)
-    // Bid API, and "saved" is a local-only bookmark with nothing to sync.
-    this.bidStatus.set(this.vendorService.getMyBidStatus(this.tenderId));
+    this.bidStatus.set(bundle.bidStatus);
+    // Still local-only: "saved" is a bookmark with no persistence story and no
+    // endpoint (D6). Bid status used to be in this same sentence and no longer is.
     this.isSaved.set(this.vendorService.isTenderSaved(this.tenderId));
   }
 

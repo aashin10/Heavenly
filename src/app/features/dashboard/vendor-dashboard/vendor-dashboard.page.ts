@@ -14,6 +14,7 @@ import {
   VendorDashboardStats,
 } from './vendor-dashboard.model';
 import { BidStatus } from '../../vendor/vendor.model';
+import { VendorTenderService } from '../../vendor/vendor.service';
 
 @Component({
   selector: 'app-vendor-dashboard-page',
@@ -25,17 +26,13 @@ import { BidStatus } from '../../vendor/vendor.model';
 export class VendorDashboardPageComponent implements OnInit {
   private readonly serviceAuthService = inject(ServiceAuthService);
   private readonly router = inject(Router);
+  private readonly vendorService = inject(VendorTenderService);
 
   // User data
   currentUser = signal<Vendor | null>(null);
 
-  // Dashboard stats
-  stats = signal<VendorDashboardStats>({
-    openTenders: 0,
-    myBids: 0,
-    wonBids: 0,
-    activeProjects: 0,
-  });
+  /** Null until a stats response lands. The cards render '—' rather than a zero we cannot vouch for. */
+  stats = signal<VendorDashboardStats | null>(null);
 
   // Tender opportunities
   tenderOpportunities = signal<TenderOpportunity[]>([]);
@@ -85,6 +82,28 @@ export class VendorDashboardPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadUserData();
     this.loadDashboardData();
+    void this.loadStats();
+  }
+
+  /**
+   * `GET /api/bids/mine/stats` — one call for all four counters, because a
+   * dashboard that fires four requests renders in four stages and looks broken.
+   *
+   * Mock mode returns null and the cards show '—'. That is deliberate: the four
+   * numbers here were hard-coded (24 / 8 / 3 / 2) and had never once reflected
+   * anything, so a placeholder is strictly more truthful than what shipped.
+   */
+  private async loadStats(): Promise<void> {
+    const stats = await this.vendorService.getVendorBidStatsAsync();
+    if (stats) this.stats.set(stats);
+  }
+
+  // Angular template expressions cannot contain arrow functions, so the
+  // picker is a key rather than a `(s: VendorDashboardStats) => number`
+  // lambda — same null-safe intent, syntax the template parser accepts.
+  statValue(key: keyof VendorDashboardStats): string {
+    const stats = this.stats();
+    return stats ? String(stats[key]) : '—';
   }
 
   private loadUserData(): void {
@@ -105,15 +124,6 @@ export class VendorDashboardPageComponent implements OnInit {
   }
 
   private loadDashboardData(): void {
-    // Mock data for Phase 1 - will be replaced with actual API calls in Phase 2
-    this.stats.set({
-      openTenders: 24,
-      myBids: 8,
-      wonBids: 3,
-      activeProjects: 2,
-      rating: 4.5,
-    });
-
     // Mock tender opportunities
     this.tenderOpportunities.set([
       {
