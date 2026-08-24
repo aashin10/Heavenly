@@ -444,7 +444,72 @@
         color: var(--gray-500);
         margin-top: 2px;
       }
+
+      .timeline-note {
+        display: block;
+        font-size: 12px;
+        color: var(--gray-600);
+        margin-top: 4px;
+      }
     }
+  }
+}
+
+// Withdraw panel
+.withdraw-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-700);
+  }
+
+  textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-300);
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--gray-900);
+    background: var(--white);
+    resize: vertical;
+
+    &::placeholder {
+      color: var(--gray-400);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: var(--ring-brand);
+    }
+
+    &:disabled {
+      background: var(--gray-50);
+      cursor: not-allowed;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+
+    .btn {
+      flex: 1;
+      padding: 10px 16px;
+      font-size: 13px;
+    }
+  }
+
+  &__note {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin: 0;
+    line-height: 1.5;
   }
 }
 

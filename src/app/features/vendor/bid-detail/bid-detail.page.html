@@ -1,13 +1,23 @@
-@if (bid(); as bid) {
+@if (loadFailed()) {
+  <app-empty-state
+    icon="circle-x"
+    title="Couldn't load this bid"
+    message="It may have been removed, or the server could not be reached.">
+    <button class="btn-outline" type="button" (click)="goBack()">Back to My Bids</button>
+  </app-empty-state>
+} @else if (loading()) {
+  <app-empty-state icon="clock" title="Loading this bid…" message="" />
+} @else {
+  @if (bid(); as bid) {
 <div class="bid-detail-container">
-  
+
   <!-- Header -->
   <div class="page-header">
     <button class="btn-back" (click)="goBack()"><app-icon name="arrow-left" [size]="16" /> Back to My Bids</button>
-    
+
     <div class="header-content">
       <div class="header-info">
-        <span class="bid-id">{{ bid.bidId }}</span>
+        <span class="bid-id">{{ bid.bidNumber }}</span>
         <h1>{{ bid.tenderTitle }}</h1>
       </div>
       <app-status-badge [status]="bid.status" [label]="getStatusLabel(bid.status)" />
@@ -205,22 +215,18 @@
       <div class="sidebar-card">
         <h3>Status Timeline</h3>
         <div class="timeline">
-          @for (step of getStatusTimeline(); track step.label) {
-            <div class="timeline-item" 
-                 [class.active]="step.active" 
-                 [class.completed]="step.completed"
-                 [class.pending]="!step.active && !step.completed">
+          @for (step of timeline(); track step.date) {
+            <div class="timeline-item">
               <div class="timeline-marker">
-                @if (step.completed) {
-                  <span><app-icon name="check" [size]="16" /></span>
-                } @else if (step.active) {
-                  <span class="pulse"></span>
-                }
+                <span><app-icon name="check" [size]="16" /></span>
               </div>
               <div class="timeline-content">
                 <span class="timeline-label">{{ step.label }}</span>
                 @if (step.date) {
                   <span class="timeline-date">{{ formatDate(step.date) }}</span>
+                }
+                @if (step.note) {
+                  <span class="timeline-note">{{ step.note }}</span>
                 }
               </div>
             </div>
@@ -234,7 +240,7 @@
         <div class="info-list">
           <div class="info-item">
             <span class="info-label">Bid ID</span>
-            <span class="info-value mono">{{ bid.bidId }}</span>
+            <span class="info-value mono">{{ bid.bidNumber }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">Submitted</span>
@@ -253,6 +259,34 @@
       
       <!-- Actions -->
       <div class="sidebar-card actions">
+        @if (bid.canWithdraw) {
+          @if (showWithdrawPanel()) {
+            <div class="withdraw-panel">
+              <label for="withdraw-reason">Why are you withdrawing? (optional)</label>
+              <textarea
+                id="withdraw-reason"
+                rows="3"
+                [value]="withdrawReason()"
+                (input)="withdrawReason.set($any($event.target).value)"
+                [disabled]="withdrawing()"></textarea>
+              <div class="withdraw-panel__actions">
+                <button class="btn btn-outline" type="button" [disabled]="withdrawing()" (click)="cancelWithdraw()">
+                  Keep my bid
+                </button>
+                <button class="btn btn-danger" type="button" [disabled]="withdrawing()" (click)="confirmWithdraw()">
+                  {{ withdrawing() ? 'Withdrawing…' : 'Withdraw bid' }}
+                </button>
+              </div>
+              <p class="withdraw-panel__note">
+                A withdrawn bid cannot be resubmitted for this tender.
+              </p>
+            </div>
+          } @else {
+            <button class="btn btn-outline btn-full" type="button" (click)="openWithdrawPanel()">
+              Withdraw bid
+            </button>
+          }
+        }
         <button class="btn btn-outline btn-full" (click)="viewTender()">
           View Original Tender
         </button>
@@ -263,4 +297,5 @@
     </aside>
   </div>
 </div>
+  }
 }

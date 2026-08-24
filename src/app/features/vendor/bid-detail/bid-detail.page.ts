@@ -1,18 +1,20 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { VendorTenderService } from '../vendor.service';
-import { Bid, PublishedTender } from '../vendor.model';
+import { Bid } from '../vendor.model';
 import { TimeAgoPipe } from '../../../shared/pipes/time-ago.pipe';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { formatAppDateTime } from '../../../shared/utils/date-format.util';
 import { AppDatePipe } from '../../../shared/pipes/app-date.pipe';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
+import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
   selector: 'app-bid-detail-page',
   standalone: true,
-  imports: [CommonModule, TimeAgoPipe, IconComponent, AppDatePipe, StatusBadgeComponent],
+  imports: [CommonModule, TimeAgoPipe, IconComponent, AppDatePipe, StatusBadgeComponent, EmptyStateComponent],
   templateUrl: './bid-detail.page.html',
   styleUrl: './bid-detail.page.scss'
 })
@@ -20,26 +22,35 @@ export class BidDetailPageComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly vendorService = inject(VendorTenderService);
+  private readonly toastService = inject(ToastService);
 
   bid = signal<Bid | null>(null);
-  tender = signal<PublishedTender | null>(null);
+  loading = signal(true);
+  loadFailed = signal(false);
+
+  /** Guards the withdraw control while a request is in flight — one click, one withdrawal. */
+  withdrawing = signal(false);
+  showWithdrawPanel = signal(false);
+  withdrawReason = signal('');
 
   ngOnInit(): void {
-    const bidId = this.route.snapshot.params['id'];
-    this.loadBidDetails(bidId);
+    void this.load(this.route.snapshot.params['id']);
   }
 
-  private loadBidDetails(bidId: string): void {
-    const bid = this.vendorService.getBidDetail(bidId);
+  private async load(bidId: string): Promise<void> {
+    this.loading.set(true);
+    const bid = await this.vendorService.getBidDetailAsync(bidId);
+    this.loading.set(false);
+
     if (!bid) {
-      this.router.navigate(['/vendor/bids']);
+      // Deliberately not a redirect. The old code bounced to /vendor/bids on
+      // any failure, so a transient 500 looked identical to a bid that does
+      // not exist, and the vendor was never told which.
+      this.loadFailed.set(true);
       return;
     }
-    this.bid.set(bid);
 
-    // Load tender details
-    const tender = this.vendorService.getTenderDetail(bid.tenderId);
-    this.tender.set(tender || null);
+    this.bid.set(bid);
   }
 
   goBack(): void {
@@ -53,6 +64,37 @@ export class BidDetailPageComponent implements OnInit {
     }
   }
 
+  openWithdrawPanel(): void {
+    this.withdrawReason.set('');
+    this.showWithdrawPanel.set(true);
+  }
+
+  cancelWithdraw(): void {
+    // Guarded like the panel's own action: cancelling only hides the panel, it
+    // cannot recall a request already sent. Slice 2's F12 lesson.
+    if (this.withdrawing()) return;
+    this.showWithdrawPanel.set(false);
+  }
+
+  async confirmWithdraw(): Promise<void> {
+    const bid = this.bid();
+    if (!bid || this.withdrawing()) return;
+
+    this.withdrawing.set(true);
+    const updated = await this.vendorService.withdrawBidAsync(
+      bid.bidId,
+      this.withdrawReason().trim() || undefined
+    );
+    this.withdrawing.set(false);
+    this.showWithdrawPanel.set(false);
+
+    // `withdrawBidAsync` returns the *fresh* bid on a 409 as well as on
+    // success, so either way this leaves the screen showing what the server
+    // actually holds. Null means even the re-read failed; it has already said
+    // so, and overwriting the bid with null would blank the page.
+    if (updated) this.bid.set(updated);
+  }
+
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       draft: 'Draft',
@@ -60,7 +102,8 @@ export class BidDetailPageComponent implements OnInit {
       under_review: 'Under Review',
       shortlisted: 'Shortlisted',
       awarded: 'Awarded',
-      rejected: 'Not Selected'
+      rejected: 'Not Selected',
+      withdrawn: 'Withdrawn'
     };
     return labels[status] || status;
   }
@@ -77,38 +120,20 @@ export class BidDetailPageComponent implements OnInit {
     return formatAppDateTime(date);
   }
 
-  getStatusTimeline(): { label: string; date: string; active: boolean; completed: boolean }[] {
-    const bid = this.bid();
-    if (!bid) return [];
-
-    const statusOrder = ['submitted', 'under_review', 'shortlisted', 'awarded'];
-    const currentIndex = statusOrder.indexOf(bid.status);
-
-    return [
-      {
-        label: 'Bid Submitted',
-        date: bid.submittedAt,
-        active: bid.status === 'submitted',
-        completed: currentIndex > 0
-      },
-      {
-        label: 'Under Technical Review',
-        date: bid.status !== 'submitted' ? bid.updatedAt || bid.submittedAt : '',
-        active: bid.status === 'under_review',
-        completed: currentIndex > 1
-      },
-      {
-        label: 'Technical Shortlisted',
-        date: bid.status === 'shortlisted' || bid.status === 'awarded' ? bid.updatedAt || bid.submittedAt : '',
-        active: bid.status === 'shortlisted',
-        completed: currentIndex > 2
-      },
-      {
-        label: 'Contract Awarded',
-        date: bid.status === 'awarded' ? bid.updatedAt || bid.submittedAt : '',
-        active: bid.status === 'awarded',
-        completed: false
-      }
-    ];
-  }
+  /**
+   * The bid's actual history.
+   *
+   * The old version derived four fixed steps from the current status and
+   * stamped `updatedAt` on each intermediate one — so a bid that went straight
+   * from submitted to awarded displayed a dated "Under Technical Review" step
+   * that never happened. `events` is the server's append-only record; the
+   * backend's own comment says award disputes are decided on it.
+   */
+  timeline = computed(() =>
+    (this.bid()?.events ?? []).map(event => ({
+      label: this.getStatusLabel(event.toStatus),
+      date: event.occurredAt,
+      note: event.note ?? '',
+    }))
+  );
 }
