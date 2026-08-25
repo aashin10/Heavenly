@@ -372,7 +372,7 @@ export class VendorTenderService {
     if (!bid) {
       return { submitted: false };
     }
-    return { submitted: true, status: bid.status, bidId: bid.bidId };
+    return { submitted: true, status: bid.status, bidId: bid.bidId, bidNumber: bid.bidNumber };
   }
 
   // ==================== BID OPERATIONS ====================
