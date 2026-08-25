@@ -5,11 +5,12 @@ import { VendorTenderService } from '../vendor.service';
 import { PublishedTender, BidFormData, WorkReference, PriceItem, EligibilityResult, BidDraft } from '../vendor.model';
 import { ToastService } from '../../../core/services/toast.service';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-bid-submission-page',
   standalone: true,
-  imports: [ReactiveFormsModule, IconComponent],
+  imports: [ReactiveFormsModule, IconComponent, EmptyStateComponent],
   templateUrl: './bid-submission.page.html',
   styleUrl: './bid-submission.page.scss'
 })
@@ -24,6 +25,8 @@ export class BidSubmissionPageComponent implements OnInit, OnDestroy {
   tenderId = '';
   tender = signal<PublishedTender | null>(null);
   eligibility = signal<EligibilityResult>({ eligible: false, reasons: [], missingRequirements: [] });
+  loading = signal(true);
+  loadFailed = signal(false);
 
   /** Why the last submit was refused, if it was. Null while nothing has been refused. */
   submitRefusal = signal<
@@ -61,6 +64,10 @@ export class BidSubmissionPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.stopAutoSave();
+  }
+
+  goBack(): void {
+    this.router.navigate(['/vendor/tenders']);
   }
 
   private initializeForm(): void {
@@ -103,10 +110,15 @@ export class BidSubmissionPageComponent implements OnInit, OnDestroy {
    * up front what a submit would be refused for.
    */
   private async load(): Promise<void> {
+    this.loading.set(true);
     const bundle = await this.vendorService.getTenderDetailBundleAsync(this.tenderId);
+    this.loading.set(false);
+
     if (!bundle) {
-      this.toastService.error('Tender not found');
-      this.router.navigate(['/vendor/tenders']);
+      // Deliberately not a toast-and-redirect. That collapsed a transient 500
+      // and a tender that genuinely doesn't exist into the same experience —
+      // the same anti-pattern fixed on bid-detail.page.ts's load().
+      this.loadFailed.set(true);
       return;
     }
 

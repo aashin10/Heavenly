@@ -1,4 +1,14 @@
-@if (tender(); as tender) {
+@if (loadFailed()) {
+  <app-empty-state
+    icon="circle-x"
+    title="Couldn't load this tender"
+    message="It may have been removed, or the server could not be reached.">
+    <button class="btn-outline" type="button" (click)="goBack()">Back to Tenders</button>
+  </app-empty-state>
+} @else if (loading()) {
+  <app-empty-state icon="clock" title="Loading this tender…" message="" />
+} @else {
+  @if (tender(); as tender) {
 <div class="bid-submission-container">
   
   <!-- Header -->
@@ -574,5 +584,6 @@
       </div>
     </div>
   </div>
+}
 }
 }

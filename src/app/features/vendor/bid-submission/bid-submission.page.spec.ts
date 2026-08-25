@@ -1,8 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+import { importProvidersFrom } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
+import { APP_ICONS } from '../../../shared/icons/app-icons';
 import { BidSubmissionPageComponent } from './bid-submission.page';
 import { VendorTenderService } from '../vendor.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -32,6 +35,7 @@ function makeComponent(overrides: Partial<Record<string, unknown>> = {}) {
       provideHttpClient(),
       provideHttpClientTesting(),
       provideRouter([]),
+      importProvidersFrom(LucideAngularModule.pick(APP_ICONS)),
       { provide: VendorTenderService, useValue: vendorService },
       { provide: ActivatedRoute, useValue: { snapshot: { params: { id: 't-1' } } } },
       {
