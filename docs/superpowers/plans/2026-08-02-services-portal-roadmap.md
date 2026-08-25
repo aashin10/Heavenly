@@ -41,7 +41,7 @@ These were open questions; they are now settled and the slices below assume them
 | D3 | **Tender draft generation is a deterministic server-side template**, exposed behind `ITenderDraftGenerator`, and the UI label changes from "AI-generated draft" to "Suggested draft". | The mock's `getAIDraft` is a hand-written template already. A real model call would add a secret, per-review cost, latency on the review screen, non-determinism in tests, and would still need a template fallback. The interface seam keeps a model-backed implementation available later. |
 | D4 | **Publish happens immediately; the schedule + notification toggles are removed from the publish screen.** | `POST /api/service-admin/tenders/{id}/publish` takes no body, and there is no delivery channel to notify anyone through — email verification (B7) is unbuilt and SMS is blocked on DLT registration (Y5). Shipping controls that silently do nothing is worse than not shipping them. Re-add when a notification channel exists. |
 | D5 | **Award notification toggles (`notifyWinner` / `notifyOthers` / `notifyRequester`) are removed for the same reason.** `awardJustification` maps to the existing `Note` field; `contractAmount` is not sent — the backend snapshots the winning bid amount deliberately so the commercial record cannot drift. | Same missing-channel argument. The amount decision is already made and defended in `Award.cs`. |
-| D6 | **Saved tenders, "not interested", and per-tender bid status stay mock-only** where they have no endpoint, except bid status which Slice 4 sources from the real Bid API. | Already the documented position in F2.4; saved/dismissed genuinely have no persistence story and are not worth inventing one for in this round. |
+| D6 | **Saved tenders, "not interested", and per-tender bid status stay mock-only** where they have no endpoint, except bid status, which Slice 4 sources from the real API via a `myBid` field on the tender detail DTO — not a separate Bid API route, which doesn't exist. | Already the documented position in F2.4; saved/dismissed genuinely have no persistence story and are not worth inventing one for in this round. |
 
 ---
 
@@ -53,8 +53,8 @@ Ordered so that each slice removes a constraint on the ones after it. Ten slices
 1  Admin bootstrap + silent refresh      ✅ DONE 2026-08-02  (B11, F1)
 2  Vendor verification queue + review     ✅ DONE 2026-08-03  (F2.5, F9) + post-merge review 08-06 (F16)
 3  Model divergences + async convention   ✅ DONE 2026-08-11  (F5, F10, F12, F17 loading/error/409)
-4  Bid submission + my bids                ◀── NEXT
-5  Admin request queue + review
+4  Bid submission + my bids                ✅ DONE 2026-08-25  (F2.6)
+5  Admin request queue + review            ◀── NEXT
 6  Tender create / publish / clarifications
 7  Evaluation scoring backend
 8  Evaluation frontend
@@ -62,9 +62,11 @@ Ordered so that each slice removes a constraint on the ones after it. Ten slices
 10 Flip the flag + full-pipeline pass
 ```
 
-**Status as of 2026-08-11.** Slices 1–2 are merged into `dev-agentic` on the frontend repo. Slice 3 (frontend-only — no backend changes) is complete and ready to merge from `feature/model-divergences`, but has not been merged yet — it is still under review. Slice 2 went through a four-reviewer post-merge audit, which found and fixed one Critical (F16 — a granted `ServiceAdmin` could not open `/management` at all, because the frontend guard checked `userType` where the backend checks roles) and logged F17–F19. **One item from Slice 2 is still genuinely unverified** — the plan's own Task 8 Step 4 item 7, "log in as the approved vendor and reach `/vendor-dashboard`" — Slice 3's own verification gate didn't re-touch it either (its Step 3 checks the vendor *queue* and *review* screens, not a fresh approve-then-log-in-as-that-vendor pass). Still worth confirming before or during Slice 4 rather than assuming it.
+**Status as of 2026-08-25.** Slices 1–2 are merged into `dev-agentic` on the frontend repo. Slice 3 (frontend-only — no backend changes) is complete and ready to merge from `feature/model-divergences`, but had not been merged as of its own writing. Slice 2 went through a four-reviewer post-merge audit, which found and fixed one Critical (F16 — a granted `ServiceAdmin` could not open `/management` at all, because the frontend guard checked `userType` where the backend checks roles) and logged F17–F19. **The one item left genuinely unverified since Slice 2** — the plan's own Task 8 Step 4 item 7, "log in as the approved vendor and reach `/vendor-dashboard`" — went unperformed through Slice 3's verification gate too (its Step 3 checked the vendor *queue* and *review* screens, not a fresh approve-then-log-in-as-that-vendor pass). It was finally performed during Slice 4's own Task 10, live: register → admin-approve → fresh vendor login → `/vendor-dashboard`, no redirect. Closed, not carried forward a third time.
 
 Slice 3 (model divergences + the async UI convention) shipped 2026-08-11: closes F5, F10, and F12, plus F17's loading/error/409 halves via the new `core/utils/request-state.ts` primitive. F17's `adjustServerStats` bullet and F14 were explicitly re-checked against the final code and confirmed to remain open — not touched by this slice. Detail: [`docs/BACKLOG.md`](../../BACKLOG.md)'s F5/F10/F12/F14/F17 entries and the [plan file](2026-08-06-slice-3-model-divergences.md)'s SDD ledger.
+
+Slice 4 (bid submission, my bids, withdrawal) shipped 2026-08-25: closes F2.6 and D6's last exception. Detail: [`docs/BACKLOG.md`](../../BACKLOG.md)'s F2.6 entry and the [plan file](2026-08-23-slice-4-bid-submission.md)'s SDD ledger. Worth noting for whoever writes Slices 5–9's task-level detail, since they were drafted in the same pass as this roadmap and in the same voice: Slice 4's own file list and its own prose notes disagreed with each other (the file list omitted two files its notes explicitly required touching), the same class of internal contradiction Slice 3's plan had to correct in its own Context section before implementation. Read each slice's plan file's own self-review before trusting its file list at face value.
 
 ---
 
@@ -129,11 +131,18 @@ Slice 3 (model divergences + the async UI convention) shipped 2026-08-11: closes
 
 ---
 
-### Slice 4 — Bid submission + my bids (F2.6)
+### Slice 4 — Bid submission + my bids (F2.6) — ✅ DONE 2026-08-25
+
+> ⚠️ **Two claims below turned out wrong, and this section's own file list contradicted its own notes** — all caught while writing the task-level plan, corrected there, and recorded here so this document stays accurate rather than aspirational. Full detail: [`docs/BACKLOG.md`](../../BACKLOG.md)'s F2.6 entry and the [task plan](2026-08-23-slice-4-bid-submission.md).
+> - "Per-tender bid status moves from mock to the real Bid API" is not what shipped, because it can't be: there is no by-tender route on the Bid API. It comes from a new `myBid` field on the vendor-facing *tender detail* DTO instead — free, since that handler already loads the vendor.
+> - "`GET /api/bids/mine/stats` replaces the vendor dashboard's four separately-computed counters" implied the dashboard was computing four counters. It wasn't — `vendor-dashboard.page.ts` hard-coded `{openTenders: 24, myBids: 8, wonBids: 3, activeProjects: 2}`, literally invented numbers that had never once reflected anything. There was nothing to replace; there was a fabrication to delete.
+> - The **Files** line below named only `vendor.service.ts` and "the three pages," but the notes' own two bullets above required touching `tender-detail.page.ts` and `vendor-dashboard.page.ts` as well — an internal contradiction, the same class of defect Slice 3's plan had to correct in its own Context section before implementation started.
+>
+> Four more pre-existing defects were found and fixed along the way, none named below because none was known when this was written: the Submit Bid button navigated to a route that didn't exist; a restored bid draft silently truncated every repeatable row past the first; a withdrawn bid's `hasBid` flag read `false`, offering a Submit button guaranteed to 409; and `isEditableByVendor` alone couldn't tell a client whether withdrawal was still legal once an admin closed a tender early.
 
 **Screens:** E4 `/vendor/tenders/:id/bid`, E5 `/vendor/bids`, E6 `/vendor/bids/:id`
 **Endpoints:** `GET|PUT /api/bids/drafts/{tenderId}` · `POST /api/bids/tenders/{tenderId}` · `GET /api/bids/mine` · `GET /api/bids/mine/stats` · `GET /api/bids/{bidId}` · `POST /api/bids/{bidId}/withdraw`
-**Files:** create `bid-api.{service,models}.ts`; modify `src/app/features/vendor/vendor.service.ts` and the three pages.
+**Files:** create `bid-api.{service,models}.ts`; modify `src/app/features/vendor/vendor.service.ts`, the three pages, `tender-detail.page.ts`, and `vendor-dashboard.page.ts`.
 
 **Notes that will bite if missed**
 - **Use `core/utils/request-state.ts` for all three screens' loading/error/in-flight states** — Slice 3 built it precisely so these three don't each invent their own. A screen that hand-rolls a `loading` boolean here is a review finding, not a style preference.
