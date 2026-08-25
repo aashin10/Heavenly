@@ -412,7 +412,7 @@ export class VendorTenderService {
       tenderId,
       tenderNumber: tender?.tenderId ?? '',
       tenderTitle: tender?.title || 'Unknown Tender',
-      category: tender?.category ?? 'quick_service',
+      category: tender?.category,
       tenderClosingDate: tender?.bidWindowEnd || new Date().toISOString(),
       vendorId: 'current-vendor', // Would come from auth service
 

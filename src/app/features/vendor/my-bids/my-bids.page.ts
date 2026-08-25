@@ -57,7 +57,7 @@ export class MyBidsPageComponent implements OnInit {
     if (query) {
       result = result.filter(bid =>
         bid.tenderTitle.toLowerCase().includes(query) ||
-        bid.bidNumber.toLowerCase().includes(query)
+        (bid.bidNumber ?? '').toLowerCase().includes(query)
       );
     }
 

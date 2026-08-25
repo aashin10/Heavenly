@@ -215,7 +215,7 @@
       <div class="sidebar-card">
         <h3>Status Timeline</h3>
         <div class="timeline">
-          @for (step of timeline(); track step.date) {
+          @for (step of timeline(); track $index) {
             <div class="timeline-item">
               <div class="timeline-marker">
                 <span><app-icon name="check" [size]="16" /></span>
